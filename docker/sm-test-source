@@ -1,0 +1,9 @@
+#!/bin/sh
+# Run the source contract tests against folder plugins (see PLUGINS.md):
+#   docker exec -it stremio-music sm-test-source /config/music-sources/my-source
+set -eu
+CMD="node --disable-warning=ExperimentalWarning /app/server/dist/test/contract/run.js $*"
+if [ "$(id -u)" = "0" ]; then
+  exec setpriv --reuid="${PUID:-1000}" --regid="${PGID:-1000}" --clear-groups env HOME=/config sh -c "$CMD"
+fi
+exec sh -c "$CMD"

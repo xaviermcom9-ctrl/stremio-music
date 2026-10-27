@@ -7,10 +7,12 @@
     "node": ">=22.13"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && node scripts/copy-assets.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "start": "node --disable-warning=ExperimentalWarning dist/src/index.js",
-    "test": "node --disable-warning=ExperimentalWarning --test --test-concurrency=1 dist/test/*.test.js"
+    "test": "node --disable-warning=ExperimentalWarning --test --test-concurrency=1 dist/test/*.test.js",
+    "test:sources": "node --disable-warning=ExperimentalWarning dist/test/contract/run.js",
+    "new-source": "node scripts/new-source.mjs"
   },
   "dependencies": {
     "@fastify/cookie": "11.1.3",

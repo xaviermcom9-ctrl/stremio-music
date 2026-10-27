@@ -217,6 +217,33 @@ Stremio's own services and addons. Casting from Movies & TV needs Brave's *Media
 (Settings → Extensions), which is off by default. If you use *Forget me when I close this site* or
 clear cookies on exit, you'll have to sign in each time; add the app as an exception.
 
+## Music sources
+
+Music comes from sources, managed under **Music → Sources**. Admins see everything; other users
+see only the sources that need their own login. There are three kinds:
+
+- **Built-in** (Navidrome, Internet Archive, Jamendo, Free Music Archive, Radio Browser; Phase 6).
+- **Folder plugins**: drop a folder into `/config/music-sources/` and press **Reload plugins**.
+  Start one with `docker exec -it stremio-music sm-new-source my-source`, and test it with
+  `docker exec -it stremio-music sm-test-source /config/music-sources/my-source`.
+- **Remote addons**: paste a Stremio addon manifest URL. It's used only if it declares the `music`
+  type.
+
+On the Sources page you can enable or disable each source and change its order (which sets Home
+and search order). You can also edit settings, **Test connection**, and see status, errors and
+logs. Writing a source is covered in [PLUGINS.md](PLUGINS.md).
+
+**Secrets** (passwords, API keys) entered in source settings are encrypted at rest. Set the key
+yourself, or a random one is created in `/config/secret.key`, next to the data:
+
+| Variable | |
+|---|---|
+| `APP_SECRET_KEY` | passphrase (16+ characters) for encrypting source secrets |
+| `APP_SECRET_KEY_FILE` | the same, read from a file, e.g. a Docker secret (`/run/secrets/…`) |
+| `MUSIC_SOURCES_DIR` | folder plugin directory (default `/config/music-sources`) |
+
+Changing the key makes saved secrets unreadable: they have to be entered again.
+
 ## Torrent peers and VPN
 
 **Incoming peer port: not supported by the engine.** Stremio's streaming server only makes

@@ -50,6 +50,10 @@ const Env = z.object({
   ADMIN_PASSWORD_FILE: z.string().default(''),
   SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(365).default(30),
   COOKIE_SECURE: z.enum(['auto', 'true', 'false']).default('auto'),
+  // encrypts source secrets at rest; without it a key is generated in /config/secret.key
+  APP_SECRET_KEY: z.string().default(''),
+  APP_SECRET_KEY_FILE: z.string().default(''),
+  MUSIC_SOURCES_DIR: z.string().default(''),
 });
 
 const list = (v: string) =>
@@ -90,6 +94,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
       ffprobe: e.FFPROBE_BIN,
     },
     trustedProxies,
+    secrets: { key: e.APP_SECRET_KEY, keyFile: e.APP_SECRET_KEY_FILE },
+    musicSourcesDir: e.MUSIC_SOURCES_DIR || path.join(e.CONFIG_DIR, 'music-sources'),
     auth: {
       mode: e.AUTH_MODE,
       proxyUserHeader: e.PROXY_USER_HEADER.toLowerCase(),

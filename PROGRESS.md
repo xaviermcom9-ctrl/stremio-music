@@ -137,7 +137,7 @@ Not done / notes:
 GitHub: private repo https://github.com/xaviermcom9-ctrl/stremio-music (gh logged in on the server).
 User's own admin account created via setup (2026-10-27). Browser: Brave on the Ubuntu laptop.
 
-## Phase 4 – Tab switch (done, awaiting go-ahead)
+## Phase 4 – Tab switch (done)
 
 - `web/src/sm/ModeSwitch`: "Movies & TV | Music" segmented control (tablist, arrow keys; icons only
   under 800px). Shown in upstream's top bar (main tabs) and in the Music top bar.
@@ -164,5 +164,45 @@ Dockerfile now appends a hash of the web sources (`…-sm-<hash>`), so every cha
 Notes: fresh profiles get upstream's seasonal "event" modal (upstream behaviour). Six bottom tabs
 truncate "Downloads" on narrow phones (admins only); revisit in Phase 8.
 
+## Phase 5 – Source plugin system (done, awaiting go-ahead)
+
+Backend (`server/src/music/`, `server/src/music-sources/`):
+- `music-sources/sdk.ts`: the `MusicSource` interface (manifest, catalog/meta/streams/test, hooks,
+  settings schema, ctx). Types only; shipped as `sdk.d.ts` to folder plugins.
+- `music/protocol/`: Resonance's protocol client ported (manifest validation, request URLs, cache,
+  limiter, HTTP addon client); only `"music"` addons are used (brief).
+- `music/runtime.ts`: SourceRuntime: manifest validation (zod), Stremio manifest, ctx.fetch (rate
+  limit, UA, 15 s timeout, 10 MB cap, host allow-list incl. redirects), response cache, output
+  validation (bad items dropped + logged), stats, log ring, per-call 30 s timeout.
+- `music/folder.ts` + `plugin-host.ts`: folder plugins in their own process with Node's permission
+  model (read own folder only; no writes/child processes/workers/addons; no env; 128 MB); fetch and
+  logs relayed to the parent; crash restart (3 per 5 min). JS only: Ubuntu's Node has no TS support.
+- `music/registry.ts`: built-in + folder + remote sources; enabled/priority in SQLite (`sources`),
+  settings global/per-user (`source_user_settings`), secrets AES-256-GCM (`secrets.ts`,
+  APP_SECRET_KEY / _FILE, else /config/secret.key + UI warning).
+- `music/routes.ts`: `/sources/<id>/…` (Stremio addon endpoints, signed-in), `/api/sources…`
+  (admin: list, add URL, remove, enable, settings, order, test, refresh, logs, reload plugins;
+  users: own per-user settings), `/api/music/…` (sources, catalog, search, meta, streams;
+  allSettled, per-source errors; proxyHeaders stripped → `needsProxy`).
+- `_template` (demo data, offline) + `npm run new-source <name>` (built-in TS, registered) /
+  `--folder` (JS plugin) + container commands `sm-new-source`, `sm-test-source`.
+- Contract tests `npm run test:sources` (fixtures.json, offline) run in docker build for built-ins,
+  the template, and the template as a sandboxed folder plugin. 52 unit/integration tests.
+Web: Music → Sources page (admin: add addon URL, reload plugins, plugin load errors, cards with
+enable switch, ↑↓ order, settings form from schema with masked secrets, test, logs + stats, remove;
+users: their per-user settings only). Sources nav item now visible to all users (deviation from
+"Sources (admin)": per-user logins need a place).
+Docs: PLUGINS.md; README "Music sources"; ARCHITECTURE notes.
+
+Verified (throwaway instance + local mock addon; laptop then phone): sm-new-source in the container
+(files owned by PUID), sm-test-source 9/9, Reload plugins loads it and lists a broken plugin's
+error, movies-only addon rejected, music addon added, settings save (secret shows "Saved", never
+returned by the API, encrypted in SQLite), Test connection uses settings + user, logs, reorder,
+disable removes it from /api/music/sources, non-admin sees only per-user sources, phone layout OK,
+sandbox blocks reading /etc/hostname (unit test).
+
+Notes: no built-in sources yet (Phase 6), so the Sources page starts empty. Built-in sources
+need recorded fixtures.json to pass the contract in the build.
+
 ### Next
-- User: go-ahead for Phase 5 (source plugin system).
+- User: go-ahead for Phase 6 (built-in sources, Navidrome first).

@@ -1,0 +1,11 @@
+#!/bin/sh
+# Scaffold a folder plugin in /config/music-sources (see PLUGINS.md):
+#   docker exec -it stremio-music sm-new-source my-source
+# Runs as PUID:PGID so the files belong to you, not root.
+set -eu
+DIR="${MUSIC_SOURCES_DIR:-/config/music-sources}"
+CMD="node /app/server/scripts/new-source.mjs $* --folder $DIR"
+if [ "$(id -u)" = "0" ]; then
+  exec setpriv --reuid="${PUID:-1000}" --regid="${PGID:-1000}" --clear-groups env HOME=/config sh -c "$CMD"
+fi
+exec sh -c "$CMD"

@@ -8,6 +8,13 @@ import type { Config } from './config.js';
 import { dbHealthy } from './db.js';
 import { registerEngineProxy } from './engine/proxy.js';
 import { registerPrefs } from './prefs.js';
+import { mkdirSync } from 'node:fs';
+import type { MusicSource } from './music-sources/sdk.js';
+import { BUILTIN_SOURCES } from './music-sources/index.js';
+import { SourceRegistry } from './music/registry.js';
+import { registerMusicRoutes } from './music/routes.js';
+import { APP_VERSION } from './music/runtime.js';
+import { SecretBox } from './music/secrets.js';
 import type { EngineSupervisor } from './engine/supervisor.js';
 
 export const VERSION = '0.1.0';
@@ -16,9 +23,12 @@ export interface AppDeps {
   config: Config;
   db: DatabaseSync;
   engine: EngineSupervisor;
+  /** tests: replace the built-in sources / outbound fetch */
+  builtins?: MusicSource[];
+  fetchImpl?: typeof fetch;
 }
 
-export async function buildApp({ config, db, engine }: AppDeps): Promise<FastifyInstance> {
+export async function buildApp({ config, db, engine, builtins, fetchImpl }: AppDeps): Promise<FastifyInstance> {
   const app = Fastify({
     logger: { level: config.logLevel },
     // X-Forwarded-* only from configured proxies; otherwise clients could spoof their IP
@@ -54,6 +64,22 @@ export async function buildApp({ config, db, engine }: AppDeps): Promise<Fastify
   });
 
   registerPrefs(app, db);
+
+  mkdirSync(config.musicSourcesDir, { recursive: true });
+  const box = SecretBox.load({ ...config.secrets, configDir: config.dirs.config });
+  if (box.source === 'generated') app.log.warn('APP_SECRET_KEY not set: source secrets are encrypted with /config/secret.key, which sits next to the data');
+  const registry = new SourceRegistry({
+    db,
+    box,
+    builtins: builtins ?? BUILTIN_SOURCES,
+    pluginDir: config.musicSourcesDir,
+    userAgent: `StremioMusic/${APP_VERSION} (self-hosted)`,
+    fetchImpl,
+    log: { info: (m) => app.log.info(m), warn: (m) => app.log.warn(m) },
+  });
+  await registry.init();
+  app.addHook('onClose', async () => registry.stop());
+  registerMusicRoutes(app, registry, { secretKeySource: box.source });
   await registerEngineProxy(app, engine);
 
   if (existsSync(config.webRoot)) {

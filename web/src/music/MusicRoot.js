@@ -10,6 +10,7 @@ const ModeSwitch = require('stremio/sm/ModeSwitch');
 const { getAuthState } = require('stremio/sm/api');
 const AccountMenu = require('./AccountMenu');
 const MusicIcon = require('./icons');
+const Sources = require('./pages/Sources');
 const styles = require('./styles');
 
 const stremioIcon = (name) => (className) => <Icon className={className} name={name} />;
@@ -21,7 +22,7 @@ const PAGES = [
     { path: 'library', label: 'Library', icon: stremioIcon('library'), text: 'Your liked songs, saved albums and playlists.', phase: 8 },
     { path: 'radio', label: 'Radio', icon: musicIcon('radio'), text: 'Live radio stations from Radio Browser: top voted, trending, by genre and by country.', phase: 6 },
     { path: 'downloads', label: 'Downloads', icon: stremioIcon('download'), text: 'Server-side downloads into your music library, with progress, pause and retry.', phase: 9 },
-    { path: 'sources', label: 'Sources', icon: musicIcon('sources'), text: 'Enable, order, configure and test music sources: built-in, plugin folder or addon URL.', phase: 5, admin: true },
+    { path: 'sources', label: 'Sources', icon: musicIcon('sources'), element: <Sources /> },
 ];
 
 const Placeholder = ({ page }) => (
@@ -40,7 +41,7 @@ const MusicRoot = () => {
         getAuthState().then((state) => setUser(state.user)).catch(() => {});
     }, []);
 
-    const pages = PAGES.filter((page) => !page.admin || user?.isAdmin);
+    const pages = PAGES;
 
     return (
         <div className={styles['music-root']}>
@@ -75,7 +76,7 @@ const MusicRoot = () => {
                                 key={page.path}
                                 index={page.path === ''}
                                 path={page.path || undefined}
-                                element={<Placeholder page={page} />}
+                                element={page.element ?? <Placeholder page={page} />}
                             />
                         ))
                     }

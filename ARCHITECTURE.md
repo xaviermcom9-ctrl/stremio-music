@@ -285,12 +285,14 @@ artist).
 
 ### 5.3 Three ways to add a source
 
-1. **Built-in:** `server/src/music-sources/<name>/index.ts` exporting a `MusicSource`, registered
-   in a generated index. `_template/` plus `npm run new-source <name>` scaffolds one (via
-   `docker exec stremio-music npm run new-source <name>` it writes to
-   `/config/music-sources/<name>`, i.e. a folder plugin).
-2. **Folder plugin:** `/config/music-sources/<name>/` with `plugin.json` (the manifest) +
-   `index.js` (ESM, built JS). Loaded at start-up or via "Reload plugins".
+1. **Built-in:** `server/src/music-sources/<name>/index.ts` exporting a `MusicSource`, listed in
+   `server/src/music-sources/index.ts`. `_template/` plus `npm run new-source <name>` scaffolds
+   one. In the container, `sm-new-source <name>` writes a folder plugin to
+   `/config/music-sources/<name>` instead.
+2. **Folder plugin:** `/config/music-sources/<name>/index.js` (an ES module whose default export is
+   the `MusicSource`, manifest included; no separate `plugin.json`). Loaded at start-up or via
+   "Reload plugins". *Implemented as JavaScript:* Ubuntu's Node 22 is built without type
+   stripping, so the scaffolder emits the template compiled by `tsc` plus `sdk.d.ts`.
    - Each runs in its **own child process**, not a `worker_thread`, because Node's permission
      model is per process: `node --permission --allow-fs-read=<plugin dir>`. So no fs writes, no
      reading /config or /music, no child processes, no native addons, no workers;
@@ -313,8 +315,10 @@ artist).
 - Secret fields are encrypted with AES-256-GCM using a key from `APP_SECRET_KEY` or
   `APP_SECRET_KEY_FILE` (Docker secret). If neither is set, a key is generated into
   `/config/secret.key` (0600) and the UI warns that the key sits next to the data.
-- Sources page (admin): enable/disable, drag to reorder priority, settings form, Test
-  connection, status (last error, latency, rate-limit hits), log tail.
+- Sources page: admins get enable/disable, reorder priority, settings form, Test connection,
+  status (last error, latency, rate-limit hits) and log tail. *Implemented:* other users see the
+  page too, but only sources with per-user fields (their own logins), because per-user
+  credentials need a home.
 - `npm run test:sources`: a contract suite run against every built-in plugin and `_template`
   (manifest valid, catalogs return valid metas, meta ids round-trip, streams have a source,
   `downloadable`/`live` consistent, respects the limiter). Runs in the Docker build stage, so a

@@ -33,7 +33,12 @@ COPY server/package.json server/package-lock.json ./
 RUN --mount=type=cache,id=npm-cache,target=/root/.npm npm ci
 COPY engine/ /src/engine/
 COPY server/ ./
-RUN npm run build && npm test && npm prune --omit=dev
+# unit tests, then the source contract (built-ins + template, and the template as a sandboxed
+# folder plugin): a source that breaks the contract fails the image build
+RUN npm run build && npm test && npm run test:sources \
+ && node scripts/new-source.mjs ci-check --folder /tmp/plugins \
+ && node --disable-warning=ExperimentalWarning dist/test/contract/run.js /tmp/plugins/ci-check \
+ && npm prune --omit=dev
 
 # --- runtime -----------------------------------------------------------------------------------
 FROM ${UBUNTU}
@@ -54,8 +59,10 @@ COPY --from=web /src/web/build /app/web
 COPY --from=server /src/server/package.json /app/server/
 COPY --from=server /src/server/node_modules /app/server/node_modules
 COPY --from=server /src/server/dist/src /app/server/dist/src
+COPY --from=server /src/server/dist/test/contract /app/server/dist/test/contract
+COPY --from=server /src/server/scripts/new-source.mjs /app/server/scripts/new-source.mjs
 COPY docker/entrypoint.sh /app/docker/entrypoint.sh
-COPY docker/sm-user /usr/local/bin/sm-user
+COPY docker/sm-user docker/sm-new-source docker/sm-test-source /usr/local/bin/
 
 ENV PUID=1000 PGID=1000 UMASK=022 TZ=Australia/Melbourne \
     PORT=8095 ENGINE_CACHE_SIZE=10GB NODE_ENV=production

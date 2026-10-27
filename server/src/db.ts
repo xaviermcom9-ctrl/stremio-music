@@ -30,6 +30,21 @@ const MIGRATIONS: string[] = [
      updated_at INTEGER NOT NULL,
      PRIMARY KEY (user_id, key)
    );`,
+  `CREATE TABLE sources (
+     id TEXT PRIMARY KEY,           -- source id (built-in/folder manifest id, or "addon-<hash>" for remote)
+     kind TEXT NOT NULL CHECK (kind IN ('builtin', 'folder', 'remote')),
+     url TEXT,                      -- remote: manifest URL
+     enabled INTEGER NOT NULL DEFAULT 1,
+     priority INTEGER NOT NULL,
+     settings TEXT NOT NULL DEFAULT '{}', -- global settings JSON; secret values encrypted
+     added_at INTEGER NOT NULL
+   );
+   CREATE TABLE source_user_settings (
+     source_id TEXT NOT NULL REFERENCES sources(id) ON DELETE CASCADE,
+     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+     settings TEXT NOT NULL,        -- per-user settings JSON; secret values encrypted
+     PRIMARY KEY (source_id, user_id)
+   );`,
 ];
 
 export function openDb(file: string): DatabaseSync {
