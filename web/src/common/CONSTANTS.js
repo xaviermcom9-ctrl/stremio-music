@@ -1,7 +1,10 @@
 // Copyright (C) 2017-2023 Smart code 203358507
 
 const CHROMECAST_RECEIVER_APP_ID = '1634F54B';
-const DEFAULT_STREAMING_SERVER_URL = 'http://127.0.0.1:11470/';
+// stremio-music: the engine is proxied same-origin at <app base>/engine/
+const DEFAULT_STREAMING_SERVER_URL = new URL('engine/', document.baseURI).href;
+// stremio-music: stremio-core's built-in default, replaced by DEFAULT_STREAMING_SERVER_URL on load
+const CORE_DEFAULT_STREAMING_SERVER_URL = 'http://127.0.0.1:11470/';
 const DEFAULT_SUBTITLES_LANGUAGE = 'eng';
 const LOCAL_SUBTITLES_LANGUAGE = 'local';
 const SUBTITLES_SIZES = [75, 100, 125, 150, 175, 200, 250];
@@ -129,6 +132,7 @@ const PROTOCOL = 'stremio:';
 module.exports = {
     CHROMECAST_RECEIVER_APP_ID,
     DEFAULT_STREAMING_SERVER_URL,
+    CORE_DEFAULT_STREAMING_SERVER_URL,
     DEFAULT_SUBTITLES_LANGUAGE,
     LOCAL_SUBTITLES_LANGUAGE,
     SUBTITLES_SIZES,

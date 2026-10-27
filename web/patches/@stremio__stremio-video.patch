@@ -1,0 +1,124 @@
+--- a/src/withStreamingServer/buildProxyUrl.js
++++ b/src/withStreamingServer/buildProxyUrl.js
+@@ -10,7 +10,7 @@
+     Object.entries(responseHeaders).forEach(function(entry) {
+         proxyOptions.append('r', entry[0] + ':' + entry[1]);
+     });
+-    return url.resolve(streamingServerURL, '/proxy/' + proxyOptions.toString() + parsedStreamURL.pathname) + parsedStreamURL.search;
++    return url.resolve(streamingServerURL, 'proxy/' + proxyOptions.toString() + parsedStreamURL.pathname) + parsedStreamURL.search;
+ }
+ 
+ module.exports = buildProxyUrl;
+--- a/src/withStreamingServer/fetchVideoParams.js
++++ b/src/withStreamingServer/fetchVideoParams.js
+@@ -8,7 +8,7 @@
+     }
+ 
+     var queryParams = new URLSearchParams([['videoUrl', mediaURL]]);
+-    return fetch(url.resolve(streamingServerURL, '/opensubHash?' + queryParams.toString()))
++    return fetch(url.resolve(streamingServerURL, 'opensubHash?' + queryParams.toString()))
+         .then(function(resp) {
+             if (resp.ok) {
+                 return resp.json();
+@@ -52,7 +52,7 @@
+     if (probe && probe.format && typeof probe.format.name === 'string') {
+         queryParams.set('container', probe.format.name);
+     }
+-    return fetch(url.resolve(streamingServerURL, '/subtitleSignature?' + queryParams.toString()))
++    return fetch(url.resolve(streamingServerURL, 'subtitleSignature?' + queryParams.toString()))
+         .then(function(resp) {
+             if (resp.ok) {
+                 return resp.json();
+@@ -87,7 +87,7 @@
+         var hasSpecificFileIdx = fileIdxNum !== null && fileIdxNum !== -1 && isFinite(fileIdxNum);
+ 
+         if (hasSpecificFileIdx) {
+-            return fetch(url.resolve(streamingServerURL, '/' + encodeURIComponent(infoHash) + '/' + encodeURIComponent(fileIdx) + '/stats.json'))
++            return fetch(url.resolve(streamingServerURL, encodeURIComponent(infoHash) + '/' + encodeURIComponent(fileIdx) + '/stats.json'))
+                 .then(function(resp) {
+                     if (resp.ok) {
+                         return resp.json();
+@@ -104,7 +104,7 @@
+                 });
+         }
+ 
+-        return fetch(url.resolve(streamingServerURL, '/' + encodeURIComponent(infoHash) + '/stats.json'))
++        return fetch(url.resolve(streamingServerURL, encodeURIComponent(infoHash) + '/stats.json'))
+             .then(function(resp) {
+                 if (resp.ok) {
+                     return resp.json();
+--- a/src/withStreamingServer/withStreamingServer.js
++++ b/src/withStreamingServer/withStreamingServer.js
+@@ -36,14 +36,14 @@
+             url: typeof track.url === 'string' ?
+                 (subtitleTypes.isASSSubtitleTrack(track) ?
+                     buildProxyUrl(streamingServerURL, track.url, {}, {}) :
+-                    url.resolve(streamingServerURL, '/subtitles.vtt?' + new URLSearchParams([['from', track.url]]).toString())) :
++                    url.resolve(streamingServerURL, 'subtitles.vtt?' + new URLSearchParams([['from', track.url]]).toString())) :
+                 track.url
+         });
+     }
+     function fetchStreamProbe(stream, options) {
+         var queryParams = new URLSearchParams([['mediaURL', stream.url]]);
+ 
+-        return fetch(url.resolve(options.streamingServerURL, '/hlsv2/probe?' + queryParams.toString()))
++        return fetch(url.resolve(options.streamingServerURL, 'hlsv2/probe?' + queryParams.toString()))
+             .then(function(resp) {
+                 if (!resp.ok) {
+                     throw new Error(resp.status + ' (' + resp.statusText + ')');
+@@ -119,7 +119,7 @@
+         var fonts = probe.streams
+             .filter(isFontAttachment)
+             .map(function(stream) {
+-                return url.resolve(streamingServerURL, '/hlsv2/' + id + '/source/attachment/' + stream.id + '?' + query);
++                return url.resolve(streamingServerURL, 'hlsv2/' + id + '/source/attachment/' + stream.id + '?' + query);
+             });
+ 
+         return probe.streams
+@@ -130,7 +130,7 @@
+                 return {
+                     id: stream.id,
+                     codec: stream.codec,
+-                    url: url.resolve(streamingServerURL, '/hlsv2/' + id + '/source/subtitle/' + stream.id + '.ass?' + query),
++                    url: url.resolve(streamingServerURL, 'hlsv2/' + id + '/source/subtitle/' + stream.id + '.ass?' + query),
+                     fonts: fonts
+                 };
+             });
+@@ -313,7 +313,7 @@
+                                                 fileIdx: fileIdx,
+                                                 probe: probe,
+                                                 stream: {
+-                                                    url: url.resolve(commandArgs.streamingServerURL, '/hlsv2/' + id + '/master.m3u8?' + queryParams.toString()),
++                                                    url: url.resolve(commandArgs.streamingServerURL, 'hlsv2/' + id + '/master.m3u8?' + queryParams.toString()),
+                                                     subtitles: subtitles,
+                                                     _embeddedASSSources: getEmbeddedASSSources(probe, commandArgs.streamingServerURL, id, queryParams),
+                                                     behaviorHints: {
+@@ -343,7 +343,7 @@
+ 
+                                 if (['Tizen', 'webOS'].includes(commandArgs.platform) && result.stream.url === result.mediaURL) {
+                                     var sourceQuery = new URLSearchParams([['mediaURL', result.mediaURL]]).toString();
+-                                    var sourceBase = url.resolve(commandArgs.streamingServerURL, '/embedded-ass');
++                                    var sourceBase = url.resolve(commandArgs.streamingServerURL, 'embedded-ass');
+                                     embeddedASSDiscovery = typeof AbortController === 'function' ? new AbortController() : null;
+                                     var fetchOptions = embeddedASSDiscovery ? { signal: embeddedASSDiscovery.signal } : {};
+                                     var getFontURL = function(font) {
+--- a/src/withStreamingServer/createTorrent.js
++++ b/src/withStreamingServer/createTorrent.js
+@@ -8,7 +8,7 @@
+         :
+         '';
+     return {
+-        url: url.resolve(streamingServerURL, '/' + encodeURIComponent(infoHash) + '/' + encodeURIComponent(fileIdx)) + query,
++        url: url.resolve(streamingServerURL, encodeURIComponent(infoHash) + '/' + encodeURIComponent(fileIdx)) + query,
+         infoHash: infoHash,
+         fileIdx: fileIdx,
+         sources: sources
+@@ -52,7 +52,7 @@
+         body.guessFileIdx = false;
+     }
+ 
+-    return fetch(url.resolve(streamingServerURL, '/' + encodeURIComponent(infoHash) + '/create'), {
++    return fetch(url.resolve(streamingServerURL, encodeURIComponent(infoHash) + '/create'), {
+         method: 'POST',
+         headers: {
+             'content-type': 'application/json'

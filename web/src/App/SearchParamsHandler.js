@@ -33,7 +33,10 @@ const SearchParamsHandler = () => {
     const { streamingServerUrls } = useModelState({ model: 'ctx', map: map });
 
     const { searchParams } = new URL(`${window.location.origin}${createPath(location)}${window.location.search}`);
-    const streamingServerUrl = searchParams.getAll('streamingServerUrl').pop() ?? null;
+    // stremio-music: without an explicit param, move a profile still on core's loopback default to the same-origin engine
+    const onCoreDefault = normalize(profile.settings.streamingServerUrl) === CONSTANTS.CORE_DEFAULT_STREAMING_SERVER_URL;
+    const streamingServerUrl = searchParams.getAll('streamingServerUrl').pop() ??
+        (onCoreDefault ? CONSTANTS.DEFAULT_STREAMING_SERVER_URL : null);
     const [requested, set] = React.useState(null);
     const handledStreamingServerUrlRef = React.useRef(null);
 
