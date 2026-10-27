@@ -196,18 +196,26 @@ by anything else; the built-in login is the simpler choice.)
 
 ## Installing the app (PWA)
 
-Over HTTPS, open the app and install it: on an **Ubuntu laptop** use Chrome, Chromium or Edge
-(the install icon in the address bar, or ⋮ → *Cast, save and share* → *Install page as app*). It
+Over HTTPS, open the app and install it: on an **Ubuntu laptop** use Brave, Chrome, Chromium or
+Edge (the install icon at the right of the address bar, or the menu → *Install Stremio Music…* /
+*Cast, save and share* → *Install page as app*). It
 then gets its own window and launcher entry, and media keys work through the desktop's media
 controls. **Firefox on Linux can't install web apps**, though the app works fine in a normal
 Firefox tab. On Android use **Add to Home Screen** / **Install app**.
 
-No HTTPS yet and only using it on the LAN? Chrome/Chromium can treat this one address as secure:
-open `chrome://flags/#unsafely-treat-insecure-origin-as-secure`, add `http://<server>:8095`,
-relaunch. That's for your own laptop only; HTTPS (proxy or Tailscale) is the proper fix. The service
+No HTTPS yet and only using it on the LAN? Chromium-based browsers can treat this one address as
+secure: open `brave://flags/#unsafely-treat-insecure-origin-as-secure` (Chrome:
+`chrome://flags/…`), add `http://<server>:8095`, enable, relaunch. That's for your own laptop only; HTTPS (proxy or Tailscale) is the proper fix. The service
 worker caches only the UI shell (scripts, styles, fonts, images) so the app opens fast. Pages,
 your data, the API and streams always come from the server, and signing in is always checked
 there.
+
+### Brave
+
+Works with Shields on: the app only talks to its own origin, except Movies & TV's normal calls to
+Stremio's own services and addons. Casting from Movies & TV needs Brave's *Media Router* setting
+(Settings → Extensions), which is off by default. If you use *Forget me when I close this site* or
+clear cookies on exit, you'll have to sign in each time; add the app as an exception.
 
 ## Torrent peers and VPN
 
