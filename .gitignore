@@ -1,0 +1,11 @@
+recon/
+node_modules/
+build/
+dist/
+.env
+.npm-cache/
+config/
+cache/
+downloads/
+server/dist/
+.pnpm-store/

@@ -1,0 +1,9 @@
+.git
+recon
+.npm-cache
+**/node_modules
+server/dist
+web/build
+config
+cache
+downloads

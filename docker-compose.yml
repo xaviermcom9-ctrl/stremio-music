@@ -1,0 +1,30 @@
+# Stremio Music – example compose file.
+# Joins the existing media-stack network so the app can reach navidrome:4533 and qbittorrent:8080.
+services:
+  stremio-music:
+    build: .
+    image: stremio-music:local
+    container_name: stremio-music
+    restart: unless-stopped
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-Australia/Melbourne}
+      # cap for the streaming engine's torrent cache (e.g. 20GB, 512MiB, 0 = no cache, unlimited)
+      ENGINE_CACHE_SIZE: ${ENGINE_CACHE_SIZE:-10GB}
+    ports:
+      - "8095:8095"
+    volumes:
+      - ./config:/config                       # settings, plugins, database
+      - ./cache:/cache                         # engine/torrent cache
+      - /srv/media/library/music:/music        # library, shared read-write with Navidrome
+      - ./downloads:/downloads                 # optional staging area
+    networks:
+      - media
+    # the app stops the engine and exits within a few seconds; this is only a safety margin
+    stop_grace_period: 20s
+
+networks:
+  media:
+    name: media-stack_default
+    external: true

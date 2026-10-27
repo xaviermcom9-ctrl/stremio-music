@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Run Node/npm (+ffmpeg) inside a container (docker/dev.Dockerfile) as the current user, so the host
+# needs only Docker. Usage: scripts/node npm test | SUBDIR=server scripts/node npx tsc ...
+# Set PORTS="-p 8095:8095" to publish ports.
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+TTY=(); [ -t 0 ] && [ -t 1 ] && TTY=(-it)
+exec docker run --rm "${TTY[@]}" \
+  -u "$(id -u):$(id -g)" -e HOME=/tmp -e npm_config_cache=/app/.npm-cache \
+  -v "$ROOT:/app" -w "/app${SUBDIR:+/$SUBDIR}" ${PORTS:-} ${NODE_DOCKER_ARGS:-} \
+  "${NODE_IMAGE:-stremio-music-dev:26.04}" "$@"
