@@ -43,16 +43,28 @@ function auth(ctx: SourceContext): URLSearchParams {
   });
 }
 
-function endpoint(ctx: SourceContext, name: string, params: Record<string, string | number | undefined> = {}): string {
-  const server = String(ctx.settings.server ?? '').replace(/\/+$/, '');
-  if (!server) throw new Error('set the Navidrome server URL');
+type Params = Record<string, string | number | string[] | undefined>;
+
+function query(ctx: SourceContext, params: Params): URLSearchParams {
   const q = auth(ctx);
-  for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== '') q.set(k, String(v));
-  return `${server}/rest/${name}.view?${q}`;
+  for (const [k, v] of Object.entries(params)) {
+    if (Array.isArray(v)) v.forEach((x) => q.append(k, x));
+    else if (v !== undefined && v !== '') q.set(k, String(v));
+  }
+  return q;
 }
 
-async function api<T = Record<string, unknown>>(ctx: SourceContext, name: string, params: Record<string, string | number | undefined> = {}): Promise<T> {
-  const res = await ctx.fetch(endpoint(ctx, name, params));
+function endpoint(ctx: SourceContext, name: string, params: Params = {}): string {
+  const server = String(ctx.settings.server ?? '').replace(/\/+$/, '');
+  if (!server) throw new Error('set the Navidrome server URL');
+  return `${server}/rest/${name}.view?${query(ctx, params)}`;
+}
+
+/** `post`: parameters go in a form body (long song lists would overflow a URL). */
+async function api<T = Record<string, unknown>>(ctx: SourceContext, name: string, params: Params = {}, post = false): Promise<T> {
+  const res = post
+    ? await ctx.fetch(endpoint(ctx, name), { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: query(ctx, params).toString() })
+    : await ctx.fetch(endpoint(ctx, name, params));
   if (!res.ok) throw new Error(`Navidrome ${name}: HTTP ${res.status}`);
   const body = (await res.json<{ 'subsonic-response'?: Record<string, unknown> & { status: string; error?: SubsonicError } }>())['subsonic-response'];
   if (!body) throw new Error(`Navidrome ${name}: not a Subsonic response (is the server URL right?)`);
@@ -392,6 +404,44 @@ const source: MusicSource = {
       if (!p) return;
       const param = p.kind === 'album' ? 'albumId' : p.kind === 'artist' ? 'artistId' : 'id';
       await api(ctx, liked ? 'star' : 'unstar', { [param]: p.nid });
+    },
+    async listLiked(ctx) {
+      const r = await api<{ starred2?: { album?: Album[]; song?: Song[]; artist?: Artist[] } }>(ctx, 'getStarred2');
+      return [
+        ...asList(r.starred2?.song).map((s) => songPreview(ctx, s)),
+        ...asList(r.starred2?.album).map((a) => albumPreview(ctx, a)),
+        ...asList(r.starred2?.artist).map((a) => artistPreview(ctx, a)),
+      ];
+    },
+    async savePlaylist({ remoteId, name, description, trackIds }, ctx) {
+      const songId = trackIds.flatMap((id) => {
+        const p = parseId(id);
+        return p?.kind === 'track' ? [p.nid] : [];
+      });
+      let id = remoteId;
+      if (id) {
+        // createPlaylist with an id replaces its songs; the playlist may have been deleted in Navidrome
+        try {
+          await api(ctx, 'createPlaylist', { playlistId: id, songId }, true);
+        } catch (err) {
+          if (!(err instanceof NotFound)) throw err;
+          id = undefined;
+        }
+      }
+      if (!id) {
+        const r = await api<{ playlist?: { id: string } }>(ctx, 'createPlaylist', { name, songId }, true);
+        if (!r.playlist?.id) throw new Error('Navidrome did not return the new playlist');
+        id = r.playlist.id;
+      }
+      await api(ctx, 'updatePlaylist', { playlistId: id, name, comment: description });
+      return id;
+    },
+    async deletePlaylist(remoteId, ctx) {
+      try {
+        await api(ctx, 'deletePlaylist', { id: remoteId });
+      } catch (err) {
+        if (!(err instanceof NotFound)) throw err;
+      }
     },
   },
 };

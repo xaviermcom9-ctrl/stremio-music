@@ -54,6 +54,8 @@ const Env = z.object({
   APP_SECRET_KEY: z.string().default(''),
   APP_SECRET_KEY_FILE: z.string().default(''),
   MUSIC_SOURCES_DIR: z.string().default(''),
+  // MusicBrainz lookups (artist merging) need a contact in the User-Agent: an email or URL
+  MUSICBRAINZ_CONTACT: z.string().default(''),
 });
 
 const list = (v: string) =>
@@ -96,6 +98,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
     trustedProxies,
     secrets: { key: e.APP_SECRET_KEY, keyFile: e.APP_SECRET_KEY_FILE },
     musicSourcesDir: e.MUSIC_SOURCES_DIR || path.join(e.CONFIG_DIR, 'music-sources'),
+    musicbrainzContact: e.MUSICBRAINZ_CONTACT.trim(),
     auth: {
       mode: e.AUTH_MODE,
       proxyUserHeader: e.PROXY_USER_HEADER.toLowerCase(),

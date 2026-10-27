@@ -14,6 +14,9 @@ services:
       ENGINE_CACHE_SIZE: ${ENGINE_CACHE_SIZE:-10GB}
       # behind a reverse proxy: its address(es), e.g. the shared Docker network (see README)
       # TRUSTED_PROXIES: 172.18.0.0/16
+      # MusicBrainz lookups for merging artists across sources: your contact (email or URL), as
+      # MusicBrainz requires; leave unset to match by the sources' own MBIDs and names only
+      # MUSICBRAINZ_CONTACT: you@example.org
       # first admin without the setup code (ignored once an account exists)
       # ADMIN_USERNAME: admin
       # ADMIN_PASSWORD_FILE: /run/secrets/admin_password

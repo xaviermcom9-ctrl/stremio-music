@@ -253,6 +253,34 @@ yourself, or a random one is created in `/config/secret.key`, next to the data:
 
 Changing the key makes saved secrets unreadable: they have to be entered again.
 
+## Library
+
+**Library** keeps, per user and on the server: **Liked songs**, saved albums, followed artists, saved
+radio stations, and your **playlists** (which can mix tracks from any source). Tap a heart to like
+or save; every track's **⋯** menu has *Play next*, *Add to queue*, *Add to playlist…*, *Go to album*
+and *Go to artist*. Playlists are listed in the sidebar (on phones: under Library); a playlist's ⋯
+menu edits its details, reorders and removes tracks, and deletes it.
+
+**Navidrome sync** (for users who entered their Navidrome login):
+
+- **Likes, both ways:** liking a Navidrome song, album or artist stars it in Navidrome, and stars
+  made in Navidrome's own apps show up here (the Library's **Sync** button pulls them at once).
+- **Playlists, one way, if you ask:** a playlist's ⋯ menu → **Sync to Navidrome** keeps a Navidrome
+  playlist of the same name up to date with its *Navidrome* tracks (other sources' tracks can't be
+  stored there). Stopping the sync leaves the Navidrome copy alone; deleting a synced playlist
+  deletes the copy too. Navidrome's own playlists are on Home under Navidrome → Playlists.
+
+**Artists across sources:** an artist page also looks for the artist on your other sources and
+merges popular tracks and albums (with source badges); an album page shows a **Source** picker when
+another source has the same album. Matching uses MusicBrainz IDs where sources provide them
+(Navidrome does, from your tags), otherwise names. With `MUSICBRAINZ_CONTACT` set, the server also
+asks MusicBrainz for the artist's id and aliases (so "Beatles" finds "The Beatles"): at most one
+request per second, answers cached for 30 days.
+
+| Variable | |
+|---|---|
+| `MUSICBRAINZ_CONTACT` | an email address or URL, sent in the User-Agent as [MusicBrainz requires](https://musicbrainz.org/doc/MusicBrainz_API/Rate_Limiting); unset = no MusicBrainz lookups |
+
 ## Playback
 
 Music plays in the browser. For each track the server picks a stream from what your browser can

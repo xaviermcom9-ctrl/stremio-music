@@ -51,6 +51,40 @@ const MIGRATIONS: string[] = [
      device TEXT,
      updated_at INTEGER NOT NULL
    );`,
+  `CREATE TABLE library_items (
+     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+     kind TEXT NOT NULL CHECK (kind IN ('track', 'album', 'artist', 'playlist', 'station')),
+     item_id TEXT NOT NULL,         -- meta id ("<source>:…")
+     data TEXT NOT NULL,            -- JSON meta preview snapshot (name, poster, music…)
+     added_at INTEGER NOT NULL,
+     PRIMARY KEY (user_id, kind, item_id)
+   );
+   CREATE TABLE playlists (
+     id INTEGER PRIMARY KEY,
+     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+     name TEXT NOT NULL,
+     description TEXT NOT NULL DEFAULT '',
+     sync INTEGER NOT NULL DEFAULT 0, -- mirror into sources that support playlists (Navidrome)
+     remotes TEXT NOT NULL DEFAULT '{}', -- JSON {sourceId: remote playlist id}
+     sync_error TEXT,
+     created_at INTEGER NOT NULL,
+     updated_at INTEGER NOT NULL
+   );
+   CREATE INDEX playlists_user ON playlists(user_id);
+   CREATE TABLE playlist_tracks (
+     id INTEGER PRIMARY KEY,
+     playlist_id INTEGER NOT NULL REFERENCES playlists(id) ON DELETE CASCADE,
+     position INTEGER NOT NULL,
+     item_id TEXT NOT NULL,
+     data TEXT NOT NULL,            -- JSON track snapshot
+     added_at INTEGER NOT NULL
+   );
+   CREATE INDEX playlist_tracks_order ON playlist_tracks(playlist_id, position);
+   CREATE TABLE mb_cache (
+     key TEXT PRIMARY KEY,
+     value TEXT NOT NULL,           -- JSON (null = no confident match)
+     at INTEGER NOT NULL
+   );`,
 ];
 
 export function openDb(file: string): DatabaseSync {

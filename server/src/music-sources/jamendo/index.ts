@@ -16,7 +16,8 @@ const TAGS = ['rock', 'pop', 'electronic', 'hiphop', 'jazz', 'classical', 'metal
 interface Track {
   id: string;
   name: string;
-  duration?: number;
+  // a number from /tracks, a string from /albums/tracks
+  duration?: number | string;
   position?: number;
   releasedate?: string;
   artist_id?: string;
@@ -51,6 +52,31 @@ interface Artist {
   albums?: Album[];
 }
 
+// Jamendo HTML-escapes its text ("Pop &amp; Deep House", "podr&oacute;ż"); we show plain text.
+const NAMED: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: '\u00a0', szlig: 'ß', aelig: 'æ', AElig: 'Æ', oslash: 'ø', Oslash: 'Ø', eth: 'ð', thorn: 'þ' };
+const MARKS: Record<string, string> = { acute: '\u0301', grave: '\u0300', circ: '\u0302', tilde: '\u0303', uml: '\u0308', ring: '\u030a', cedil: '\u0327' };
+
+export function unescapeHtml(s: string): string {
+  return s
+    .replace(/&(?:#(\d+)|#x([0-9a-f]+)|([a-z]+));/gi, (m, dec?: string, hex?: string, name?: string) => {
+      if (dec || hex) return String.fromCodePoint(parseInt(dec ?? hex!, dec ? 10 : 16));
+      if (NAMED[name!]) return NAMED[name!]!;
+      // "oacute" = o + combining acute
+      const accent = /^([a-z])(acute|grave|circ|tilde|uml|ring|cedil)$/i.exec(name!);
+      return accent ? accent[1]! + MARKS[accent[2]!] : m;
+    })
+    .normalize('NFC');
+}
+
+/** Unescapes every `…name` field (name, artist_name, album_name), recursively. */
+function unescapeNames<T>(v: T): T {
+  if (Array.isArray(v)) return v.map(unescapeNames) as T;
+  if (v && typeof v === 'object') {
+    return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, typeof x === 'string' && k.endsWith('name') ? unescapeHtml(x) : unescapeNames(x)])) as T;
+  }
+  return v;
+}
+
 async function api<T>(ctx: SourceContext, path: string, params: Record<string, string | number | undefined>): Promise<T[]> {
   const clientId = ctx.settings.clientId;
   if (!clientId) throw new Error('set your Jamendo client ID (free at devportal.jamendo.com)');
@@ -62,7 +88,7 @@ async function api<T>(ctx: SourceContext, path: string, params: Record<string, s
   if (body.headers.status !== 'success') {
     throw new Error(body.headers.code === 5 ? 'Jamendo rejected the client ID' : `Jamendo: ${body.headers.error_message || `error ${body.headers.code}`}`);
   }
-  return body.results;
+  return unescapeNames(body.results);
 }
 
 /**
@@ -122,7 +148,7 @@ function trackPreview(t: Track): MusicMetaPreview {
       artistId: t.artist_id ? artistId(t.artist_id) : undefined,
       album: t.album_name || undefined,
       albumId: t.album_id ? albumId(t.album_id) : undefined,
-      duration: t.duration,
+      duration: Number(t.duration) || undefined,
       licence: licence(t),
     },
   };
@@ -141,7 +167,7 @@ function track(t: Track, album: Partial<Album>, n: number): MusicTrack {
       artistId: (t.artist_id ?? album.artist_id) ? artistId((t.artist_id ?? album.artist_id)!) : undefined,
       album: t.album_name ?? album.name,
       albumId: (t.album_id ?? album.id) ? albumId((t.album_id ?? album.id)!) : undefined,
-      duration: t.duration,
+      duration: Number(t.duration) || undefined,
       licence: licence({ ...t, artist_name: artist }),
     },
   };

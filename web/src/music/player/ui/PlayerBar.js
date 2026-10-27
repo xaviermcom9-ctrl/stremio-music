@@ -9,6 +9,8 @@ const usePlayer = require('../usePlayer');
 const { currentOf } = require('../usePlayer');
 const { DATA_SAVER_OPTIONS } = require('../caps');
 const { itemHref, IconButton, Controls, Progress, Volume, Artwork, streamLabel } = require('./common');
+const { LikeButton, Menu } = require('stremio/music/components');
+const { addToPlaylist } = require('stremio/music/components/overlays');
 const styles = require('./styles');
 
 const Titles = ({ item, nowPlaying, onNavigate }) => (
@@ -69,6 +71,10 @@ const QueueRow = ({ item, active, onPlay, onRemove }) => (
 
 const NowPlaying = ({ state, player, onClose, onQueue }) => {
     const item = currentOf(state);
+    const go = (id) => {
+        onClose();
+        window.location.hash = itemHref(id);
+    };
     React.useEffect(() => {
         const onKey = (e) => {
             if (e.key === 'Escape') onClose();
@@ -87,6 +93,20 @@ const NowPlaying = ({ state, player, onClose, onQueue }) => {
             <Artwork src={item.poster} className={styles['big-art']} />
             <div className={styles['np-titles']}>
                 <Titles item={item} nowPlaying={state.nowPlaying} onNavigate={onClose} />
+                <LikeButton item={item} kind={item.live ? 'station' : 'track'} big />
+                {
+                    item.live ?
+                        null
+                        :
+                        <Menu
+                            label={`More options for ${item.title}`}
+                            items={[
+                                { label: 'Add to playlist…', onSelect: () => addToPlaylist([item]) },
+                                item.albumId ? { label: 'Go to album', onSelect: () => go(item.albumId) } : null,
+                                item.artistId ? { label: 'Go to artist', onSelect: () => go(item.artistId) } : null,
+                            ]}
+                        />
+                }
             </div>
             <Progress state={state} player={player} />
             <Controls state={state} player={player} big />
@@ -132,13 +152,16 @@ const PlayerBar = () => {
                 item ?
                     <div className={styles['player-bar']} aria-label={'Player'}>
                         <div className={styles['mobile-progress']}><Progress state={state} player={player} compact /></div>
-                        <button type={'button'} className={styles['left']} onClick={() => setView('now')} aria-label={'Open now playing'}>
-                            <Artwork src={item.poster} className={styles['bar-art']} />
-                            <span className={styles['titles']}>
-                                <span className={styles['title']}>{item.live && state.nowPlaying ? state.nowPlaying : item.title}</span>
-                                <span className={styles['subtitle']}>{item.live ? (state.nowPlaying ? item.title : 'Live radio') : (item.artist ?? item.sourceName ?? '')}</span>
-                            </span>
-                        </button>
+                        <div className={styles['left-zone']}>
+                            <button type={'button'} className={styles['left']} onClick={() => setView('now')} aria-label={'Open now playing'}>
+                                <Artwork src={item.poster} className={styles['bar-art']} />
+                                <span className={styles['titles']}>
+                                    <span className={styles['title']}>{item.live && state.nowPlaying ? state.nowPlaying : item.title}</span>
+                                    <span className={styles['subtitle']}>{item.live ? (state.nowPlaying ? item.title : 'Live radio') : (item.artist ?? item.sourceName ?? '')}</span>
+                                </span>
+                            </button>
+                            <LikeButton item={item} kind={item.live ? 'station' : 'track'} />
+                        </div>
                         <div className={styles['center']}>
                             <Controls state={state} player={player} />
                             <Progress state={state} player={player} />

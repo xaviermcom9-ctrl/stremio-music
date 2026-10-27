@@ -211,7 +211,19 @@ export interface SourceTestResult {
 /** Optional integrations (e.g. Navidrome scrobbling, stars, playlists). */
 export interface SourceHooks {
   scrobble(trackId: string, ctx: SourceContext): Promise<void>;
+  /** the user liked/unliked (saved/unsaved) one of this source's items in the Music library */
   setLiked(id: string, liked: boolean, ctx: SourceContext): Promise<void>;
+  /**
+   * The items this user has liked on the service itself. When present, the service is the
+   * authority for its own items: the Music library shows exactly these (two-way like sync).
+   */
+  listLiked(ctx: SourceContext): Promise<MusicMetaPreview[]>;
+  /**
+   * Mirrors a Music playlist onto the service (only this source's track ids are passed).
+   * `remoteId` is the id returned last time (absent on the first sync); return the playlist's id.
+   */
+  savePlaylist(playlist: { remoteId?: string; name: string; description: string; trackIds: string[] }, ctx: SourceContext): Promise<string>;
+  deletePlaylist(remoteId: string, ctx: SourceContext): Promise<void>;
 }
 
 export interface MusicSource {

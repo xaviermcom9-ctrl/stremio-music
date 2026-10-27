@@ -1,6 +1,5 @@
 // stremio-music: the Music route tree (#/music/*). Own layout (Spotify-like structure, Stremio look):
-// top bar, sidebar (bottom tab bar on phones), content. Pages are placeholders until the source
-// plugins (Phase 5-6), playback (Phase 7) and the music UI (Phase 8) land.
+// top bar, sidebar with your playlists (bottom tab bar on phones), content, player bar.
 
 const React = require('react');
 const classnames = require('classnames');
@@ -11,7 +10,9 @@ const { getAuthState } = require('stremio/sm/api');
 const AccountMenu = require('./AccountMenu');
 const MusicIcon = require('./icons');
 const Sources = require('./pages/Sources');
-const { Home, Item, Radio, Search } = require('./pages/Pages');
+const { Home, Item, Radio, Search, Library, Liked, Playlist, NewPlaylistButton } = require('./pages/Pages');
+const { Toasts, PlaylistPicker } = require('./components/overlays');
+const useLibrary = require('./library/useLibrary');
 const PlayerBar = require('./player/ui/PlayerBar');
 const { getPlayer } = require('./player/store');
 const { default: useShortcut } = require('stremio/common/Shortcuts/useShortcut');
@@ -24,10 +25,11 @@ const musicIcon = (name) => (className) => <MusicIcon className={className} name
 const PAGES = [
     { path: '', label: 'Home', icon: stremioIcon('home'), element: <Home /> },
     { path: 'search', label: 'Search', icon: stremioIcon('search'), element: <Search /> },
-    { path: 'library', label: 'Library', icon: stremioIcon('library'), text: 'Your liked songs, saved albums and playlists.', phase: 8 },
+    { path: 'library', label: 'Library', icon: stremioIcon('library'), element: <Library /> },
     { path: 'radio', label: 'Radio', icon: musicIcon('radio'), element: <Radio /> },
     { path: 'downloads', label: 'Downloads', icon: stremioIcon('download'), text: 'Server-side downloads into your music library, with progress, pause and retry.', phase: 9 },
-    { path: 'sources', label: 'Sources', icon: musicIcon('sources'), element: <Sources /> },
+    // phones: in the account menu (five tabs fit a bottom bar, six don't)
+    { path: 'sources', label: 'Sources', icon: musicIcon('sources'), element: <Sources />, secondary: true },
 ];
 
 const Placeholder = ({ page }) => (
@@ -51,6 +53,32 @@ const usePlayerShortcuts = () => {
         const p = getPlayer();
         p.seek(p.position() - (combo === 1 ? 30 : 10));
     }, []), focused);
+};
+
+/** Sidebar (desktop): Liked songs and your playlists. */
+const YourPlaylists = () => {
+    const [lib] = useLibrary();
+    const navClass = ({ isActive }) => classnames(styles['lib-link'], { [styles['active']]: isActive });
+    return (
+        <div className={styles['side-library']}>
+            <div className={styles['side-head']}>
+                <span>{'Playlists'}</span>
+                <NewPlaylistButton className={styles['side-add']}><Icon className={styles['side-add-icon']} name={'add'} /><span className={styles['visually-hidden']}>{'New playlist'}</span></NewPlaylistButton>
+            </div>
+            <NavLink to={'/music/library/liked'} className={navClass}>
+                <MusicIcon className={styles['lib-link-icon']} name={'heart-filled'} />
+                <span>{'Liked songs'}</span>
+            </NavLink>
+            {
+                lib.playlists.map((p) => (
+                    <NavLink key={p.id} to={`/music/playlist/${p.id}`} className={navClass} title={p.name}>
+                        <MusicIcon className={styles['lib-link-icon']} name={p.sync ? 'sync' : 'playlist'} />
+                        <span>{p.name}</span>
+                    </NavLink>
+                ))
+            }
+        </div>
+    );
 };
 
 const MusicRoot = () => {
@@ -80,13 +108,14 @@ const MusicRoot = () => {
                             key={page.path}
                             to={page.path ? `/music/${page.path}` : '/music'}
                             end={page.path === ''}
-                            className={({ isActive }) => classnames(styles['nav-item'], { [styles['active']]: isActive })}
+                            className={({ isActive }) => classnames(styles['nav-item'], { [styles['active']]: isActive, [styles['secondary']]: page.secondary })}
                         >
                             {page.icon(styles['nav-icon'])}
                             <span className={styles['nav-label']}>{page.label}</span>
                         </NavLink>
                     ))
                 }
+                <YourPlaylists />
             </nav>
             <main className={styles['content']}>
                 <Routes>
@@ -100,11 +129,15 @@ const MusicRoot = () => {
                             />
                         ))
                     }
+                    <Route path={'library/liked'} element={<Liked />} />
+                    <Route path={'playlist/:id'} element={<Playlist />} />
                     <Route path={'item/*'} element={<Item />} />
                     <Route path={'*'} element={<Placeholder page={{ label: 'Not found', icon: musicIcon('note'), text: 'This music page does not exist.' }} />} />
                 </Routes>
             </main>
             <PlayerBar />
+            <PlaylistPicker />
+            <Toasts />
         </div>
     );
 };

@@ -288,6 +288,13 @@
     border-top: 1px solid var(--overlay-color);
     background-color: var(--primary-background-color);
 
+    .left-zone {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-width: 0;
+    }
+
     .left {
         display: flex;
         align-items: center;
@@ -498,8 +505,16 @@
     }
 
     .np-titles {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
         width: 100%;
         max-width: 36rem;
+
+        > :first-child {
+            flex: 1;
+            min-width: 0;
+        }
 
         .title {
             font-size: 1.5rem;

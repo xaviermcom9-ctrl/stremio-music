@@ -4,6 +4,7 @@ const React = require('react');
 const PropTypes = require('prop-types');
 const classnames = require('classnames');
 const { default: Icon } = require('@stremio/stremio-icons/react');
+const MusicIcon = require('./icons');
 const { signOut, accountUrl } = require('stremio/sm/api');
 const styles = require('./styles');
 
@@ -46,6 +47,10 @@ const AccountMenu = ({ user }) => {
                         <a className={styles['menu-item']} role={'menuitem'} href={accountUrl()}>
                             <Icon className={styles['menu-icon']} name={'person-outline'} />
                             {'Account'}
+                        </a>
+                        <a className={classnames(styles['menu-item'], styles['phone-only'])} role={'menuitem'} href={'#/music/sources'} onClick={() => setOpen(false)}>
+                            <MusicIcon className={styles['menu-icon']} name={'sources'} />
+                            {'Music sources'}
                         </a>
                         <a className={styles['menu-item']} role={'menuitem'} href={'#/settings'} onClick={() => setOpen(false)}>
                             <Icon className={styles['menu-icon']} name={'settings'} />

@@ -27,6 +27,8 @@ const api = {
     search: (q) => cached(`search:${q}`, () => request('GET', `api/music/search?${qs({ q })}`)),
     meta: (id) => cached(`meta:${id}`, () => request('GET', `api/music/meta?${qs({ id })}`)),
     streams: (id) => request('GET', `api/music/streams?${qs({ id })}`),
+    artist: (id) => cached(`artist:${id}`, () => request('GET', `api/music/artist?${qs({ id })}`)),
+    alternatives: (id) => cached(`alt:${id}`, () => request('GET', `api/music/alternatives?${qs({ id })}`)),
     torrentFiles: (ih, trackers = []) => request('GET', `api/music/torrent/${ih}?${trackers.map((t) => `tr=${encodeURIComponent(t)}`).join('&')}`),
 };
 
@@ -44,7 +46,7 @@ const queueItems = (meta, source) => {
             poster: v.thumbnail ?? meta.poster ?? null,
             duration: v.music?.duration ?? null,
             live: false,
-            sourceName,
+            sourceName: v.source?.name ?? sourceName,
         }));
     }
     const kind = meta.music?.kind;
@@ -74,4 +76,57 @@ const playMeta = async (player, preview, { shuffle = false, start = 0 } = {}) =>
     if (items.length) player.playQueue(items, shuffle ? Math.floor(Math.random() * items.length) : start, { shuffle });
 };
 
-module.exports = { api, queueItems, playMeta };
+/** Library kind of a meta (tracks of albums have no `music.kind`). */
+const libraryKind = (meta) => {
+    const k = meta.music?.kind;
+    if (k === 'station' || meta.music?.live) return 'station';
+    return ['album', 'artist', 'playlist'].includes(k) ? k : 'track';
+};
+
+const sourceIdOf = (id) => (typeof id === 'string' && id.includes(':') ? id.slice(0, id.indexOf(':')) : null);
+
+/** What the library stores of a meta preview or a queue item (see server/src/music/library.ts). */
+const toSnapshot = (x, source) => {
+    const src = source ?? x.source ?? (x.sourceName ? { id: sourceIdOf(x.id), name: x.sourceName } : null);
+    const isQueueItem = 'title' in x && !('name' in x);
+    const music = isQueueItem ?
+        { kind: x.live ? 'station' : 'track', artist: x.artist, artistId: x.artistId, album: x.album, albumId: x.albumId, duration: x.duration, live: x.live || undefined }
+        :
+        { ...x.music, kind: libraryKind(x) };
+    const clean = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined && v !== null && v !== ''));
+    return clean({
+        id: x.id,
+        name: isQueueItem ? x.title : x.name,
+        poster: x.poster,
+        posterShape: x.posterShape,
+        releaseInfo: x.releaseInfo,
+        source: src && src.id && src.name ? { id: src.id, name: src.name } : undefined,
+        music: clean({
+            kind: music.kind,
+            artist: music.artist,
+            artistId: music.artistId,
+            album: music.album,
+            albumId: music.albumId,
+            duration: typeof music.duration === 'number' ? music.duration : undefined,
+            live: music.live,
+            trackCount: music.trackCount,
+            mbid: music.mbid,
+        }),
+    });
+};
+
+/** Library/playlist track snapshot -> queue item. */
+const snapshotToItem = (s) => ({
+    id: s.id,
+    title: s.name,
+    artist: s.music?.artist ?? null,
+    artistId: s.music?.artistId ?? null,
+    album: s.music?.album ?? null,
+    albumId: s.music?.albumId ?? null,
+    poster: s.poster ?? null,
+    duration: s.music?.duration ?? null,
+    live: s.music?.kind === 'station' || Boolean(s.music?.live),
+    sourceName: s.source?.name ?? null,
+});
+
+module.exports = { api, queueItems, playMeta, toSnapshot, snapshotToItem, libraryKind, sourceIdOf };

@@ -303,5 +303,56 @@ Not done / notes:
   it instant (possible later).
 - Browse pages are functional, not final: Phase 8 brings the full layout, library, artist merging.
 
+## Phase 8 – Music UI (done, awaiting go-ahead)
+
+Server:
+- Library (`music/library.ts`, migration 7): liked songs + saved albums/artists/stations/playlists
+  (snapshots), playlists with entries (add, remove, move, rename, describe), per-user, limits
+  (20k items, 500 playlists, 5k tracks each). `GET/PUT/DELETE /api/library…`.
+- Navidrome sync (decided here, see README): likes both ways (new hooks `listLiked`; the source is the
+  authority for its own items; a failed star refuses the like), playlists one way and opt-in per
+  playlist (`savePlaylist`/`deletePlaylist`; Navidrome tracks only; POST form body for long lists;
+  re-creates a playlist deleted in Navidrome). SDK + PLUGINS.md updated.
+- Cross-source: `/api/music/artist` merges an artist across sources (MBIDs where known, else
+  normalised names/aliases; same-source albums never collapsed), `/api/music/alternatives` for the
+  album source picker. MusicBrainz lookups (artist by id/name + aliases, 1 req/s, 30-day SQLite
+  cache, ambiguous names = no match) only with `MUSICBRAINZ_CONTACT` set (API rules need a contact).
+- `/api/music/sources` reports `sync: {likes, playlists}` per source.
+- Fixes found while testing: Jamendo names were HTML-escaped (`podr&oacute;ż`) -> decoded; Jamendo
+  album track durations were strings (no times shown) -> numbers, and the contract now checks that
+  track durations are numbers. Fastify `maxParamLength` deprecation -> `routerOptions`.
+- 78 unit/integration tests (10 new), contract 54.
+Web:
+- Layout: sidebar = nav + Playlists (Liked songs + yours, "+" new); phones: 5 bottom tabs (Sources
+  moved to the account menu: fixes the truncated "Downloads" from Phase 4).
+- Home: greeting, library shortcut tiles, then rows grouped by source (header with icon) in priority
+  order; radio gets one row + "All radio".
+- Search: Artists / Albums / Tracks / Stations / Playlists, source badges, query kept in the URL.
+- Album page: cover, Play/Shuffle, save, ⋯, track list with likes and per-track menus, licence line,
+  **Source** picker when other sources have the album. Track rows: tap to play; ⋯ = Play next, Add
+  to queue, Add to playlist…, Go to album/artist.
+- Artist page: source's page at once, then the merged one (badges per source, Popular top 5/10,
+  Albums with source badges).
+- Library (filters, sort, Sync), Liked songs, playlist pages (edit, sync to Navidrome, move up/down,
+  remove, delete with confirmation), saved stations shelf on Radio, hearts in the player bar and
+  now-playing view (+ its ⋯ menu), toasts, playlist picker dialog.
+
+Verified against a throwaway instance + throwaway Navidrome (with a "Marcus Scriptor – Songs of Tao"
+album added to match a real Jamendo artist), real Chrome, laptop 1440px then Android phone 412px:
+like -> star in Navidrome, star/unstar in Navidrome -> library, synced playlist in Navidrome with
+only its Navidrome tracks (description, removal, deletion followed); artist page merged Navidrome +
+Jamendo with "Songs of Tao" once and the Jamendo copy as alternative; album picker switches to the
+Jamendo copy; mixed playlist plays, move up, bar heart state; Library/Liked/Radio stations/Home
+tiles; phone: 5 tabs, nothing truncated, no horizontal scroll, Sources in the account menu, row
+menus, tap-to-play, now-playing like + menu; no console errors.
+
+Not done / notes:
+- MusicBrainz lookups are tested with a fake server only: no contact is configured (asking the user).
+- Merging depends on other sources' search returning artists: Jamendo and Navidrome do; Internet
+  Archive/FMA search returns releases, so they add nothing to merged artist pages (their albums
+  still show up in the album source picker).
+- Reordering is Move up/down in the track menu (no drag and drop yet).
+- Emulating a phone needs a mobile User-Agent: upstream blanks the viewport meta on desktop UAs.
+
 ### Next
-- User: go-ahead for Phase 8 (music UI).
+- User: go-ahead for Phase 9 (downloads).

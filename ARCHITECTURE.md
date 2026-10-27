@@ -342,6 +342,22 @@ artist).
   reconnect with backoff, hls.js for HLS radio, Media Session, scrobble at 50 % / 4 min (radio at
   start), per-device data saver, local + server snapshot (`player_state`), "continue on this device".
 
+## 5c. Library and cross-source views (Phase 8, as built)
+
+- `music/library.ts`: `library_items` (per user: kind + meta id + small meta snapshot) and
+  `playlists` / `playlist_tracks` (entries with positions; snapshots, so lists render without
+  asking sources). Likes call the owning source's `setLiked`; a source with `listLiked` is the
+  authority for its own ids and is reconciled on `GET /api/library` (60 s per user and source).
+  Playlists with `sync` are pushed through `savePlaylist` after each change (`remotes` keeps the ids).
+- `music/discover.ts`: `GET /api/music/artist` (primary meta + each other source's best artist search
+  hit, accepted by MBID or normalised name/alias, then `mergeArtist`) and `/api/music/alternatives`
+  (same album elsewhere). Searches are bounded at 10 s per source.
+- `music/musicbrainz.ts`: optional (needs `MUSICBRAINZ_CONTACT`), serialised at 1.1 s, cached in
+  `mb_cache` for 30 days; ambiguous names give no match.
+- Web: `music/library/store.js` (optimistic, rolled back on errors), pages split per view
+  (`pages/Home|Item|Artist|Library|Radio|Search.js`), shared overlays (toasts, menus, playlist
+  picker, dialogs) in `components/`.
+
 ## 6. Repository layout (proposed)
 
 ```

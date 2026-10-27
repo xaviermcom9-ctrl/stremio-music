@@ -173,7 +173,17 @@ export function registerMusicRoutes(
   app.get('/api/music/sources', async (req) => ({
     sources: registry.active(userOf(req)).map((e) => {
       const d = registry.describe(e, userOf(req), false);
-      return { id: d.id, name: d.name, icon: d.icon, kind: d.kind, capabilities: d.capabilities, attribution: d.attribution, catalogs: d.catalogs };
+      return {
+        id: d.id,
+        name: d.name,
+        icon: d.icon,
+        kind: d.kind,
+        capabilities: d.capabilities,
+        attribution: d.attribution,
+        catalogs: d.catalogs,
+        // library sync (Navidrome): likes both ways, playlists copied to the source
+        sync: { likes: registry.hasHook(e, 'listLiked'), playlists: registry.hasHook(e, 'savePlaylist') },
+      };
     }),
   }));
 

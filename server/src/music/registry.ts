@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import type { DatabaseSync } from 'node:sqlite';
-import type { CatalogDef, MusicSource, SettingsSchema, SourceContext, SourceManifest } from '../music-sources/sdk.js';
+import type { CatalogDef, MusicSource, SettingsSchema, SourceContext, SourceHooks, SourceManifest } from '../music-sources/sdk.js';
 import { FolderPlugin, scanPluginDir } from './folder.js';
 import { AddonClient, AddonError } from './protocol/addon-client.js';
 import { ResponseCache } from './protocol/cache.js';
@@ -471,15 +471,29 @@ export class SourceRegistry {
     }
   }
 
-  /** Calls an optional source hook as this user; failures are logged on the source, never thrown. */
-  async hook(e: SourceEntry, user: User, name: 'scrobble' | 'setLiked', ...args: unknown[]): Promise<boolean> {
-    const fn = e.runtime?.impl.hooks?.[name] as ((...a: unknown[]) => Promise<void>) | undefined;
-    if (!fn) return false;
+  hasHook(e: SourceEntry, name: keyof SourceHooks): boolean {
+    return typeof e.runtime?.impl.hooks?.[name] === 'function';
+  }
+
+  /** Calls a source hook as this user and returns its result; failures are logged on the source and rethrown. */
+  async callHook<K extends keyof SourceHooks>(e: SourceEntry, user: User, name: K, ...args: DropCtx<Parameters<SourceHooks[K]>>): Promise<Awaited<ReturnType<SourceHooks[K]>>> {
+    const fn = e.runtime?.impl.hooks?.[name] as ((...a: unknown[]) => Promise<unknown>) | undefined;
+    if (!fn) throw new Error(`${e.name} has no ${name} hook`);
     try {
-      await fn(...args, e.runtime!.context(user));
-      return true;
+      return (await fn(...args, e.runtime!.context(user))) as Awaited<ReturnType<SourceHooks[K]>>;
     } catch (err) {
       e.runtime!.log('warn', `${name} hook failed: ${err instanceof Error ? err.message : String(err)}`);
+      throw err;
+    }
+  }
+
+  /** Calls an optional source hook as this user; failures are logged on the source, never thrown. */
+  async hook(e: SourceEntry, user: User, name: 'scrobble' | 'setLiked', ...args: unknown[]): Promise<boolean> {
+    if (!this.hasHook(e, name)) return false;
+    try {
+      await (this.callHook as (...a: unknown[]) => Promise<unknown>)(e, user, name, ...args);
+      return true;
+    } catch {
       return false;
     }
   }
@@ -520,3 +534,5 @@ const PROXY_TOKEN_TTL_MS = 7 * 24 * 3600 * 1000;
 export const BUILTIN_DIR = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../music-sources');
 
 export type { Manifest };
+
+type DropCtx<T extends unknown[]> = T extends [...infer A, SourceContext] ? A : T;

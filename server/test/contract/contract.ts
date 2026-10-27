@@ -175,6 +175,10 @@ export function contractSuite(
           const ids = meta.videos.map((v) => v.id);
           assert.equal(new Set(ids).size, ids.length, `duplicate track ids in ${meta.id}`);
           for (const id of ids) assert.ok(id.startsWith(`${impl.manifest.id}:`), `track id ${id} must be prefixed`);
+          for (const v of meta.videos) {
+            const d = v.music?.duration;
+            assert.ok(d === undefined || (typeof d === 'number' && Number.isFinite(d)), `track ${v.id}: duration must be a number of seconds, got ${JSON.stringify(d)}`);
+          }
         }
       }
       if (impl.meta) assert.equal(await rt.meta(USER, `${impl.manifest.id}:does-not-exist`), null, 'unknown ids must return null');

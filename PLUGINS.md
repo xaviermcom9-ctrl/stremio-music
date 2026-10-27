@@ -58,7 +58,7 @@ const source: MusicSource = {
   async meta(id, ctx)     { return /* MusicMeta | null */; },     // artist / album / track / station page
   async streams(id, ctx)  { return [/* MusicStream */]; },        // how to play a track or station
   async test(ctx)         { return { ok: true, message: '…' }; }, // "Test connection" (optional)
-  hooks: { scrobble, setLiked },                                  // optional integrations
+  hooks: { scrobble, setLiked, listLiked, savePlaylist, deletePlaylist }, // optional integrations
 };
 export default source;
 ```
@@ -155,11 +155,30 @@ Return one or more ways to play an id (a track id from `videos`, or a track/stat
 
 - `scrobble(trackId, ctx)`: called when playback of an item starts counting (Phase 7), e.g.
   Navidrome scrobbles, and Radio Browser counts a station click as its guidelines ask.
-- `setLiked(id, liked, ctx)`: called when the user likes or unlikes an item (Phase 8), e.g.
-  Navidrome stars.
+- `setLiked(id, liked, ctx)`: called when the user likes or unlikes one of the source's items in the
+  Music library (tracks, albums, artists, stations, playlists), e.g. Navidrome stars.
+- `listLiked(ctx)`: the items this user has liked on the service itself, as meta previews with
+  `music.kind`. Having it makes the source the authority for its own items: the library shows
+  exactly what it returns (refreshed at most once a minute, or with **Sync** on the Library page),
+  so likes sync both ways. `setLiked` must then succeed: if it throws, the like is refused with
+  the error instead of silently disappearing at the next sync.
+- `savePlaylist({ remoteId, name, description, trackIds }, ctx)`: mirrors a Music playlist that the
+  user set to sync. Only this source's track ids are passed (other sources' tracks can't live in
+  it); `remoteId` is what you returned last time (absent the first time, and possibly deleted on
+  the service since). Return the playlist's id on the service. Called after every change.
+- `deletePlaylist(remoteId, ctx)`: the synced playlist was deleted in Music.
 
-Hooks run as the user who acted (their per-user settings). Failures are logged, never shown as
-playback errors.
+Hooks run as the user who acted (their per-user settings). Failures are logged on the Sources page;
+`scrobble` failures are never shown as playback errors.
+
+### Matching across sources
+
+Artist pages merge the same artist from every source, and album pages offer a source picker when
+another source has the same album. Give `music.mbid` (MusicBrainz artist / release / recording id)
+whenever the service knows it: two items with different MBIDs are never merged. Without one,
+normalised names decide ("The Beatles" = "Beatles", "Sigur Rós" = "Sigur Ros"; for albums, artist +
+title). Artist search results must have `music.kind: "artist"` and artist metas should carry
+`albums` and their popular tracks as `videos` for the merge to have something to show.
 
 ### Settings
 

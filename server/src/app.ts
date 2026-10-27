@@ -16,6 +16,9 @@ import type { MusicSource } from './music-sources/sdk.js';
 import { BUILTIN_SOURCES } from './music-sources/index.js';
 import { SourceRegistry } from './music/registry.js';
 import { registerMusicRoutes } from './music/routes.js';
+import { registerDiscover } from './music/discover.js';
+import { registerLibrary } from './music/library.js';
+import { MusicBrainz } from './music/musicbrainz.js';
 import { APP_VERSION } from './music/runtime.js';
 import { SecretBox } from './music/secrets.js';
 import type { EngineSupervisor } from './engine/supervisor.js';
@@ -39,7 +42,7 @@ export async function buildApp({ config, db, engine, builtins, fetchImpl }: AppD
     // long-lived media streams must not hold up `docker stop`
     forceCloseConnections: true,
     // encrypted proxy tokens (/api/proxy/:token) are several hundred characters
-    maxParamLength: 4096,
+    routerOptions: { maxParamLength: 4096 },
   });
 
   // polled by the Docker HEALTHCHECK every 30 s: keep it out of the request log
@@ -88,6 +91,12 @@ export async function buildApp({ config, db, engine, builtins, fetchImpl }: AppD
   await registry.init();
   app.addHook('onClose', async () => registry.stop());
   registerMusicRoutes(app, registry, { secretKeySource: box.source }, fetchImpl);
+  const musicbrainz = config.musicbrainzContact
+    ? new MusicBrainz({ userAgent: `StremioMusic/${APP_VERSION} ( ${config.musicbrainzContact} )`, db, fetch: fetchImpl })
+    : null;
+  if (!musicbrainz) app.log.info('MUSICBRAINZ_CONTACT not set: artists are merged by name and the MBIDs sources provide');
+  registerDiscover(app, registry, musicbrainz);
+  registerLibrary(app, db, registry);
   registerPlayback(app, {
     registry,
     engine,
