@@ -354,5 +354,49 @@ Not done / notes:
 - Reordering is Move up/down in the track menu (no drag and drop yet).
 - Emulating a phone needs a mobile User-Agent: upstream blanks the viewport meta on desktop UAs.
 
+## Phase 9 – Downloads (done, awaiting go-ahead)
+
+Server (`server/src/downloads/`, migration 8; dependency `music-metadata` 12.2.0, MIT, as approved):
+- Queue per track, grouped (album / track / list); SQLite state, restart-safe (re-queued; HTTP and
+  engine downloads resume with Range). Concurrency setting (default 2).
+- Enqueue: album/playlist meta (all tracks, tags from the meta), track (with the album it came from),
+  torrent albums (files listed via the engine), or a list (your playlists / Liked songs). Refused up
+  front: sources without downloads (Navidrome: "your own library already"), live radio, artists.
+- Transfer: http(s) via our loopback proxy (same SSRF rules as playback), torrents via the engine, or
+  qBittorrent (optional): magnet stopped at metadata, only wanted files, `useDownloadPath=false`,
+  one add per torrent, waits for the file at the mapped path, keeps seeding. Best stream first,
+  falls back to the next downloadable one; errors name the source ("Jamendo: the server answered
+  HTTP 500").
+- Process: format sniffed from bytes, tags (source metadata wins for title/album/numbering; file tags
+  fill gaps and keep MusicBrainz ids), cover embedded (existing embedded covers kept), cover.jpg,
+  `/music/Album Artist/Album/NN - Title.ext` (safe names), files owned by PUID:PGID (process user),
+  skip or "(2)" when the file exists. LICENSE.txt per album folder for CC tracks. Navidrome
+  `startScan` via a new `libraryChanged` hook, 15 s after the last download.
+- API + SSE live updates; pause/resume/cancel/retry per item or group; remove from list; save to
+  device (Content-Disposition); admin settings (qBittorrent password encrypted; Test connection
+  checks login + folder and writes `.ndignore`).
+- Fixes found while testing: Jamendo list endpoints also return intermittent empty "success" pages
+  (Popular tracks was empty and got cached) -> first pages retried like id lookups.
+- 89 server tests (11 new: real ffmpeg tagging, cover, LICENSE, rescan hook, skip, pause/resume
+  with Range, not-audio failure, isolation between users, SSE, settings secrecy).
+Web: "Download" in track menus (sources that allow it), "Download album/track" on item pages,
+"Download all" on playlists and Liked songs; Downloads page (live via EventSource, group + item
+progress, actions, save to device, admin settings panel); badge with the number in progress.
+
+Verified on a throwaway instance (own /music, /downloads), throwaway Navidrome on the same folder,
+local torrent swarm, throwaway qBittorrent 5.2.4 (same folder mounted as /data/library/music):
+IA 78 RPM FLAC, Jamendo CC FLAC (tags, cover, LICENSE.txt), FMA MP3 (+LICENSE.txt), seeded torrent
+album via the engine, then via qBittorrent (skip, then "(2)"; torrent kept seeding in the hidden
+folder), a broken Jamendo file failing with a clear message, 52 MB LMA FLAC paused at 2.5 MB and
+resumed, Navidrome scan started (15 songs, 7 folders: torrent folder ignored), restart re-queued
+pending items. Real Chrome laptop + phone: menus (none on Navidrome), toasts, live page, pause/resume
+from the UI, save to device, settings, 5 tabs + badge, no console errors.
+
+Not done / notes:
+- Navidrome's `startScan` needs a Navidrome admin login; non-admin users rely on Navidrome's own scan.
+- Jamendo only allows downloads per track where the artist permits it; popular albums often don't.
+- Internet Archive titles are whatever the uploader tagged (some are file names).
+- The qBittorrent integration was tested against a throwaway 5.2.4, not your instance (no login).
+
 ### Next
-- User: go-ahead for Phase 9 (downloads).
+- User: go-ahead for Phase 10 (deploy & docs).

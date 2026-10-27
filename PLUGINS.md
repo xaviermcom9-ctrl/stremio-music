@@ -167,6 +167,18 @@ Return one or more ways to play an id (a track id from `videos`, or a track/stat
   it); `remoteId` is what you returned last time (absent the first time, and possibly deleted on
   the service since). Return the playlist's id on the service. Called after every change.
 - `deletePlaylist(remoteId, ctx)`: the synced playlist was deleted in Music.
+- `libraryChanged(ctx)`: downloads added files to the shared music folder (`/music`); e.g.
+  Navidrome starts a scan. Called once things are quiet (15 s after the last download of a batch).
+
+### Downloads
+
+A stream can be saved to the library when `behaviorHints.music.downloadable` is `true` (and the
+source's `capabilities.downloadable` is on). Torrent streams count as downloadable unless marked
+`false`; live and YouTube streams never are. The server picks lossless first, then the highest
+`bitrate`, and falls back to the next downloadable stream if one fails. Give `filename` when the
+URL doesn't end in a useful name, and `music.licence` (with `url` and `attribution`) on tracks or
+the album: Creative Commons downloads get a LICENSE.txt built from it. Tags come from your meta:
+album = meta `name`, album artist = meta `music.artist`, track/disc = video `episode`/`season`.
 
 Hooks run as the user who acted (their per-user settings). Failures are logged on the Sources page;
 `scrobble` failures are never shown as playback errors.

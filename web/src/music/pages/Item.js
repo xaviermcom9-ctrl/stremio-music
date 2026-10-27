@@ -6,8 +6,8 @@ const { useParams, useNavigate } = require('react-router');
 const MusicIcon = require('stremio/music/icons');
 const usePlayer = require('stremio/music/player/usePlayer');
 const { itemHref, formatTime } = require('stremio/music/player/ui/common');
-const { api, queueItems } = require('stremio/music/data');
-const { TrackList, LikeButton, Menu, SourceBadge, Grid, Loading, ErrorBox, KIND_LABEL } = require('stremio/music/components');
+const { api, queueItems, canDownload } = require('stremio/music/data');
+const { TrackList, LikeButton, Menu, SourceBadge, Grid, Loading, ErrorBox, KIND_LABEL, download } = require('stremio/music/components');
 const { addToPlaylist } = require('stremio/music/components/overlays');
 const { useAsync, Cover, Hero, PlayButton, ShuffleButton, formatLength, plural } = require('./common');
 const Artist = require('./Artist');
@@ -67,7 +67,7 @@ const ItemView = ({ id }) => {
     const { meta, source } = data;
     const kind = meta.music?.kind ?? (meta.videos?.length ? 'album' : 'track');
     if (kind === 'artist') return <Artist id={id} preview={data} />;
-    const items = (torrent?.files ?? queueItems(meta, source)).map((t) => ({ ...t, sourceName: t.sourceName ?? source.name }));
+    const items = (torrent?.files ?? queueItems(meta, source)).map((t) => ({ ...t, sourceName: t.sourceName ?? source.name, albumId: t.albumId ?? (torrent ? meta.id : null) }));
     const licence = meta.music?.licence;
     const playAll = (start = 0, shuffle = false) => player.playQueue(items, start, { shuffle });
     const total = items.reduce((s, t) => s + (t.duration ?? 0), 0);
@@ -102,6 +102,7 @@ const ItemView = ({ id }) => {
                                         kind !== 'station' ? { label: 'Add to playlist…', onSelect: () => addToPlaylist(items) } : null,
                                         meta.music?.artistId ? { label: 'Go to artist', href: itemHref(meta.music.artistId) } : null,
                                         meta.music?.albumId && kind === 'track' ? { label: 'Go to album', href: itemHref(meta.music.albumId) } : null,
+                                        kind !== 'station' && canDownload(meta.id) ? { label: kind === 'track' ? 'Download' : `Download ${kind}`, onSelect: () => download({ id: meta.id }, `“${meta.name}”`) } : null,
                                     ]}
                                 />
                                 :

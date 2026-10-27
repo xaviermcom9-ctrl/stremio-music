@@ -20,8 +20,13 @@ const cached = (key, load) => {
 
 const qs = (params) => new URLSearchParams(Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '')).toString();
 
+let knownSources = null;
+
 const api = {
-    sources: () => cached('sources', () => request('GET', 'api/music/sources').then((r) => r.sources)),
+    sources: () => cached('sources', () => request('GET', 'api/music/sources').then((r) => {
+        knownSources = r.sources;
+        return r.sources;
+    })),
     catalog: (source, catalog, extra = {}) =>
         cached(`cat:${source}:${catalog}:${qs(extra)}`, () => request('GET', `api/music/catalog/${encodeURIComponent(source)}/${encodeURIComponent(catalog)}${Object.keys(extra).length ? `?${qs(extra)}` : ''}`)),
     search: (q) => cached(`search:${q}`, () => request('GET', `api/music/search?${qs({ q })}`)),
@@ -129,4 +134,17 @@ const snapshotToItem = (s) => ({
     sourceName: s.source?.name ?? null,
 });
 
-module.exports = { api, queueItems, playMeta, toSnapshot, snapshotToItem, libraryKind, sourceIdOf };
+/**
+ * Worth offering "Download"? Torrent files and sources that allow downloads; remote addons don't
+ * say up front (their streams decide), so the server has the last word either way.
+ */
+const canDownload = (id, live) => {
+    if (live || typeof id !== 'string') return false;
+    if (id.startsWith('torrent:')) return true;
+    if (!knownSources) return false;
+    const s = knownSources.find((x) => id.startsWith(`${x.id}:`));
+    if (s) return Boolean(s.capabilities.downloadable) && !s.capabilities.live;
+    return knownSources.some((x) => x.kind === 'remote');
+};
+
+module.exports = { api, queueItems, playMeta, toSnapshot, snapshotToItem, libraryKind, sourceIdOf, canDownload };

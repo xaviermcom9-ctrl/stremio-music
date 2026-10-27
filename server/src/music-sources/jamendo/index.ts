@@ -92,10 +92,11 @@ async function api<T>(ctx: SourceContext, path: string, params: Record<string, s
 }
 
 /**
- * Lookups by id: Jamendo intermittently answers "success" with no results (about 1 in 3 when
- * measured), so an empty answer is retried twice before it counts as "not found".
+ * Jamendo intermittently answers "success" with no results (about 1 in 3 when measured, for id
+ * lookups and for list pages alike), so an empty answer is retried twice before it counts. Only
+ * for requests that can't really be empty: id lookups and first pages of popularity lists.
  */
-async function byId<T>(ctx: SourceContext, path: string, params: Record<string, string | number | undefined>): Promise<T[]> {
+async function nonEmpty<T>(ctx: SourceContext, path: string, params: Record<string, string | number | undefined>): Promise<T[]> {
   for (let attempt = 0; ; attempt++) {
     const r = await api<T>(ctx, path, params);
     if (r.length > 0 || attempt === 2) return r;
@@ -207,7 +208,9 @@ const source: MusicSource = {
 
   async catalog(req, ctx) {
     const offset = req.skip ?? 0;
-    const albums = (order: string) => api<Album>(ctx, 'albums', { order, limit: LIMIT, offset, imagesize: 600 }).then((r) => r.map(albumPreview));
+    // a later page may really be empty (end of the list); a first page never is
+    const list = offset === 0 ? nonEmpty : api;
+    const albums = (order: string) => list<Album>(ctx, 'albums', { order, limit: LIMIT, offset, imagesize: 600 }).then((r) => r.map(albumPreview));
     switch (req.catalogId) {
       case 'popular-week':
         return albums('popularity_week');
@@ -216,11 +219,11 @@ const source: MusicSource = {
       case 'popular':
         return albums('popularity_total');
       case 'tracks': {
-        const r = await api<Track>(ctx, 'tracks', { order: 'popularity_week', tags: req.genre, limit: LIMIT, offset, imagesize: 600, include: 'musicinfo' });
+        const r = await list<Track>(ctx, 'tracks', { order: 'popularity_week', tags: req.genre, limit: LIMIT, offset, imagesize: 600, include: 'musicinfo' });
         return r.map(trackPreview);
       }
       case 'artists': {
-        const r = await api<Artist>(ctx, 'artists', { order: 'popularity_week', hasimage: 'true', limit: LIMIT, offset, imagesize: 600 });
+        const r = await list<Artist>(ctx, 'artists', { order: 'popularity_week', hasimage: 'true', limit: LIMIT, offset, imagesize: 600 });
         return r.map(artistPreview);
       }
       case 'search': {
@@ -241,9 +244,9 @@ const source: MusicSource = {
     const p = parseId(id);
     if (!p) return null;
     if (p.kind === 'album') {
-      const [album] = await byId<Album>(ctx, 'albums/tracks', { id: p.jid, imagesize: 600 });
+      const [album] = await nonEmpty<Album>(ctx, 'albums/tracks', { id: p.jid, imagesize: 600 });
       if (!album) return null;
-      const [info] = await byId<Album>(ctx, 'albums', { id: p.jid, imagesize: 600 });
+      const [info] = await nonEmpty<Album>(ctx, 'albums', { id: p.jid, imagesize: 600 });
       const videos = (album.tracks ?? []).map((t, i) => track(t, album, i + 1));
       const meta: MusicMeta = {
         ...albumPreview({ ...album, ...info }),
@@ -254,10 +257,10 @@ const source: MusicSource = {
       return meta;
     }
     if (p.kind === 'artist') {
-      const [artist] = await byId<Artist>(ctx, 'artists/albums', { id: p.jid, imagesize: 600 });
+      const [artist] = await nonEmpty<Artist>(ctx, 'artists/albums', { id: p.jid, imagesize: 600 });
       if (!artist) return null;
       const top = await api<Track>(ctx, 'tracks', { artist_id: p.jid, order: 'popularity_total', limit: 10, imagesize: 600 });
-      const [info] = await byId<Artist>(ctx, 'artists', { id: p.jid, imagesize: 600 });
+      const [info] = await nonEmpty<Artist>(ctx, 'artists', { id: p.jid, imagesize: 600 });
       const meta: MusicMeta = {
         ...artistPreview({ ...artist, ...info }),
         videos: top.map((t, i) => ({ ...track(t, {}, i + 1), episode: i + 1 })),
@@ -266,7 +269,7 @@ const source: MusicSource = {
       };
       return meta;
     }
-    const [t] = await byId<Track>(ctx, 'tracks', { id: p.jid, imagesize: 600, include: 'musicinfo' });
+    const [t] = await nonEmpty<Track>(ctx, 'tracks', { id: p.jid, imagesize: 600, include: 'musicinfo' });
     return t ? { ...trackPreview(t), id, links: jamendoLink(t.shareurl) } : null;
   },
 
@@ -275,10 +278,10 @@ const source: MusicSource = {
     if (!p || p.kind !== 'track') return [];
     // audio: stream in the best format the API serves (VBR MP3); audiodownload: FLAC where allowed
     const formats = { audioformat: 'mp32', audiodlformat: 'flac' };
-    let [t] = await byId<Track>(ctx, 'tracks', { id: p.jid, ...formats });
+    let [t] = await nonEmpty<Track>(ctx, 'tracks', { id: p.jid, ...formats });
     if (!t && p.album) {
       // released in the last day or so: only the album listing knows it yet
-      const [album] = await byId<Album>(ctx, 'albums/tracks', { id: p.album, ...formats });
+      const [album] = await nonEmpty<Album>(ctx, 'albums/tracks', { id: p.album, ...formats });
       t = album?.tracks?.find((x) => String(x.id) === p.jid);
       if (t) t = { ...t, artist_name: album!.artist_name, album_name: album!.name };
     }
@@ -303,7 +306,7 @@ const source: MusicSource = {
   async test(ctx) {
     try {
       // same retry as lookups: an empty answer now and then isn't a failure
-      const r = await byId<Track>(ctx, 'tracks', { limit: 1, order: 'popularity_week' });
+      const r = await nonEmpty<Track>(ctx, 'tracks', { limit: 1, order: 'popularity_week' });
       return { ok: true, message: r[0] ? `Jamendo API works (top track this week: “${r[0].name}” by ${r[0].artist_name}).` : 'Jamendo API works.' };
     } catch (err) {
       return { ok: false, message: err instanceof Error ? err.message : String(err) };

@@ -9,7 +9,8 @@ const MusicIcon = require('stremio/music/icons');
 const usePlayer = require('stremio/music/player/usePlayer');
 const { currentOf } = require('stremio/music/player/usePlayer');
 const { itemHref, formatTime } = require('stremio/music/player/ui/common');
-const { api, playMeta, libraryKind } = require('stremio/music/data');
+const { api, playMeta, libraryKind, canDownload } = require('stremio/music/data');
+const { getDownloads } = require('stremio/music/downloads/store');
 const useLibrary = require('stremio/music/library/useLibrary');
 const { toast, addToPlaylist } = require('./overlays');
 const styles = require('./styles');
@@ -229,6 +230,11 @@ const CatalogRow = ({ source, catalog, title, extra, hideBadge }) => {
 
 CatalogRow.propTypes = { source: PropTypes.object.isRequired, catalog: PropTypes.object.isRequired, title: PropTypes.string, extra: PropTypes.object, hideBadge: PropTypes.bool };
 
+/** Queues a server-side download and says so. */
+const download = (body, what) => getDownloads().add(body)
+    .then((r) => toast(`Downloading ${what} to your library${r.skipped ? ` (${r.skipped} not available)` : ''}`))
+    .catch((e) => toast(e.message, { error: true }));
+
 /** The standard actions for a track row's "…" menu. */
 const trackMenuItems = (t, player) => [
     { label: 'Play next', onSelect: () => player.enqueue([t], { next: true }) },
@@ -236,6 +242,7 @@ const trackMenuItems = (t, player) => [
     { label: 'Add to playlist…', onSelect: () => addToPlaylist([t]) },
     t.albumId ? { label: 'Go to album', href: itemHref(t.albumId) } : null,
     t.artistId ? { label: 'Go to artist', href: itemHref(t.artistId) } : null,
+    canDownload(t.id, t.live) ? { label: 'Download', onSelect: () => download({ id: t.id, albumId: t.albumId ?? undefined }, `“${t.title}”`) } : null,
 ];
 
 /**
@@ -296,4 +303,4 @@ const Loading = () => <div className={styles['loading']} role={'status'}><span c
 const ErrorBox = ({ message }) => <div className={styles['error-box']} role={'alert'}>{message}</div>;
 ErrorBox.propTypes = { message: PropTypes.string };
 
-module.exports = { MetaCard, Grid, Shelf, CatalogRow, TrackList, LikeButton, Menu, SourceBadge, Loading, ErrorBox, KIND_LABEL, trackMenuItems };
+module.exports = { MetaCard, Grid, Shelf, CatalogRow, TrackList, LikeButton, Menu, SourceBadge, Loading, ErrorBox, KIND_LABEL, trackMenuItems, download };

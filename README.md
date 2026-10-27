@@ -306,6 +306,45 @@ the browser. Keyboard (in Music): Space play/pause, ←/→ seek 10 s (Shift: 30
 mode. Plays are reported to the sources that ask for it (Navidrome scrobbles at half a track,
 Radio Browser counts a station start).
 
+## Downloads
+
+Albums and tracks from sources that allow it (Internet Archive, Jamendo where the artist allows
+it, Free Music Archive, torrents from addons) can be saved into your music library: **Download**
+in an album's or a track's ⋯ menu, or **Download all** on a playlist. Your own Navidrome library
+and radio are never downloaded.
+
+- The **server** does the work: downloads carry on with the browser closed, survive restarts
+  (partial files resume), and run two at a time (setting). **Downloads** shows them live, with
+  pause, resume, cancel, retry, and **Save to device** for finished files.
+- Files go to `/music/<Album Artist>/<Album>/<NN> - <Title>.<ext>` (`D-NN` on multi-disc albums),
+  owned by `PUID:PGID`. The format is checked from the file itself; tags are written from the
+  source's details (the file's own tags fill the gaps), with the cover embedded and a `cover.jpg`.
+  Creative Commons music gets a `LICENSE.txt` in its album folder with the credit its licence asks
+  for: keep it with the files if you share them. A file that's already there is skipped (or kept
+  as "(2)", setting).
+- Afterwards the server asks **Navidrome** to rescan, with the Navidrome login of the user who
+  downloaded (Navidrome only lets admins start a scan; otherwise its own scan finds them later).
+- Partial downloads wait in `/downloads/incoming` (or a hidden `/music/.stremio-music` folder
+  when `/downloads` isn't writable).
+
+**Torrents through qBittorrent** (optional, Downloads → Settings, admins): instead of the built-in
+engine, which stops sharing once a file is done, send torrents to your qBittorrent so they keep
+seeding. Only the wanted files are downloaded. qBittorrent must save into a folder both containers
+see, best inside the music volume. With this repo's compose file and a media stack where
+qBittorrent mounts `/srv/media` as `/data`:
+
+| Setting | Value |
+|---|---|
+| Web UI address | `http://qbittorrent:8080` |
+| Save folder, as qBittorrent sees it | `/data/library/music/.stremio-music-torrents` |
+| The same folder, as this app sees it | `/music/.stremio-music-torrents` |
+
+**Test connection** checks the login and the folder, and puts a `.ndignore` in it so Navidrome
+doesn't list the torrent copies. Finished files are tagged into the library from there (a new
+file, so seeding isn't disturbed). Torrents are added in the `stremio-music` category, tagged
+`stremio-music`, and left in qBittorrent when done: its own seeding limits apply. qBittorrent 4.5
+or later is needed (it must stop torrents once their file list arrives).
+
 ## Torrent peers and VPN
 
 **Incoming peer port: not supported by the engine.** Stremio's streaming server only makes

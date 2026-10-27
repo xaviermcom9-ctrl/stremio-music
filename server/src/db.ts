@@ -85,6 +85,39 @@ const MIGRATIONS: string[] = [
      value TEXT NOT NULL,           -- JSON (null = no confident match)
      at INTEGER NOT NULL
    );`,
+  `CREATE TABLE download_groups (
+     id INTEGER PRIMARY KEY,
+     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+     kind TEXT NOT NULL CHECK (kind IN ('album', 'track', 'list')),
+     title TEXT NOT NULL,
+     subtitle TEXT,
+     poster TEXT,
+     meta_id TEXT,
+     created_at INTEGER NOT NULL
+   );
+   CREATE INDEX download_groups_user ON download_groups(user_id);
+   CREATE TABLE download_items (
+     id INTEGER PRIMARY KEY,
+     group_id INTEGER NOT NULL REFERENCES download_groups(id) ON DELETE CASCADE,
+     position INTEGER NOT NULL,
+     item_id TEXT NOT NULL,         -- track id whose streams are downloaded ("torrent:<ih>:<idx>" for torrent files)
+     target TEXT NOT NULL,          -- JSON: tags, cover URL, licence, links
+     status TEXT NOT NULL CHECK (status IN ('queued', 'downloading', 'paused', 'processing', 'done', 'skipped', 'failed', 'cancelled')),
+     backend TEXT,                  -- http | engine | qbittorrent (once started)
+     downloaded INTEGER NOT NULL DEFAULT 0,
+     total INTEGER,
+     error TEXT,
+     note TEXT,
+     path TEXT,                     -- final file, relative to /music
+     attempts INTEGER NOT NULL DEFAULT 0,
+     updated_at INTEGER NOT NULL
+   );
+   CREATE INDEX download_items_group ON download_items(group_id, position);
+   CREATE INDEX download_items_status ON download_items(status);
+   CREATE TABLE app_settings (
+     key TEXT PRIMARY KEY,
+     value TEXT NOT NULL            -- JSON; secret fields encrypted
+   );`,
 ];
 
 export function openDb(file: string): DatabaseSync {

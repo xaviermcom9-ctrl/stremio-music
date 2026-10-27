@@ -10,10 +10,21 @@ const MusicIcon = require('stremio/music/icons');
 const usePlayer = require('stremio/music/player/usePlayer');
 const useLibrary = require('stremio/music/library/useLibrary');
 const { api, snapshotToItem } = require('stremio/music/data');
-const { MetaCard, TrackList, Menu, Loading, ErrorBox } = require('stremio/music/components');
+const { MetaCard, TrackList, Menu, Loading, ErrorBox, download } = require('stremio/music/components');
+const { canDownload } = require('stremio/music/data');
 const { toast, addToPlaylist, Dialog } = require('stremio/music/components/overlays');
 const { useAsync, Cover, Hero, PlayButton, ShuffleButton, formatLength, plural } = require('./common');
 const styles = require('./styles');
+
+/** "Download all" for a list of queue items: the downloadable ones, as one entry. */
+const downloadAll = (items, title) => {
+    const ok = items.filter((t) => canDownload(t.id, t.live));
+    if (!ok.length) return null;
+    return {
+        label: ok.length === items.length ? 'Download all' : `Download ${ok.length} of ${items.length} (the others can’t be downloaded)`,
+        onSelect: () => download({ items: ok.map((t) => ({ id: t.id, albumId: t.albumId ?? undefined })), title }, `${ok.length} tracks`),
+    };
+};
 
 // ---------------------------------------------------------------- dialogs
 
@@ -200,7 +211,14 @@ const Liked = () => {
                         <>
                             <PlayButton label={'Play Liked songs'} onClick={() => play(0)} />
                             <ShuffleButton onClick={() => play(0, true)} />
-                            <Menu label={'More options for Liked songs'} items={[{ label: 'Add to queue', onSelect: () => player.enqueue(items) }, { label: 'Add to playlist…', onSelect: () => addToPlaylist(items) }]} />
+                            <Menu
+                                label={'More options for Liked songs'}
+                                items={[
+                                    { label: 'Add to queue', onSelect: () => player.enqueue(items) },
+                                    { label: 'Add to playlist…', onSelect: () => addToPlaylist(items) },
+                                    downloadAll(items, 'Liked songs'),
+                                ]}
+                            />
                         </>
                         :
                         null
@@ -264,6 +282,7 @@ const Playlist = () => {
                             items={[
                                 items.length ? { label: 'Add to queue', onSelect: () => player.enqueue(items) } : null,
                                 { label: 'Edit details', onSelect: () => setDialog('edit') },
+                                downloadAll(items, p.name),
                                 ...targets.map((s) => ({
                                     label: p.sync ? `Stop syncing to ${s.name}` : `Sync to ${s.name}`,
                                     onSelect: () => guard(library.updatePlaylist(id, { sync: !p.sync })).then(() => toast(p.sync ? `No longer synced (the copy on ${s.name} stays)` : `Synced to ${s.name}: its tracks from ${s.name} appear there`)),

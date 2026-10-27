@@ -436,6 +436,11 @@ const source: MusicSource = {
       await api(ctx, 'updatePlaylist', { playlistId: id, name, comment: description });
       return id;
     },
+    // Navidrome reads the same /music folder: scan it so downloads show up (needs a Navidrome admin
+    // login; otherwise Navidrome's own folder watcher or scan schedule picks them up later)
+    async libraryChanged(ctx) {
+      await api(ctx, 'startScan');
+    },
     async deletePlaylist(remoteId, ctx) {
       try {
         await api(ctx, 'deletePlaylist', { id: remoteId });

@@ -1,4 +1,5 @@
-import { existsSync } from 'node:fs';
+import { accessSync, constants, existsSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
 import fastifyStatic from '@fastify/static';
 import Fastify, { type FastifyInstance } from 'fastify';
 import type { DatabaseSync } from 'node:sqlite';
@@ -19,6 +20,9 @@ import { registerMusicRoutes } from './music/routes.js';
 import { registerDiscover } from './music/discover.js';
 import { registerLibrary } from './music/library.js';
 import { MusicBrainz } from './music/musicbrainz.js';
+import { DownloadManager } from './downloads/manager.js';
+import { qbittorrentFrom, registerDownloads } from './downloads/routes.js';
+import { DownloadSettingsStore } from './downloads/settings.js';
 import { APP_VERSION } from './music/runtime.js';
 import { SecretBox } from './music/secrets.js';
 import type { EngineSupervisor } from './engine/supervisor.js';
@@ -32,9 +36,11 @@ export interface AppDeps {
   /** tests: replace the built-in sources / outbound fetch */
   builtins?: MusicSource[];
   fetchImpl?: typeof fetch;
+  /** tests: rescan delay after downloads */
+  downloadsScanDelayMs?: number;
 }
 
-export async function buildApp({ config, db, engine, builtins, fetchImpl }: AppDeps): Promise<FastifyInstance> {
+export async function buildApp({ config, db, engine, builtins, fetchImpl, downloadsScanDelayMs }: AppDeps): Promise<FastifyInstance> {
   const app = Fastify({
     logger: { level: config.logLevel },
     // X-Forwarded-* only from configured proxies; otherwise clients could spoof their IP
@@ -97,7 +103,7 @@ export async function buildApp({ config, db, engine, builtins, fetchImpl }: AppD
   if (!musicbrainz) app.log.info('MUSICBRAINZ_CONTACT not set: artists are merged by name and the MBIDs sources provide');
   registerDiscover(app, registry, musicbrainz);
   registerLibrary(app, db, registry);
-  registerPlayback(app, {
+  const playback = registerPlayback(app, {
     registry,
     engine,
     db,
@@ -105,6 +111,28 @@ export async function buildApp({ config, db, engine, builtins, fetchImpl }: AppD
     port: () => (app.server.address() as AddressInfo | null)?.port ?? config.port,
     internalKey,
   });
+
+  const downloadSettings = new DownloadSettingsStore(db, box);
+  const qbittorrent = qbittorrentFrom(downloadSettings, fetchImpl);
+  const downloads = new DownloadManager({
+    db,
+    registry,
+    engine,
+    playback,
+    musicDir: config.dirs.music,
+    stagingDir: stagingDir(config.dirs),
+    ffmpeg: config.engine.ffmpeg,
+    self: () => `http://127.0.0.1:${(app.server.address() as AddressInfo | null)?.port ?? config.port}`,
+    internal: { header: INTERNAL_HEADER, key: internalKey },
+    settings: () => downloadSettings.get(),
+    qbittorrent,
+    log: { info: (m) => app.log.info(m), warn: (m) => app.log.warn(m) },
+    scanDelayMs: downloadsScanDelayMs,
+  });
+  registerDownloads(app, downloads, downloadSettings, qbittorrent);
+  // after listen: downloads read through our own /api/proxy over loopback
+  app.addHook('onListen', async () => downloads.start());
+  app.addHook('onClose', async () => downloads.close());
   await registerEngineProxy(app, engine);
 
   if (existsSync(config.webRoot)) {
@@ -123,4 +151,24 @@ export async function buildApp({ config, db, engine, builtins, fetchImpl }: AppD
   }
 
   return app;
+}
+
+/**
+ * Where downloads land before they're tagged and moved into the library: the /downloads volume
+ * when it's writable, else a hidden folder in the library (Navidrome skips it: .ndignore).
+ */
+function stagingDir(dirs: Config['dirs']): string {
+  try {
+    accessSync(dirs.downloads, constants.W_OK);
+    return path.join(dirs.downloads, 'incoming');
+  } catch {
+    const dir = path.join(dirs.music, '.stremio-music');
+    try {
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(path.join(dir, '.ndignore'), '');
+    } catch {
+      // read-only library: downloads will fail with a clear error when they try to write
+    }
+    return path.join(dir, 'incoming');
+  }
 }

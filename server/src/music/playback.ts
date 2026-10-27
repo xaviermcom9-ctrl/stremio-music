@@ -20,9 +20,9 @@ import { openUpstream, UpstreamError } from './upstream.js';
 export const INTERNAL_HEADER = 'x-sm-internal';
 
 const PASS_HEADERS = ['content-type', 'content-length', 'content-range', 'accept-ranges', 'last-modified', 'etag'];
-const LOSSLESS = new Set(['flac', 'alac', 'wav']);
+export const LOSSLESS = new Set(['flac', 'alac', 'wav']);
 const MAX_TRANSCODES = 4;
-const AUDIO_EXT = /\.(mp3|flac|ogg|oga|opus|m4a|aac|wav|alac|wma|ape|wv)$/i;
+export const AUDIO_EXT = /\.(mp3|flac|ogg|oga|opus|m4a|aac|wav|alac|wma|ape|wv)$/i;
 
 export type Codec = 'mp3' | 'aac' | 'flac' | 'vorbis' | 'opus' | 'alac' | 'wav' | 'hls' | 'unknown';
 
@@ -53,7 +53,7 @@ export interface ClientCaps {
   secure: boolean;
 }
 
-type Candidate = { stream: MusicStream; source: SourceEntry; codec: Codec; live: boolean; bitrate?: number };
+export type Candidate = { stream: MusicStream; source: SourceEntry; codec: Codec; live: boolean; bitrate?: number };
 
 export interface PlayDecision {
   mode: 'direct' | 'proxy' | 'transcode' | 'engine' | 'youtube';
@@ -159,7 +159,13 @@ export interface PlaybackOptions {
   internalKey: string;
 }
 
-export function registerPlayback(app: FastifyInstance, o: PlaybackOptions): void {
+/** What other modules (downloads) reuse: stream lookup and starting torrents in the engine. */
+export interface PlaybackHelpers {
+  streamCandidates(id: string, user: SourceContext['user']): Promise<Candidate[]>;
+  createTorrent(infoHash: string, stream: { sources?: string[] }): Promise<{ files?: { name: string; length: number }[] } | null>;
+}
+
+export function registerPlayback(app: FastifyInstance, o: PlaybackOptions): PlaybackHelpers {
   const { registry } = o;
   const userOf = (req: FastifyRequest): SourceContext['user'] => (req.user ? { id: req.user.id, username: req.user.username } : null);
   let transcodes = 0;
@@ -376,6 +382,8 @@ export function registerPlayback(app: FastifyInstance, o: PlaybackOptions): void
       .run(req.user!.id, json, body.data.device ?? null, now);
     return { ok: true, updatedAt: now };
   });
+
+  return { streamCandidates, createTorrent };
 }
 
 export type { FastifyReply };

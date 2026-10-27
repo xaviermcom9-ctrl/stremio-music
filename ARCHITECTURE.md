@@ -358,6 +358,20 @@ artist).
   (`pages/Home|Item|Artist|Library|Radio|Search.js`), shared overlays (toasts, menus, playlist
   picker, dialogs) in `components/`.
 
+## 5d. Downloads (Phase 9, as built)
+
+- `downloads/manager.ts`: SQLite `download_groups` / `download_items` (one per track); queue with
+  configurable concurrency; interrupted items re-queued on start. Per item: stream candidates from
+  playback (`rankDownloads`: downloadable only, lossless first, fallback to the next) -> transfer
+  (http(s) through our own `/api/proxy` over loopback with the internal key, so the same host
+  rules apply; torrents from the engine over HTTP; or qBittorrent: magnet with
+  `stopCondition=MetadataReceived`, priorities, poll, import from the mapped save path) -> process
+  (sniff format, music-metadata tags merged with the source's, ffmpeg tag/cover write, rename into
+  `/music`). Group settled -> LICENSE.txt per folder (CC), `libraryChanged` hooks (debounced).
+- `downloads/routes.ts`: API, SSE stream (`/api/downloads/events`, throttled to 2/s), save-to-device,
+  admin settings (`app_settings`, qBittorrent password encrypted).
+- Ported from Resonance: `naming.ts`, `tags.ts`, `format.ts` (sniffing), `qbittorrent.ts`.
+
 ## 6. Repository layout (proposed)
 
 ```

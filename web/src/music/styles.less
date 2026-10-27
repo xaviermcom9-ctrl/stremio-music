@@ -278,6 +278,18 @@
     display: none !important;
 }
 
+.nav-badge {
+    margin-left: auto;
+    min-width: 1.4rem;
+    padding: 0.05rem 0.4rem;
+    border-radius: 0.7rem;
+    background-color: var(--primary-accent-color);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-align: center;
+}
+
 .content {
     grid-area: content;
     overflow-y: auto;
@@ -359,6 +371,18 @@
 
     .phone-only {
         display: flex !important;
+    }
+
+    .side-nav .nav-item {
+        position: relative;
+    }
+
+    .nav-badge {
+        position: absolute;
+        top: 0.2rem;
+        left: 55%;
+        min-width: 1.1rem;
+        font-size: 0.65rem;
     }
 
     .side-nav {

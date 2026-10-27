@@ -224,6 +224,8 @@ export interface SourceHooks {
    */
   savePlaylist(playlist: { remoteId?: string; name: string; description: string; trackIds: string[] }, ctx: SourceContext): Promise<string>;
   deletePlaylist(remoteId: string, ctx: SourceContext): Promise<void>;
+  /** files were added to the shared music folder (/music) by a download: e.g. start a rescan */
+  libraryChanged(ctx: SourceContext): Promise<void>;
 }
 
 export interface MusicSource {

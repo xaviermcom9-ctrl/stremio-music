@@ -13,6 +13,9 @@ const Sources = require('./pages/Sources');
 const { Home, Item, Radio, Search, Library, Liked, Playlist, NewPlaylistButton } = require('./pages/Pages');
 const { Toasts, PlaylistPicker } = require('./components/overlays');
 const useLibrary = require('./library/useLibrary');
+const Downloads = require('./pages/Downloads');
+const { useDownloads, activeCount } = require('./downloads/store');
+const { api } = require('./data');
 const PlayerBar = require('./player/ui/PlayerBar');
 const { getPlayer } = require('./player/store');
 const { default: useShortcut } = require('stremio/common/Shortcuts/useShortcut');
@@ -27,7 +30,7 @@ const PAGES = [
     { path: 'search', label: 'Search', icon: stremioIcon('search'), element: <Search /> },
     { path: 'library', label: 'Library', icon: stremioIcon('library'), element: <Library /> },
     { path: 'radio', label: 'Radio', icon: musicIcon('radio'), element: <Radio /> },
-    { path: 'downloads', label: 'Downloads', icon: stremioIcon('download'), text: 'Server-side downloads into your music library, with progress, pause and retry.', phase: 9 },
+    { path: 'downloads', label: 'Downloads', icon: stremioIcon('download'), element: <Downloads />, badge: true },
     // phones: in the account menu (five tabs fit a bottom bar, six don't)
     { path: 'sources', label: 'Sources', icon: musicIcon('sources'), element: <Sources />, secondary: true },
 ];
@@ -81,8 +84,19 @@ const YourPlaylists = () => {
     );
 };
 
+/** Number of downloads on the way, on the Downloads nav item. */
+const DownloadsBadge = () => {
+    const [state] = useDownloads();
+    const n = activeCount(state.groups);
+    return n ? <span className={styles['nav-badge']} aria-label={`${n} downloading`}>{n > 99 ? '99+' : n}</span> : null;
+};
+
 const MusicRoot = () => {
     usePlayerShortcuts();
+    // which sources allow downloads (for the "Download" menu items)
+    React.useEffect(() => {
+        api.sources().catch(() => {});
+    }, []);
     const [user, setUser] = React.useState(null);
 
     React.useEffect(() => {
@@ -112,6 +126,7 @@ const MusicRoot = () => {
                         >
                             {page.icon(styles['nav-icon'])}
                             <span className={styles['nav-label']}>{page.label}</span>
+                            {page.badge ? <DownloadsBadge /> : null}
                         </NavLink>
                     ))
                 }
