@@ -19,9 +19,12 @@ COPY web/patches ./patches
 RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
     pnpm install --frozen-lockfile
 COPY web/ ./
-# upstream commit + our marker, shown as "Build Version" in Settings
+# upstream commit + a hash of our web sources, shown as "Build Version" in Settings. It's also the
+# folder name of the bundles, which are cached as immutable, so it must change with every change.
 ARG WEB_COMMIT=8329565d17b75d2af8ba5822aa8059058a5d934e
-RUN COMMIT_HASH="${WEB_COMMIT}-sm" pnpm build
+RUN SRC_HASH=$(find src assets patches webpack.config.js package.json pnpm-lock.yaml manifest.json -type f -print0 \
+      | sort -z | xargs -0 sha256sum | sha256sum | cut -c1-10) \
+ && COMMIT_HASH="${WEB_COMMIT}-sm-${SRC_HASH}" pnpm build
 
 # --- backend -----------------------------------------------------------------------------------
 FROM toolchain AS server

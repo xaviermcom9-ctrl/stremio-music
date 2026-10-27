@@ -157,6 +157,10 @@ ways returning to the previous page (radio ↔ discover), saved mode, fresh open
 #/library not overridden (and saves movies), both menus, admin-only Sources, shortcut in help,
 phone bottom tab bar, no horizontal scroll, no console errors (only upstream view-transition notices).
 
+Fix after deploy (user didn't see Phase 4): the bundle folder was `<upstream commit>-sm` for every
+build while `<folder>/scripts|styles` are served immutable for a year, so browsers kept old JS.
+Dockerfile now appends a hash of the web sources (`…-sm-<hash>`), so every change gets new URLs.
+
 Notes: fresh profiles get upstream's seasonal "event" modal (upstream behaviour). Six bottom tabs
 truncate "Downloads" on narrow phones (admins only); revisit in Phase 8.
 
