@@ -65,9 +65,22 @@ async function api<T>(ctx: SourceContext, path: string, params: Record<string, s
   return body.results;
 }
 
+/**
+ * Lookups by id: Jamendo intermittently answers "success" with no results (about 1 in 3 when
+ * measured), so an empty answer is retried twice before it counts as "not found".
+ */
+async function byId<T>(ctx: SourceContext, path: string, params: Record<string, string | number | undefined>): Promise<T[]> {
+  for (let attempt = 0; ; attempt++) {
+    const r = await api<T>(ctx, path, params);
+    if (r.length > 0 || attempt === 2) return r;
+    await new Promise((resolve) => setTimeout(resolve, 300));
+  }
+}
+
 const albumId = (id: string) => `${ID}:album:${id}`;
 const artistId = (id: string) => `${ID}:artist:${id}`;
-const trackId = (id: string) => `${ID}:track:${id}`;
+/** an album's tracks carry the album (`…@album`): brand-new releases reach /tracks only later */
+const trackId = (id: string, album?: string) => `${ID}:track:${id}${album ? `@${album}` : ''}`;
 const year = (date?: string) => (date && /^\d{4}/.test(date) ? date.slice(0, 4) : undefined);
 
 function licence(t: Pick<Track, 'license_ccurl' | 'name' | 'artist_name'>): Licence | undefined {
@@ -118,7 +131,7 @@ function trackPreview(t: Track): MusicMetaPreview {
 function track(t: Track, album: Partial<Album>, n: number): MusicTrack {
   const artist = t.artist_name ?? album.artist_name;
   return {
-    id: trackId(t.id),
+    id: trackId(t.id, album.id ?? t.album_id ?? undefined),
     title: t.name,
     episode: Number(t.position) || n,
     season: 1,
@@ -134,9 +147,9 @@ function track(t: Track, album: Partial<Album>, n: number): MusicTrack {
   };
 }
 
-function parseId(id: string): { kind: string; jid: string } | null {
-  const m = new RegExp(`^${ID}:(album|artist|track):(\\d+)$`).exec(id);
-  return m ? { kind: m[1]!, jid: m[2]! } : null;
+function parseId(id: string): { kind: string; jid: string; album?: string } | null {
+  const m = new RegExp(`^${ID}:(album|artist|track):(\\d+)(?:@(\\d+))?$`).exec(id);
+  return m ? { kind: m[1]!, jid: m[2]!, album: m[3] } : null;
 }
 
 const source: MusicSource = {
@@ -202,9 +215,9 @@ const source: MusicSource = {
     const p = parseId(id);
     if (!p) return null;
     if (p.kind === 'album') {
-      const [album] = await api<Album>(ctx, 'albums/tracks', { id: p.jid, imagesize: 600 });
+      const [album] = await byId<Album>(ctx, 'albums/tracks', { id: p.jid, imagesize: 600 });
       if (!album) return null;
-      const [info] = await api<Album>(ctx, 'albums', { id: p.jid, imagesize: 600 });
+      const [info] = await byId<Album>(ctx, 'albums', { id: p.jid, imagesize: 600 });
       const videos = (album.tracks ?? []).map((t, i) => track(t, album, i + 1));
       const meta: MusicMeta = {
         ...albumPreview({ ...album, ...info }),
@@ -215,10 +228,10 @@ const source: MusicSource = {
       return meta;
     }
     if (p.kind === 'artist') {
-      const [artist] = await api<Artist>(ctx, 'artists/albums', { id: p.jid, imagesize: 600 });
+      const [artist] = await byId<Artist>(ctx, 'artists/albums', { id: p.jid, imagesize: 600 });
       if (!artist) return null;
       const top = await api<Track>(ctx, 'tracks', { artist_id: p.jid, order: 'popularity_total', limit: 10, imagesize: 600 });
-      const [info] = await api<Artist>(ctx, 'artists', { id: p.jid, imagesize: 600 });
+      const [info] = await byId<Artist>(ctx, 'artists', { id: p.jid, imagesize: 600 });
       const meta: MusicMeta = {
         ...artistPreview({ ...artist, ...info }),
         videos: top.map((t, i) => ({ ...track(t, {}, i + 1), episode: i + 1 })),
@@ -227,25 +240,32 @@ const source: MusicSource = {
       };
       return meta;
     }
-    const [t] = await api<Track>(ctx, 'tracks', { id: p.jid, imagesize: 600, include: 'musicinfo' });
-    return t ? { ...trackPreview(t), links: jamendoLink(t.shareurl) } : null;
+    const [t] = await byId<Track>(ctx, 'tracks', { id: p.jid, imagesize: 600, include: 'musicinfo' });
+    return t ? { ...trackPreview(t), id, links: jamendoLink(t.shareurl) } : null;
   },
 
   async streams(id, ctx) {
     const p = parseId(id);
     if (!p || p.kind !== 'track') return [];
     // audio: stream in the best format the API serves (VBR MP3); audiodownload: FLAC where allowed
-    const [t] = await api<Track>(ctx, 'tracks', { id: p.jid, audioformat: 'mp32', audiodlformat: 'flac' });
+    const formats = { audioformat: 'mp32', audiodlformat: 'flac' };
+    let [t] = await byId<Track>(ctx, 'tracks', { id: p.jid, ...formats });
+    if (!t && p.album) {
+      // released in the last day or so: only the album listing knows it yet
+      const [album] = await byId<Album>(ctx, 'albums/tracks', { id: p.album, ...formats });
+      t = album?.tracks?.find((x) => String(x.id) === p.jid);
+      if (t) t = { ...t, artist_name: album!.artist_name, album_name: album!.name };
+    }
     if (!t?.audio) return [];
     const allowed = t.audiodownload_allowed === true && !!t.audiodownload;
     const base = t.name.replace(/[/\\?%*:|"<>]/g, '-');
-    // the URLs carry the client ID, so the browser gets them through the backend's proxy
+    // Jamendo's storage URLs carry no credentials (checked), so the browser fetches them directly
     const out: MusicStream[] = [
-      { url: ctx.proxyUrl(t.audio), name: 'MP3 VBR', behaviorHints: { music: { codec: 'mp3', downloadable: false } } },
+      { url: t.audio, name: 'MP3 VBR', behaviorHints: { music: { codec: 'mp3', downloadable: false } } },
     ];
     if (allowed) {
       out.push({
-        url: ctx.proxyUrl(t.audiodownload!),
+        url: t.audiodownload!,
         name: 'FLAC',
         description: 'Download allowed by the artist',
         behaviorHints: { music: { codec: 'flac', downloadable: true, filename: `${String(t.position ?? 1).padStart(2, '0')} - ${base}.flac` } },
@@ -256,8 +276,9 @@ const source: MusicSource = {
 
   async test(ctx) {
     try {
-      const r = await api<Track>(ctx, 'tracks', { limit: 1, order: 'popularity_week' });
-      return { ok: true, message: `Jamendo API works (top track this week: “${r[0]?.name ?? '—'}”).` };
+      // same retry as lookups: an empty answer now and then isn't a failure
+      const r = await byId<Track>(ctx, 'tracks', { limit: 1, order: 'popularity_week' });
+      return { ok: true, message: r[0] ? `Jamendo API works (top track this week: “${r[0].name}” by ${r[0].artist_name}).` : 'Jamendo API works.' };
     } catch (err) {
       return { ok: false, message: err instanceof Error ? err.message : String(err) };
     }

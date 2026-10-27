@@ -230,7 +230,8 @@ see only the sources that need their own login. There are three kinds:
     change in its settings.
   - **Jamendo:** needs a free client ID from [devportal.jamendo.com](https://devportal.jamendo.com),
     for non-commercial use only.
-  - **Free Music Archive:** pending a decision on how to access it (see PROGRESS.md).
+  - **Free Music Archive:** Creative Commons releases up to 2018, from FMA's mirror on archive.org.
+    FMA's own API no longer exists.
 - **Folder plugins**: drop a folder into `/config/music-sources/` and press **Reload plugins**.
   Start one with `docker exec -it stremio-music sm-new-source my-source`, and test it with
   `docker exec -it stremio-music sm-test-source /config/music-sources/my-source`.

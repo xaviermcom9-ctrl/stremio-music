@@ -204,7 +204,7 @@ sandbox blocks reading /etc/hostname (unit test).
 Notes: no built-in sources yet (Phase 6), so the Sources page starts empty. Built-in sources
 need recorded fixtures.json to pass the contract in the build.
 
-## Phase 6 – Built-in sources (in progress: waiting on the user for Jamendo key + FMA choice)
+## Phase 6 – Built-in sources (done, awaiting go-ahead)
 
 Media stack started by Claude on user request (2026-10-27): navidrome, lidarr, prowlarr, qbittorrent,
 nzbget all up; names resolve from the app container. User's Navidrome: 0.64.2, one account
@@ -239,20 +239,29 @@ Sources (all pass the contract live and offline from fixtures; 57 unit/integrati
    format per track FLAC > VBR MP3 > other (alternatives offered). stream_only/access-restricted
    items (e.g. GD soundboards): private files skipped, not downloadable. Licence from licenseurl
    (CC parsed), else rights text, else item page link. Fixtures 743 KB (IA lists every derivative).
-3. **Jamendo** ⏸ implemented from the current v3.0 docs (verified, incl. API terms: non-commercial,
-   attribute + link each item, minimal caching, downloads only where allowed); stream URLs carry the
-   client ID -> proxied. NOT registered yet: needs the user's free client ID to record fixtures.
-4. **Free Music Archive** ⏸ investigated, waiting for the user's choice (see report below).
+3. **Jamendo** ✅ (client ID from the user 2026-10-27; stored encrypted in the user's instance via a
+   script inside the container; never in git: recorded with SOURCE_SETTINGS, scrubbed). v3.0 API per
+   current docs + terms (non-commercial; credit + link each item; minimal caching; downloads only
+   where audiodownload_allowed). Storage URLs carry no credentials -> direct (not proxied).
+   Quirks handled: /tracks lags new releases (track ids from albums carry `@album`, streams fall back
+   to /albums/tracks); id lookups intermittently return empty (~1 in 3) -> retried twice.
+4. **Free Music Archive** ✅ option A (user): archive.org `freemusicarchive` mirror via the shared
+   archive.org factory (`internet-archive/archive.ts`, IA refactored onto it, its fixtures unchanged).
+   Catalogs: most downloaded, remix-friendly (no ND), latest in the archive (2018), search. Licence +
+   link/attribution to the original FMA page. No genres in the mirror's metadata.
 5. **Radio Browser** ✅ server discovery via all.api.radio-browser.info (or fixed server), own UA,
    click reporting via scrobble hook, catalogs: stations near you (default AU, setting), top voted,
    trending, by genre, search; live, no download. Verified live: AU stations, now-playing titles.
 
-FMA report: official API gone (/api and /api/get/* -> 404, no replacement documented); the live
+FMA report (user chose A): official API gone (/api and /api/get/* -> 404, no replacement documented); the live
 site (Tribe of Noise) is HTML only -> scraping, fragile and needs a ToS review; archive.org has a
 `freemusicarchive` mirror: 16,797 releases added 2011-2018 (frozen), ~half with a CC licence URL,
 same stable API as the Internet Archive source. Recommendation: FMA via the archive.org mirror.
 
 UI parts of the Radio brief (LIVE badge, no seek, Radio page) come with the player/UI (Phases 7-8).
 
+User's instance: all five built-ins registered and active except Navidrome (needs the user's own
+Navidrome login under Sources -> Navidrome -> Your settings).
+
 ### Next
-- User: Jamendo client ID (to record fixtures + enable), FMA choice; then Phase 7.
+- User: go-ahead for Phase 7 (playback).

@@ -1,0 +1,2631 @@
+{
+  "settings": {},
+  "responses": {
+    "GET https://archive.org/advancedsearch.php?q=collection%3Afreemusicarchive+AND+mediatype%3Aaudio&rows=50&page=1&output=json&fl%5B%5D=identifier&fl%5B%5D=title&fl%5B%5D=creator&fl%5B%5D=date&fl%5B%5D=year&fl%5B%5D=licenseurl&fl%5B%5D=mediatype&fl%5B%5D=subject&sort%5B%5D=downloads+desc": {
+      "status": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": {
+        "responseHeader": {
+          "status": 0,
+          "QTime": 69,
+          "params": {
+            "query": "collection:freemusicarchive AND mediatype:audio",
+            "qin": "collection:freemusicarchive AND mediatype:audio",
+            "fields": "identifier,title,creator,date,year,licenseurl,mediatype,subject",
+            "wt": "json",
+            "sort": "downloads desc",
+            "rows": 50,
+            "start": 0
+          }
+        },
+        "response": {
+          "numFound": 16797,
+          "start": 0,
+          "docs": [
+            {
+              "creator": "Jason Shaw",
+              "date": "2011-08-17T00:00:00Z",
+              "identifier": "Audionautix_Acoustic-9870",
+              "licenseurl": "http://creativecommons.org/licenses/by/3.0/us/",
+              "mediatype": "audio",
+              "title": "Audionautix: Acoustic",
+              "year": 2011
+            },
+            {
+              "creator": "Kevin MacLeod",
+              "date": "2011-07-15T00:00:00Z",
+              "identifier": "Classical_Sampler-9615",
+              "licenseurl": "http://creativecommons.org/licenses/by/3.0/",
+              "mediatype": "audio",
+              "title": "Classical Sampler",
+              "year": 2011
+            },
+            {
+              "creator": "Jahzzar",
+              "identifier": "Grab_Bag-12446",
+              "licenseurl": "http://creativecommons.org/licenses/by-sa/3.0/",
+              "mediatype": "audio",
+              "title": "Grab Bag"
+            },
+            {
+              "creator": "Evgeny Grinko",
+              "date": "2011-01-01T00:00:00Z",
+              "identifier": "Winter_Sunshine_EP-8201",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-nd/2.0/de/",
+              "mediatype": "audio",
+              "title": "Winter Sunshine EP",
+              "year": 2011
+            },
+            {
+              "creator": "John Harrison with the Wichita State University Chamber Players",
+              "date": "2011-11-03T00:00:00Z",
+              "identifier": "The_Four_Seasons_Vivaldi-10361",
+              "licenseurl": "http://creativecommons.org/licenses/by-sa/3.0/",
+              "mediatype": "audio",
+              "title": "The Four Seasons (Vivaldi)",
+              "year": 2011
+            },
+            {
+              "creator": "M.W.D.",
+              "date": "2010-07-28T00:00:00Z",
+              "identifier": "Singing_Forest-6930",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-nd/2.5/hu/",
+              "mediatype": "audio",
+              "title": "Singing Forest",
+              "year": 2010
+            },
+            {
+              "creator": "Adam & Alma",
+              "date": "2010-03-29T00:00:00Z",
+              "identifier": "Back_To_The_Sea-8076",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-nd/3.0/",
+              "mediatype": "audio",
+              "title": "Back To The Sea",
+              "year": 2010
+            },
+            {
+              "creator": "TerbujurKaku",
+              "date": "2010-02-07T00:00:00Z",
+              "identifier": "Megamix_Album-6124",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/",
+              "mediatype": "audio",
+              "title": "Megamix Album (Koplo Goes To Breakcore)",
+              "year": 2010
+            },
+            {
+              "creator": "Setec",
+              "date": "2012-07-30T00:00:00Z",
+              "identifier": "Ill_Be_Good_EP-12234",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-nd/3.0/",
+              "mediatype": "audio",
+              "title": "I'll Be Good EP",
+              "year": 2012
+            },
+            {
+              "creator": "Death Grips",
+              "date": "2011-04-29T00:00:00Z",
+              "identifier": "Ex_Military-9086",
+              "licenseurl": "http://freemusicarchive.org/FMA_License",
+              "mediatype": "audio",
+              "title": "Ex Military",
+              "year": 2011
+            },
+            {
+              "creator": "COOLRUNNINGS",
+              "date": "2010-07-28T00:00:00Z",
+              "identifier": "BABES_FOREVER-6932",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-nd/3.0/",
+              "mediatype": "audio",
+              "title": "BABES FOREVER",
+              "year": 2010
+            },
+            {
+              "creator": "Kučka",
+              "date": "2012-08-01T00:00:00Z",
+              "identifier": "Kuka_EP-12251",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-nd/3.0/",
+              "mediatype": "audio",
+              "title": "Kučka EP",
+              "year": 2012
+            },
+            {
+              "creator": "ZUHN",
+              "date": "2010-05-02T00:00:00Z",
+              "identifier": "los_suenos_lucifer-6278",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/us/",
+              "mediatype": "audio",
+              "title": "los suenos lucifer",
+              "year": 2010
+            },
+            {
+              "creator": "Metaharmoniks",
+              "date": "2011-02-25T00:00:00Z",
+              "identifier": "Be_A_King-9747",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-nd/2.5/hu/",
+              "mediatype": "audio",
+              "title": "Be A King",
+              "year": 2011
+            },
+            {
+              "creator": "NeoBrazilians (Various Artists)",
+              "identifier": "July-12126",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/",
+              "mediatype": "audio",
+              "title": "July"
+            },
+            {
+              "creator": "junior85",
+              "date": "2010-02-22T00:00:00Z",
+              "identifier": "Sleep_Music-5629",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/",
+              "mediatype": "audio",
+              "title": "Sleep Music",
+              "year": 2010
+            },
+            {
+              "creator": "Death Grips",
+              "date": "2011-03-21T00:00:00Z",
+              "identifier": "Death_Grips-8841",
+              "licenseurl": "http://freemusicarchive.org/FMA_License",
+              "mediatype": "audio",
+              "title": "Death Grips",
+              "year": 2011
+            },
+            {
+              "creator": "TV Girl",
+              "date": "2015-10-17T00:00:00Z",
+              "identifier": "French_exit-19115",
+              "mediatype": "audio",
+              "title": "French Exit",
+              "year": 2015
+            },
+            {
+              "creator": "Krestovsky",
+              "date": "2010-11-27T00:00:00Z",
+              "identifier": "Looksee-7904",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/us/",
+              "mediatype": "audio",
+              "title": "Looks(ee)",
+              "year": 2010
+            },
+            {
+              "creator": "MIT Concert Choir",
+              "date": "2011-06-03T00:00:00Z",
+              "identifier": "Carmina_Burana_Carl_Orff-9275",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc/3.0/us/",
+              "mediatype": "audio",
+              "title": "Carmina Burana [Carl Orff]",
+              "year": 2011
+            },
+            {
+              "creator": "Kimiko Ishizaka",
+              "date": "2012-05-29T00:00:00Z",
+              "identifier": "The_Open_Goldberg_Variations-11823",
+              "licenseurl": "http://creativecommons.org/publicdomain/zero/1.0/",
+              "mediatype": "audio",
+              "title": "The Open Goldberg Variations",
+              "year": 2012
+            },
+            {
+              "creator": "Ultrabunny",
+              "date": "2012-10-13T00:00:00Z",
+              "identifier": "The_Third_Ultrabunny_Album-12590",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/us/",
+              "mediatype": "audio",
+              "title": "The Third Ultrabunny Album",
+              "year": 2012
+            },
+            {
+              "creator": "Silver Process",
+              "date": "2011-11-23T00:00:00Z",
+              "identifier": "Fantastic_Planet-10470",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/us/",
+              "mediatype": "audio",
+              "title": "Fantastic Planet",
+              "year": 2011
+            },
+            {
+              "creator": "Tom Caruana",
+              "date": "2008-07-16T00:00:00Z",
+              "identifier": "Welcome_Aboard-5483",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-nd/2.5/hu/",
+              "mediatype": "audio",
+              "title": "Welcome Aboard",
+              "year": 2008
+            },
+            {
+              "creator": "Felipe Sarro",
+              "date": "2010-06-10T00:00:00Z",
+              "identifier": "Bach_Original_works_and_transcriptions-6556",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-nd/2.0/",
+              "mediatype": "audio",
+              "title": "Bach: Original works and transcriptions",
+              "year": 2010
+            },
+            {
+              "creator": "Lee Rosevere",
+              "date": "2011-01-18T00:00:00Z",
+              "identifier": "Ding-A-Ling-8294",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc/3.0/",
+              "mediatype": "audio",
+              "title": "Ding-A-Ling",
+              "year": 2011
+            },
+            {
+              "creator": "The New Happy Birthday Song Contest",
+              "date": "2012-12-12T00:00:00Z",
+              "identifier": "The_New_Birthday_Song_Contest-13010",
+              "licenseurl": "http://creativecommons.org/licenses/by/3.0/",
+              "mediatype": "audio",
+              "title": "The New Birthday Song Contest",
+              "year": 2012
+            },
+            {
+              "creator": "Various Artists",
+              "date": "2004-12-01T00:00:00Z",
+              "identifier": "Wakka_Chikka_Wakka_Chikka_Volume_1-13245",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc/3.0/",
+              "mediatype": "audio",
+              "title": "Wakka Chikka Wakka Chikka: Porn Music for the Masses Volume 1",
+              "year": 2004
+            },
+            {
+              "creator": "Kevin MacLeod",
+              "date": "2011-07-15T00:00:00Z",
+              "identifier": "Jazz_Sampler-9619",
+              "licenseurl": "http://creativecommons.org/licenses/by/3.0/",
+              "mediatype": "audio",
+              "title": "Jazz Sampler",
+              "year": 2011
+            },
+            {
+              "creator": "The Conet Project",
+              "date": "1999-01-03T00:00:00Z",
+              "identifier": "The_Conet_Project-1681",
+              "mediatype": "audio",
+              "title": "The Conet Project",
+              "year": 1999
+            },
+            {
+              "creator": "Sro",
+              "date": "2017-10-13T00:00:00Z",
+              "identifier": "Full_Stop_Punctuation-24511",
+              "mediatype": "audio",
+              "title": "Full Stop Punctuation",
+              "year": 2017
+            },
+            {
+              "creator": "Kokusai Bunka Shinkokai",
+              "date": "2009-01-01T00:00:00Z",
+              "identifier": "Japanese_Traditional_Music-3630",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/us/",
+              "mediatype": "audio",
+              "title": "Japanese Traditional Music",
+              "year": 2009
+            },
+            {
+              "creator": "Azevedo Silva",
+              "date": "2007-03-01T00:00:00Z",
+              "identifier": "Tartaruga-12774",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-nd/3.0/",
+              "mediatype": "audio",
+              "title": "Tartaruga",
+              "year": 2007
+            },
+            {
+              "creator": "Robbie Fulks",
+              "date": "2009-05-22T00:00:00Z",
+              "identifier": "Country_Love_Songs-3215",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-nd/3.0/us/",
+              "mediatype": "audio",
+              "title": "Country Love Songs",
+              "year": 2009
+            },
+            {
+              "creator": "Claudio Nuñez",
+              "date": "2011-07-05T00:00:00Z",
+              "identifier": "Love_Hurts-9527",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-nd/3.0/",
+              "mediatype": "audio",
+              "title": "Love Hurts",
+              "year": 2011
+            },
+            {
+              "creator": "The Darkest Love",
+              "date": "2010-04-01T00:00:00Z",
+              "identifier": "Jailbait-6206",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-nd/2.0/fr/",
+              "mediatype": "audio",
+              "title": "Jailbait",
+              "year": 2010
+            },
+            {
+              "creator": "Post Mortem Photographs",
+              "identifier": "Post_Mortem_Photographs-12737",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-nd/3.0/fr/",
+              "mediatype": "audio",
+              "title": "Post Mortem Photographs"
+            },
+            {
+              "creator": "The Womb",
+              "date": "2015-11-27T00:00:00Z",
+              "identifier": "Sex_Tape_2015_Remaster-19379",
+              "mediatype": "audio",
+              "title": "Sex Tape (2015 Remaster)",
+              "year": 2015
+            },
+            {
+              "creator": [
+                "Various Artists [Dawn of Sound]",
+                "Francis J. Lapitino"
+              ],
+              "date": "1998-12-01T00:00:00Z",
+              "identifier": "Voices_of_Christmas_Past-8037",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/2.5/ca/",
+              "mediatype": "audio",
+              "title": "Voices of Christmas Past",
+              "year": 1998
+            },
+            {
+              "creator": "Panta Rei",
+              "date": "1973-01-01T00:00:00Z",
+              "identifier": "Panta_Rei-8308",
+              "mediatype": "audio",
+              "title": "Panta Rei",
+              "year": 1973
+            },
+            {
+              "creator": "Niamh de Barra",
+              "date": "2012-06-12T00:00:00Z",
+              "identifier": "Below_The_Sea-11918",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/",
+              "mediatype": "audio",
+              "title": "Below The Sea",
+              "year": 2012
+            },
+            {
+              "creator": "junior85",
+              "date": "2013-03-15T00:00:00Z",
+              "identifier": "OnwardUpward-13786",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/",
+              "mediatype": "audio",
+              "subject": [
+                "Electronic",
+                "Experimental",
+                "Ambient",
+                "Electronic",
+                "Glitch"
+              ],
+              "title": "Onward&Upward",
+              "year": 2013
+            },
+            {
+              "creator": "Jan Morgenstern",
+              "date": "2008-06-06T00:00:00Z",
+              "identifier": "Big_Buck_Bunny-13302",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-nd/3.0/",
+              "mediatype": "audio",
+              "title": "Big Buck Bunny",
+              "year": 2008
+            },
+            {
+              "creator": "Vate",
+              "date": "2008-03-07T00:00:00Z",
+              "identifier": "Porno_Pixel-3321",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/",
+              "mediatype": "audio",
+              "title": "Porno Pixel",
+              "year": 2008
+            },
+            {
+              "creator": "Monopole",
+              "date": "2010-01-04T00:00:00Z",
+              "identifier": "Silent_movie_surround_sound-5031",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-nd/3.0/",
+              "mediatype": "audio",
+              "title": "Silent movie surround sound",
+              "year": 2010
+            },
+            {
+              "creator": "Pablo Ribot",
+              "date": "2011-08-08T00:00:00Z",
+              "identifier": "Sci-Fi_Vol1-9802",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-nd/3.0/",
+              "mediatype": "audio",
+              "title": "Sci-Fi Vol.1",
+              "year": 2011
+            },
+            {
+              "creator": "Naran",
+              "date": "2011-07-04T00:00:00Z",
+              "identifier": "Feel_Freeze-9508",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/de/",
+              "mediatype": "audio",
+              "title": "Feel Free:::::ze",
+              "year": 2011
+            },
+            {
+              "creator": "Spitball",
+              "date": "2010-06-10T00:00:00Z",
+              "identifier": "The_Last_Straw-6527",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/us/",
+              "mediatype": "audio",
+              "title": "The Last Straw",
+              "year": 2010
+            },
+            {
+              "creator": "Classwar Karaoke",
+              "date": "2013-02-28T00:00:00Z",
+              "identifier": "Classwar_Karaoke_-_0021_Survey-13652",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/",
+              "mediatype": "audio",
+              "title": "Classwar Karaoke - 0021 Survey",
+              "year": 2013
+            },
+            {
+              "creator": "Talkshow Boy",
+              "date": "2006-06-01T00:00:00Z",
+              "identifier": "Testosterone-11904",
+              "licenseurl": "http://creativecommons.org/licenses/by-sa/3.0/au/",
+              "mediatype": "audio",
+              "title": "Testosterone!",
+              "year": 2006
+            }
+          ]
+        }
+      }
+    },
+    "GET https://archive.org/metadata/Audionautix_Acoustic-9870": {
+      "status": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": {
+        "alternate_locations": {
+          "servers": [
+            {
+              "server": "dn710908.ca.archive.org",
+              "dir": "/0/items/Audionautix_Acoustic-9870"
+            }
+          ],
+          "workable": [
+            {
+              "server": "dn710908.ca.archive.org",
+              "dir": "/0/items/Audionautix_Acoustic-9870"
+            }
+          ]
+        },
+        "created": 1793075922,
+        "d1": "dn601304.us.archive.org",
+        "dir": "/0/items/Audionautix_Acoustic-9870",
+        "files": [
+          {
+            "name": "Audionautix_Acoustic-9870.jpg",
+            "source": "original",
+            "format": "JPEG",
+            "mtime": "1329443563",
+            "size": "62376",
+            "md5": "c69638c3c3d347b8f2a9a8c1c04bbc9e",
+            "crc32": "fcf742d8",
+            "sha1": "a32e44e7898a3f85bf0e524b292a296d41fae203",
+            "rotation": "0"
+          },
+          {
+            "name": "Audionautix_Acoustic-9870.jpg_meta.txt",
+            "source": "original",
+            "format": "Metadata",
+            "mtime": "1329443563",
+            "size": "341",
+            "md5": "aaf70be0ccffedee938a61487ec39daa",
+            "crc32": "90d06031",
+            "sha1": "491feea4815d77b57fff957b777835a98bacf6b3"
+          },
+          {
+            "name": "Audionautix_Acoustic-9870_archive.torrent",
+            "source": "metadata",
+            "btih": "20ba325076c92195886386008855f7c0db36c0b6",
+            "mtime": "1553712485",
+            "size": "16857",
+            "md5": "732301ac20d869fdb74188619f6a4eca",
+            "crc32": "b848e4da",
+            "sha1": "dad84cb2f5f85fe2a68537be2f7a83f0327151c9",
+            "format": "Archive BitTorrent"
+          },
+          {
+            "name": "Audionautix_Acoustic-9870_files.xml",
+            "source": "original",
+            "format": "Metadata",
+            "md5": "b5b36878e7667fbc941b3440b7e44fdd",
+            "summation": "md5"
+          },
+          {
+            "name": "Audionautix_Acoustic-9870_meta.xml",
+            "source": "original",
+            "format": "Metadata",
+            "mtime": "1553712480",
+            "size": "1240",
+            "md5": "238def8f0aa1706401f170c207b197ce",
+            "crc32": "1eac7d4a",
+            "sha1": "35f526ca74b6b66be1d6bddaabc98ceabe515a2c"
+          },
+          {
+            "name": "Audionautix_Acoustic-9870_reviews.xml",
+            "source": "original",
+            "mtime": "1549487307",
+            "size": "1715",
+            "format": "Metadata",
+            "md5": "e12dac7e5d491b377a27aac4c2586d8c",
+            "crc32": "409ec4ca",
+            "sha1": "df675cab61598fb9f43c34f50f7368ce53f5036a"
+          },
+          {
+            "name": "Audionautix_Acoustic-9870_thumb.jpg",
+            "source": "derivative",
+            "format": "JPEG Thumb",
+            "original": "Audionautix_Acoustic-9870.jpg",
+            "mtime": "1415616658",
+            "size": "10132",
+            "md5": "dba2d41a91bca1d54280875a02c472bb",
+            "crc32": "6a17725f",
+            "sha1": "ed0fb523c72feea8dcb69522d5a22894e7b2dab5"
+          },
+          {
+            "name": "Jason_Shaw_-_12_MORNINGS.mp3",
+            "source": "original",
+            "format": "VBR MP3",
+            "length": "153.65",
+            "mtime": "1317155524",
+            "size": "2458480",
+            "md5": "8682bf9b9fda128174a498c67503e114",
+            "crc32": "2e2ba100",
+            "sha1": "df552e929a6954397c4bc442ac19e54dba61fe0d",
+            "height": "0",
+            "width": "0",
+            "title": "12 MORNINGS",
+            "artist": "Jason Shaw",
+            "track": "0",
+            "album": "Audionautix: Acoustic",
+            "genre": "Country",
+            "external-identifier-match-date": "acoustid:2019-03-27T18:47:03Z",
+            "external-identifier": "urn:acoustid:e15ca27f-9fa4-4d40-a11b-e05981d8b0e2"
+          },
+          {
+            "name": "Jason_Shaw_-_12_MORNINGS.ogg",
+            "source": "derivative",
+            "format": "Ogg Vorbis",
+            "original": "Jason_Shaw_-_12_MORNINGS.mp3",
+            "mtime": "1317160150",
+            "size": "1811424",
+            "md5": "1b808ad66425eabe94563151be38e96c",
+            "crc32": "39cd7f81",
+            "sha1": "9e16b96db7a9c0c37f9be28ee416115cd75f0741",
+            "length": "150.25",
+            "height": "0",
+            "width": "0"
+          },
+          {
+            "name": "Jason_Shaw_-_12_MORNINGS.png",
+            "source": "derivative",
+            "format": "PNG",
+            "original": "Jason_Shaw_-_12_MORNINGS.mp3",
+            "mtime": "1415616681",
+            "size": "12333",
+            "md5": "79dc6abcca0d2b7caed5b58e660b79a3",
+            "crc32": "f95bd668",
+            "sha1": "2164d3bf365b21df1fe74fa2cfcfe9a669345d64"
+          },
+          {
+            "name": "Jason_Shaw_-_ACOUSTIC_BLUES.mp3",
+            "source": "original",
+            "format": "VBR MP3",
+            "length": "152.66",
+            "mtime": "1317155521",
+            "size": "2442697",
+            "md5": "9df9fd71a5a837c094c1c65e834db46f",
+            "crc32": "b7d796f7",
+            "sha1": "3e2817ccd6c689ad36ca852b47d668b9908b748c",
+            "height": "0",
+            "width": "0",
+            "title": "ACOUSTIC BLUES",
+            "artist": "Jason Shaw",
+            "track": "0",
+            "album": "Audionautix: Acoustic",
+            "genre": "Country",
+            "external-identifier-match-date": "acoustid:2019-03-27T18:47:03Z",
+            "external-identifier": "urn:acoustid:e660c5d1-a4c0-46fb-935f-d3948a79c9f2"
+          },
+          {
+            "name": "Jason_Shaw_-_ACOUSTIC_BLUES.ogg",
+            "source": "derivative",
+            "format": "Ogg Vorbis",
+            "original": "Jason_Shaw_-_ACOUSTIC_BLUES.mp3",
+            "mtime": "1317160113",
+            "size": "1786934",
+            "md5": "9adab2bbd2cf1f99c9e970c543f438ab",
+            "crc32": "d73160",
+            "sha1": "902582d22000a83907af076cb375a6628222155b",
+            "length": "150.04",
+            "height": "0",
+            "width": "0"
+          },
+          {
+            "name": "Jason_Shaw_-_ACOUSTIC_BLUES.png",
+            "source": "derivative",
+            "format": "PNG",
+            "original": "Jason_Shaw_-_ACOUSTIC_BLUES.mp3",
+            "mtime": "1415616702",
+            "size": "12963",
+            "md5": "d64f7792a2661dc1869ca336de3a4ed9",
+            "crc32": "fd350fa7",
+            "sha1": "b6420e544d96bb18bbf0301e7cfd0dd0f15a0281"
+          },
+          {
+            "name": "Jason_Shaw_-_FUNKY_JUNKY.mp3",
+            "source": "original",
+            "format": "VBR MP3",
+            "length": "138.55",
+            "mtime": "1317155646",
+            "size": "5542183",
+            "md5": "29b8099573e5a63df8adbb4d01341e7c",
+            "crc32": "20d8b8c8",
+            "sha1": "ea179ce540dbd9b8554c4800da6295cb9cbe0459",
+            "height": "0",
+            "width": "0",
+            "title": "FUNKY JUNKY",
+            "artist": "Jason Shaw",
+            "track": "0",
+            "album": "Audionautix: Acoustic",
+            "genre": "Country",
+            "external-identifier-match-date": "acoustid:2019-03-27T18:47:03Z",
+            "external-identifier": "urn:acoustid:345ccfb7-00e4-497b-9f53-eca56ac5fe4e"
+          },
+          {
+            "name": "Jason_Shaw_-_FUNKY_JUNKY.ogg",
+            "source": "derivative",
+            "format": "Ogg Vorbis",
+            "original": "Jason_Shaw_-_FUNKY_JUNKY.mp3",
+            "mtime": "1317160106",
+            "size": "1728781",
+            "md5": "eeab57b187cca04b5d9c650057ea66d3",
+            "crc32": "caf0befc",
+            "sha1": "a039130effe3baea4be412e1406da43a5ceed83d",
+            "length": "135.78",
+            "height": "0",
+            "width": "0"
+          },
+          {
+            "name": "Jason_Shaw_-_FUNKY_JUNKY.png",
+            "source": "derivative",
+            "format": "PNG",
+            "original": "Jason_Shaw_-_FUNKY_JUNKY.mp3",
+            "mtime": "1415616691",
+            "size": "9432",
+            "md5": "96afca1ad799b9c5fe29a0b659fba5a7",
+            "crc32": "feb7e6f8",
+            "sha1": "fdbe0062d1ea57436b1531aa16644178cbe06b9a"
+          },
+          {
+            "name": "Jason_Shaw_-_JENNYS_THEME.mp3",
+            "source": "original",
+            "format": "VBR MP3",
+            "length": "45.78",
+            "mtime": "1317155513",
+            "size": "915636",
+            "md5": "f2578b60878f6dd29120b07cb023f4ad",
+            "crc32": "8ea2f312",
+            "sha1": "5f6b06afa9434aab169dab82614424d36ce845fc",
+            "height": "0",
+            "width": "0",
+            "title": "JENNY'S THEME",
+            "artist": "Jason Shaw",
+            "track": "0",
+            "album": "Audionautix: Acoustic",
+            "genre": "Country",
+            "external-identifier-match-date": "acoustid:2019-03-27T18:47:03Z",
+            "external-identifier": "urn:acoustid:6273c251-e850-4042-b7c4-c247c5ac643c"
+          },
+          {
+            "name": "Jason_Shaw_-_JENNYS_THEME.ogg",
+            "source": "derivative",
+            "format": "Ogg Vorbis",
+            "original": "Jason_Shaw_-_JENNYS_THEME.mp3",
+            "mtime": "1317160099",
+            "size": "562997",
+            "md5": "39dea678be4133fc045d19949e8afe06",
+            "crc32": "ea907f73",
+            "sha1": "7c2f16a090220095e618964aa0b95c660e5efe5f",
+            "length": "42.96",
+            "height": "0",
+            "width": "0"
+          },
+          {
+            "name": "Jason_Shaw_-_JENNYS_THEME.png",
+            "source": "derivative",
+            "format": "PNG",
+            "original": "Jason_Shaw_-_JENNYS_THEME.mp3",
+            "mtime": "1415616662",
+            "size": "12815",
+            "md5": "89ed42a03ea888b3b5b346aa4ce72be8",
+            "crc32": "863ec055",
+            "sha1": "da9dec0e74b57d73a52dd36fb815278ec001b197"
+          },
+          {
+            "name": "Jason_Shaw_-_LAZY_DAY.mp3",
+            "source": "original",
+            "format": "VBR MP3",
+            "length": "134.08",
+            "mtime": "1317155597",
+            "size": "2681775",
+            "md5": "15f1bdadab72559bb2ce1d0f10b27f1c",
+            "crc32": "54ce39c2",
+            "sha1": "c00268737c8f0418c88154e0da81b97c2399aebc",
+            "height": "0",
+            "width": "0",
+            "title": "LAZY DAY",
+            "artist": "Jason Shaw",
+            "track": "0",
+            "album": "Audionautix: Acoustic",
+            "genre": "Country",
+            "external-identifier-match-date": "acoustid:2019-03-27T18:47:03Z",
+            "external-identifier": "urn:acoustid:c462ab43-e78b-4659-9e3a-8622e625d3f7"
+          },
+          {
+            "name": "Jason_Shaw_-_LAZY_DAY.ogg",
+            "source": "derivative",
+            "format": "Ogg Vorbis",
+            "original": "Jason_Shaw_-_LAZY_DAY.mp3",
+            "mtime": "1317160119",
+            "size": "1557161",
+            "md5": "00a809998224a6b869f48459f4b24cd0",
+            "crc32": "ee1e790b",
+            "sha1": "e27f2e81889ff4bf44a276b7d40932f5e61966a5",
+            "length": "130.32",
+            "height": "0",
+            "width": "0"
+          },
+          {
+            "name": "Jason_Shaw_-_LAZY_DAY.png",
+            "source": "derivative",
+            "format": "PNG",
+            "original": "Jason_Shaw_-_LAZY_DAY.mp3",
+            "mtime": "1415616676",
+            "size": "11797",
+            "md5": "d3a3fcc92c2d12d07fed5c7cc764b63d",
+            "crc32": "164848f1",
+            "sha1": "109b5636b6ef3307fbde6d98511cfe0b1d01f58e"
+          },
+          {
+            "name": "Jason_Shaw_-_MOUNTAIN_SUN.mp3",
+            "source": "original",
+            "format": "VBR MP3",
+            "length": "153.36",
+            "mtime": "1317155635",
+            "size": "3067342",
+            "md5": "50f726876576e36a0ea2632953847cd5",
+            "crc32": "59a83c49",
+            "sha1": "00a1e15b0f4479b3be257c07696636f319204d4d",
+            "height": "0",
+            "width": "0",
+            "title": "MOUNTAIN SUN",
+            "artist": "Jason Shaw",
+            "track": "0",
+            "album": "Audionautix: Acoustic",
+            "genre": "Country",
+            "external-identifier-match-date": "acoustid:2019-03-27T18:47:03Z",
+            "external-identifier": "urn:acoustid:9c22442b-750e-4bb0-b210-261ccc568b3b"
+          },
+          {
+            "name": "Jason_Shaw_-_MOUNTAIN_SUN.ogg",
+            "source": "derivative",
+            "format": "Ogg Vorbis",
+            "original": "Jason_Shaw_-_MOUNTAIN_SUN.mp3",
+            "mtime": "1317160125",
+            "size": "1709908",
+            "md5": "977222c9bf5b20e8f7046a1dc961e6aa",
+            "crc32": "509fdd99",
+            "sha1": "c40d2ed621f5553eacb6f2765179792cf3689c68",
+            "length": "149.45",
+            "height": "0",
+            "width": "0"
+          },
+          {
+            "name": "Jason_Shaw_-_MOUNTAIN_SUN.png",
+            "source": "derivative",
+            "format": "PNG",
+            "original": "Jason_Shaw_-_MOUNTAIN_SUN.mp3",
+            "mtime": "1415616686",
+            "size": "12339",
+            "md5": "1a84dadfaf95e10deeb23b6d136e45d6",
+            "crc32": "b1afed7e",
+            "sha1": "190342dde8159e944953dcdc5ac01f7d3deb2ebe"
+          },
+          {
+            "name": "Jason_Shaw_-_ONE_FINE_DAY.mp3",
+            "source": "original",
+            "format": "VBR MP3",
+            "length": "103.52",
+            "mtime": "1317155650",
+            "size": "2070510",
+            "md5": "a472b4798df8470f394e6129306011aa",
+            "crc32": "1ca5a150",
+            "sha1": "f81848f5395a80ec3a22c9678087ad158ccc148f",
+            "height": "0",
+            "width": "0",
+            "title": "ONE FINE DAY",
+            "artist": "Jason Shaw",
+            "track": "0",
+            "album": "Audionautix: Acoustic",
+            "genre": "Country",
+            "external-identifier-match-date": "acoustid:2019-03-27T18:47:03Z",
+            "external-identifier": "urn:acoustid:8fa95aa4-fa70-4b77-9de9-fcb62b95a176"
+          },
+          {
+            "name": "Jason_Shaw_-_ONE_FINE_DAY.ogg",
+            "source": "derivative",
+            "format": "Ogg Vorbis",
+            "original": "Jason_Shaw_-_ONE_FINE_DAY.mp3",
+            "mtime": "1317160143",
+            "size": "1202308",
+            "md5": "c98b8cd4bb1ae3625310358ca86a9283",
+            "crc32": "c270acd0",
+            "sha1": "2e699b7ec0c4a6347b2f8292dcfbd4d367ce22df",
+            "length": "99.83",
+            "height": "0",
+            "width": "0"
+          },
+          {
+            "name": "Jason_Shaw_-_ONE_FINE_DAY.png",
+            "source": "derivative",
+            "format": "PNG",
+            "original": "Jason_Shaw_-_ONE_FINE_DAY.mp3",
+            "mtime": "1415616672",
+            "size": "12365",
+            "md5": "15ac30f51418d623cb8125769801e425",
+            "crc32": "ff663e08",
+            "sha1": "38a3d8ce9d1d81fc50422288e19334f6a0d50fe3"
+          },
+          {
+            "name": "Jason_Shaw_-_RIVER_MEDITATION.mp3",
+            "source": "original",
+            "format": "VBR MP3",
+            "length": "178.26",
+            "mtime": "1317155628",
+            "size": "3565236",
+            "md5": "a6c5166c217d095e815059374e469d9c",
+            "crc32": "ca6067d1",
+            "sha1": "32eeed8edd7b0c63b55ebe4f6567389d92b0575e",
+            "height": "0",
+            "width": "0",
+            "title": "RIVER MEDITATION",
+            "artist": "Jason Shaw",
+            "track": "0",
+            "album": "Audionautix: Acoustic",
+            "genre": "Country",
+            "external-identifier-match-date": "acoustid:2019-03-27T18:47:03Z",
+            "external-identifier": "urn:acoustid:cf3d0461-c6ac-43de-b8e6-7876971b7628"
+          },
+          {
+            "name": "Jason_Shaw_-_RIVER_MEDITATION.ogg",
+            "source": "derivative",
+            "format": "Ogg Vorbis",
+            "original": "Jason_Shaw_-_RIVER_MEDITATION.mp3",
+            "mtime": "1317160138",
+            "size": "1984887",
+            "md5": "32f5f6c3a3b8bb2ed49bf30c3c624e38",
+            "crc32": "64f6af37",
+            "sha1": "391a0041e457f53cff02ccd15984ede0660e4944",
+            "length": "173.61",
+            "height": "0",
+            "width": "0"
+          },
+          {
+            "name": "Jason_Shaw_-_RIVER_MEDITATION.png",
+            "source": "derivative",
+            "format": "PNG",
+            "original": "Jason_Shaw_-_RIVER_MEDITATION.mp3",
+            "mtime": "1415616715",
+            "size": "11425",
+            "md5": "416331964cb7b6fba5ece51cafa2f86f",
+            "crc32": "b52e7287",
+            "sha1": "3feb7570575144c95815ae44bfc66c9a99ee1d3f"
+          },
+          {
+            "name": "Jason_Shaw_-_ROCKY_TOP.mp3",
+            "source": "original",
+            "format": "VBR MP3",
+            "length": "104.38",
+            "mtime": "1317155589",
+            "size": "3340374",
+            "md5": "365c1e7f419011ad05361d3a6ffa7655",
+            "crc32": "dffa5f24",
+            "sha1": "20020ac6f794daf59fa3cf6992a11bc4aff10f63",
+            "height": "0",
+            "width": "0",
+            "title": "ROCKY TOP",
+            "artist": "Jason Shaw",
+            "track": "0",
+            "album": "Audionautix: Acoustic",
+            "genre": "Country",
+            "external-identifier-match-date": "acoustid:2019-03-27T18:47:03Z",
+            "external-identifier": "urn:acoustid:3b202477-4f65-4e3f-850a-573347da5475"
+          },
+          {
+            "name": "Jason_Shaw_-_ROCKY_TOP.ogg",
+            "source": "derivative",
+            "format": "Ogg Vorbis",
+            "original": "Jason_Shaw_-_ROCKY_TOP.mp3",
+            "mtime": "1317160130",
+            "size": "1449196",
+            "md5": "10429c109b83b1cfe93a0f3f78e240f3",
+            "crc32": "7fb068a",
+            "sha1": "2f5e597b5edd5f0c07186b530096d9f05383a8c9",
+            "length": "101.72",
+            "height": "0",
+            "width": "0"
+          },
+          {
+            "name": "Jason_Shaw_-_ROCKY_TOP.png",
+            "source": "derivative",
+            "format": "PNG",
+            "original": "Jason_Shaw_-_ROCKY_TOP.mp3",
+            "mtime": "1415616719",
+            "size": "8852",
+            "md5": "edd6138b6b146935b334c856415e0cc6",
+            "crc32": "5352bbd7",
+            "sha1": "fda7b86163700ca1d2548fe1f3b00125bab9cfee"
+          },
+          {
+            "name": "Jason_Shaw_-_RUNNING_WATERS.mp3",
+            "source": "original",
+            "format": "VBR MP3",
+            "length": "166.66",
+            "mtime": "1317155576",
+            "size": "6666493",
+            "md5": "bc17eabbe2ebadaec6c6543880bb1f95",
+            "crc32": "c120d92e",
+            "sha1": "9a0055b4a3a339d14087b2c1dc407d958e411737",
+            "height": "0",
+            "width": "0",
+            "title": "RUNNING WATERS",
+            "artist": "Jason Shaw",
+            "track": "0",
+            "album": "Audionautix: Acoustic",
+            "genre": "Country",
+            "external-identifier-match-date": "acoustid:2019-03-27T18:47:03Z",
+            "external-identifier": "urn:acoustid:e26da09f-584e-49f5-b77f-954a52e7cf42"
+          },
+          {
+            "name": "Jason_Shaw_-_RUNNING_WATERS.ogg",
+            "source": "derivative",
+            "format": "Ogg Vorbis",
+            "original": "Jason_Shaw_-_RUNNING_WATERS.mp3",
+            "mtime": "1317160097",
+            "size": "1775870",
+            "md5": "7651565b39efa2b321c583ee40e5fa4f",
+            "crc32": "27ae5179",
+            "sha1": "444b98a5a7f2025a50eecea03550a29be395bea7",
+            "length": "162.16",
+            "height": "0",
+            "width": "0"
+          },
+          {
+            "name": "Jason_Shaw_-_RUNNING_WATERS.png",
+            "source": "derivative",
+            "format": "PNG",
+            "original": "Jason_Shaw_-_RUNNING_WATERS.mp3",
+            "mtime": "1415616667",
+            "size": "11804",
+            "md5": "adb293ca8ffa0891218919a1930c11fd",
+            "crc32": "74da6376",
+            "sha1": "8b7fd80438ca6e37b977814d4f6401eb3c287835"
+          },
+          {
+            "name": "Jason_Shaw_-_SERENITY.mp3",
+            "source": "original",
+            "format": "VBR MP3",
+            "length": "110.42",
+            "mtime": "1317155572",
+            "size": "2208436",
+            "md5": "390b243795f06ba1b651e3c923a710ba",
+            "crc32": "c9296beb",
+            "sha1": "cf318a40dfbfbdc3f37388489870eaf802671a1b",
+            "height": "0",
+            "width": "0",
+            "title": "SERENITY",
+            "artist": "Jason Shaw",
+            "track": "0",
+            "album": "Audionautix: Acoustic",
+            "genre": "Country",
+            "external-identifier-match-date": "acoustid:2019-03-27T18:47:03Z",
+            "external-identifier": "urn:acoustid:9b7e65f0-9b73-4f48-90c3-a6c7f57c766e"
+          },
+          {
+            "name": "Jason_Shaw_-_SERENITY.ogg",
+            "source": "derivative",
+            "format": "Ogg Vorbis",
+            "original": "Jason_Shaw_-_SERENITY.mp3",
+            "mtime": "1317160090",
+            "size": "1256715",
+            "md5": "9d2d1a9c6018c130889b1a21d50ec41b",
+            "crc32": "a64a8a8d",
+            "sha1": "b5270324a68a92871c7345522906dc9dd46c6aab",
+            "length": "106.31",
+            "height": "0",
+            "width": "0"
+          },
+          {
+            "name": "Jason_Shaw_-_SERENITY.png",
+            "source": "derivative",
+            "format": "PNG",
+            "original": "Jason_Shaw_-_SERENITY.mp3",
+            "mtime": "1415616723",
+            "size": "12935",
+            "md5": "06dd933aff04fb7dcb3fb992d004a2cc",
+            "crc32": "9e856498",
+            "sha1": "74065574e0cabb26c93487bd198d472c3af33bb2"
+          },
+          {
+            "name": "Jason_Shaw_-_SIDEWALK.mp3",
+            "source": "original",
+            "format": "VBR MP3",
+            "length": "146.7",
+            "mtime": "1317155642",
+            "size": "5868191",
+            "md5": "13766417a5ae6a36c05bdcf4d801ae58",
+            "crc32": "16fc67ec",
+            "sha1": "2cddd46b02b843439758dbf83198462424685c42",
+            "height": "0",
+            "width": "0",
+            "title": "SIDEWALK",
+            "artist": "Jason Shaw",
+            "track": "0",
+            "album": "Audionautix: Acoustic",
+            "genre": "Country",
+            "external-identifier-match-date": "acoustid:2019-03-27T18:47:03Z",
+            "external-identifier": "urn:acoustid:dc733991-ad05-4f7f-b8e6-e2069b37c270"
+          },
+          {
+            "name": "Jason_Shaw_-_SIDEWALK.ogg",
+            "source": "derivative",
+            "format": "Ogg Vorbis",
+            "original": "Jason_Shaw_-_SIDEWALK.mp3",
+            "mtime": "1317160043",
+            "size": "1775349",
+            "md5": "3ea46b6d57ccf1ff7c1dee95f4061fea",
+            "crc32": "7c1ad276",
+            "sha1": "3b345d368e9d00cae0a97b179dd9a219624022bf",
+            "length": "142.94",
+            "height": "0",
+            "width": "0"
+          },
+          {
+            "name": "Jason_Shaw_-_SIDEWALK.png",
+            "source": "derivative",
+            "format": "PNG",
+            "original": "Jason_Shaw_-_SIDEWALK.mp3",
+            "mtime": "1415616757",
+            "size": "12220",
+            "md5": "cb924a43ff448040acb6d402ca3b1087",
+            "crc32": "bfdbe934",
+            "sha1": "e8f8b40943c7a1a1c005bc80d66d95cd023c894f"
+          },
+          {
+            "name": "Jason_Shaw_-_SNAPPY.mp3",
+            "source": "original",
+            "format": "VBR MP3",
+            "length": "50.78",
+            "mtime": "1317155613",
+            "size": "1015685",
+            "md5": "263c6e816d0c1326c655aa14ccc09541",
+            "crc32": "2d6d07da",
+            "sha1": "4d266d44944eab696f0d04ddcc23d5a5122aca52",
+            "height": "0",
+            "width": "0",
+            "title": "SNAPPY",
+            "artist": "Jason Shaw",
+            "track": "0",
+            "album": "Audionautix: Acoustic",
+            "genre": "Country",
+            "external-identifier-match-date": "acoustid:2019-03-27T18:47:03Z",
+            "external-identifier": "urn:acoustid:0b695c13-8173-4e9c-af4b-10fcf8c174aa"
+          },
+          {
+            "name": "Jason_Shaw_-_SNAPPY.ogg",
+            "source": "derivative",
+            "format": "Ogg Vorbis",
+            "original": "Jason_Shaw_-_SNAPPY.mp3",
+            "mtime": "1317160037",
+            "size": "632406",
+            "md5": "2bbf8c83e7eb8dfe012b9bb3379084ac",
+            "crc32": "529ad676",
+            "sha1": "d69b3a1fc21ee5de40f607e24bbe9aaf5ce6a01d",
+            "length": "47.89",
+            "height": "0",
+            "width": "0"
+          },
+          {
+            "name": "Jason_Shaw_-_SNAPPY.png",
+            "source": "derivative",
+            "format": "PNG",
+            "original": "Jason_Shaw_-_SNAPPY.mp3",
+            "mtime": "1415616726",
+            "size": "11369",
+            "md5": "14bf827e919ddba5e9553b8e09d5984c",
+            "crc32": "f994f4bc",
+            "sha1": "46d83f6172fdc95a4ac15d50c4340949e22e48a9"
+          },
+          {
+            "name": "Jason_Shaw_-_SOLO_ACOUSTIC_GUITAR.mp3",
+            "source": "original",
+            "format": "VBR MP3",
+            "length": "191.58",
+            "mtime": "1317155528",
+            "size": "7663326",
+            "md5": "a0ac29bd5b82500f6d9c0a8c22dd5335",
+            "crc32": "d683af45",
+            "sha1": "c127aba64ded2d53ba0cdd78fb2e8e08d4b27471",
+            "height": "0",
+            "width": "0",
+            "title": "SOLO ACOUSTIC GUITAR",
+            "artist": "Jason Shaw",
+            "track": "0",
+            "album": "Audionautix: Acoustic",
+            "genre": "Country",
+            "external-identifier-match-date": "acoustid:2019-03-27T18:47:03Z",
+            "external-identifier": "urn:acoustid:9c9f73cf-be90-4771-8fff-1751e14d1671"
+          },
+          {
+            "name": "Jason_Shaw_-_SOLO_ACOUSTIC_GUITAR.ogg",
+            "source": "derivative",
+            "format": "Ogg Vorbis",
+            "original": "Jason_Shaw_-_SOLO_ACOUSTIC_GUITAR.mp3",
+            "mtime": "1317160034",
+            "size": "2337854",
+            "md5": "59eb0b8a0230533c974c25334fc1a213",
+            "crc32": "a71b91cb",
+            "sha1": "3e645458347daab3cb48c96ca9964ad04de51329",
+            "length": "188.97",
+            "height": "0",
+            "width": "0"
+          },
+          {
+            "name": "Jason_Shaw_-_SOLO_ACOUSTIC_GUITAR.png",
+            "source": "derivative",
+            "format": "PNG",
+            "original": "Jason_Shaw_-_SOLO_ACOUSTIC_GUITAR.mp3",
+            "mtime": "1415616733",
+            "size": "10888",
+            "md5": "45b7c5dd6e05bdd3599790476e91a88c",
+            "crc32": "0457c17a",
+            "sha1": "d93d17db16953724629d69767403796f8cf6a15c"
+          },
+          {
+            "name": "Jason_Shaw_-_SOUTH_OF_THE_BORDER.mp3",
+            "source": "original",
+            "format": "VBR MP3",
+            "length": "59.6",
+            "mtime": "1317155569",
+            "size": "953691",
+            "md5": "ed7e79ef8e260bfd097c347fdd4fe767",
+            "crc32": "fb11911c",
+            "sha1": "65cfa5a538d53fcc49a32ba97ec17aca1df03beb",
+            "height": "0",
+            "width": "0",
+            "title": "SOUTH OF THE BORDER",
+            "artist": "Jason Shaw",
+            "track": "0",
+            "album": "Audionautix: Acoustic",
+            "genre": "Country",
+            "external-identifier-match-date": "acoustid:2019-03-27T18:47:03Z",
+            "external-identifier": "urn:acoustid:416d1c13-ad0e-411c-bd77-fe59d8565e54"
+          },
+          {
+            "name": "Jason_Shaw_-_SOUTH_OF_THE_BORDER.ogg",
+            "source": "derivative",
+            "format": "Ogg Vorbis",
+            "original": "Jason_Shaw_-_SOUTH_OF_THE_BORDER.mp3",
+            "mtime": "1317160026",
+            "size": "702351",
+            "md5": "aa1df49f9b7692b858e37feed61049d7",
+            "crc32": "5d1c88ff",
+            "sha1": "3d1297082221abe653040b3f15fdac657e5d9126",
+            "length": "56.57",
+            "height": "0",
+            "width": "0"
+          },
+          {
+            "name": "Jason_Shaw_-_SOUTH_OF_THE_BORDER.png",
+            "source": "derivative",
+            "format": "PNG",
+            "original": "Jason_Shaw_-_SOUTH_OF_THE_BORDER.mp3",
+            "mtime": "1415616737",
+            "size": "11624",
+            "md5": "4ef7f2f26c7084b54b70feeafac955db",
+            "crc32": "ccd23452",
+            "sha1": "6132f2d215df197c07f1bf52c15310b13f827132"
+          },
+          {
+            "name": "Jason_Shaw_-_TENNESEE_HAYRIDE.mp3",
+            "source": "original",
+            "format": "VBR MP3",
+            "length": "153.28",
+            "mtime": "1317155566",
+            "size": "6131506",
+            "md5": "afa8d112e9b0123eca8c4706e54d1052",
+            "crc32": "eea51a40",
+            "sha1": "290e363846584a521ffd94e5f2438b1b639d37ca",
+            "height": "0",
+            "width": "0",
+            "title": "TENNESEE HAYRIDE",
+            "artist": "Jason Shaw",
+            "track": "0",
+            "album": "Audionautix: Acoustic",
+            "genre": "Country",
+            "external-identifier-match-date": "acoustid:2019-03-27T18:47:03Z",
+            "external-identifier": "urn:acoustid:5c50843d-80c9-4ebb-be68-a0e48e5a6ac6"
+          },
+          {
+            "name": "Jason_Shaw_-_TENNESEE_HAYRIDE.ogg",
+            "source": "derivative",
+            "format": "Ogg Vorbis",
+            "original": "Jason_Shaw_-_TENNESEE_HAYRIDE.mp3",
+            "mtime": "1317160050",
+            "size": "2125970",
+            "md5": "8b248adef3e8409c64602a1c18bea123",
+            "crc32": "6a53e890",
+            "sha1": "eb4685d49c12e5c896bf8bbb19a99bae616731b5",
+            "length": "150.52",
+            "height": "0",
+            "width": "0"
+          },
+          {
+            "name": "Jason_Shaw_-_TENNESEE_HAYRIDE.png",
+            "source": "derivative",
+            "format": "PNG",
+            "original": "Jason_Shaw_-_TENNESEE_HAYRIDE.mp3",
+            "mtime": "1415616696",
+            "size": "10465",
+            "md5": "35cd7ddd6558a88ac3b557258b980553",
+            "crc32": "ef4e1d80",
+            "sha1": "fe0cbbf7f48f79d314c6b92543b09ae2ce66a351"
+          },
+          {
+            "name": "Jason_Shaw_-_THINGAMAJIG.mp3",
+            "source": "original",
+            "format": "VBR MP3",
+            "length": "233.82",
+            "mtime": "1317155560",
+            "size": "4676485",
+            "md5": "d8a97dc3eb0edb788bcaecbabf14ac1e",
+            "crc32": "831ad57c",
+            "sha1": "f7a1e9e84a4ee4f37160647056101000bd1dc971",
+            "height": "0",
+            "width": "0",
+            "title": "THINGAMAJIG",
+            "artist": "Jason Shaw",
+            "track": "0",
+            "album": "Audionautix: Acoustic",
+            "genre": "Country",
+            "external-identifier-match-date": "acoustid:2019-03-27T18:47:03Z",
+            "external-identifier": "urn:acoustid:72e8d4b7-26d1-4179-931a-7df7f198dd9c"
+          },
+          {
+            "name": "Jason_Shaw_-_THINGAMAJIG.ogg",
+            "source": "derivative",
+            "format": "Ogg Vorbis",
+            "original": "Jason_Shaw_-_THINGAMAJIG.mp3",
+            "mtime": "1317160060",
+            "size": "2971320",
+            "md5": "9b11ff7a57929d92b94d19dcf4115de9",
+            "crc32": "69977988",
+            "sha1": "67622a31bf1ed1a9865c2d8d345ab68f9fee6908",
+            "length": "231.48",
+            "height": "0",
+            "width": "0"
+          },
+          {
+            "name": "Jason_Shaw_-_THINGAMAJIG.png",
+            "source": "derivative",
+            "format": "PNG",
+            "original": "Jason_Shaw_-_THINGAMAJIG.mp3",
+            "mtime": "1415616710",
+            "size": "9558",
+            "md5": "ab1d9d30226241a9f6bfe286bf5a34b7",
+            "crc32": "8b440b1e",
+            "sha1": "90e31154ce7b538de5eb00817550bc4ac6d4bdb5"
+          },
+          {
+            "name": "Jason_Shaw_-_TRAVEL_LIGHT.mp3",
+            "source": "original",
+            "format": "VBR MP3",
+            "length": "113.29",
+            "mtime": "1317155545",
+            "size": "2265906",
+            "md5": "990c16e4554fa6e49ade105d6bad6237",
+            "crc32": "45d1c205",
+            "sha1": "b9a650ad48737566fa93370bdbc4278b522b45c5",
+            "height": "0",
+            "width": "0",
+            "title": "TRAVEL LIGHT",
+            "artist": "Jason Shaw",
+            "track": "0",
+            "album": "Audionautix: Acoustic",
+            "genre": "Country",
+            "external-identifier-match-date": "acoustid:2019-03-27T18:47:03Z",
+            "external-identifier": "urn:acoustid:c60c7ee5-f5a2-4004-8969-adbf3e2826e0"
+          },
+          {
+            "name": "Jason_Shaw_-_TRAVEL_LIGHT.ogg",
+            "source": "derivative",
+            "format": "Ogg Vorbis",
+            "original": "Jason_Shaw_-_TRAVEL_LIGHT.mp3",
+            "mtime": "1317160084",
+            "size": "1321038",
+            "md5": "fe0a66742c9b5a4ee695d62a74c9b41d",
+            "crc32": "752d06c9",
+            "sha1": "b3668bb2b5bbd8cd69bc5df58e3388f44354f159",
+            "length": "109.97",
+            "height": "0",
+            "width": "0"
+          },
+          {
+            "name": "Jason_Shaw_-_TRAVEL_LIGHT.png",
+            "source": "derivative",
+            "format": "PNG",
+            "original": "Jason_Shaw_-_TRAVEL_LIGHT.mp3",
+            "mtime": "1415616741",
+            "size": "12233",
+            "md5": "19d026df2a79de9cb91194d5fd43f581",
+            "crc32": "77b0ff2c",
+            "sha1": "62ee9cf3982e6e26eca6f6ede0925567e15868d5"
+          },
+          {
+            "name": "Jason_Shaw_-_WHEELS.mp3",
+            "source": "original",
+            "format": "VBR MP3",
+            "length": "211.38",
+            "mtime": "1317155557",
+            "size": "3382170",
+            "md5": "1993982581f0103602c03d53fb0c5aaf",
+            "crc32": "ca2b7888",
+            "sha1": "32fa02c79bdc59533e4c2a35b168a8b609e34f63",
+            "height": "0",
+            "width": "0",
+            "title": "WHEELS",
+            "artist": "Jason Shaw",
+            "track": "0",
+            "album": "Audionautix: Acoustic",
+            "genre": "Country",
+            "external-identifier-match-date": "acoustid:2019-03-27T18:47:03Z",
+            "external-identifier": "urn:acoustid:1fac2fe9-a2a0-4b91-bb06-4c9045ca0cee"
+          },
+          {
+            "name": "Jason_Shaw_-_WHEELS.ogg",
+            "source": "derivative",
+            "format": "Ogg Vorbis",
+            "original": "Jason_Shaw_-_WHEELS.mp3",
+            "mtime": "1317160078",
+            "size": "2608066",
+            "md5": "4dd14f320f41ee8da9bf9608dd7cec7d",
+            "crc32": "17cdfcfc",
+            "sha1": "37665a0504fb07813344e89c91e016805e6aa872",
+            "length": "207.16",
+            "height": "0",
+            "width": "0"
+          },
+          {
+            "name": "Jason_Shaw_-_WHEELS.png",
+            "source": "derivative",
+            "format": "PNG",
+            "original": "Jason_Shaw_-_WHEELS.mp3",
+            "mtime": "1415616752",
+            "size": "11831",
+            "md5": "eb2c3f0fbff65b00698fb5773091fc79",
+            "crc32": "80a2ac7f",
+            "sha1": "33c51c6c2bad4ef58e6aceea7c334b375fac2bbf"
+          },
+          {
+            "name": "Jason_Shaw_-_WORDS.mp3",
+            "source": "original",
+            "format": "VBR MP3",
+            "length": "155.82",
+            "mtime": "1317155540",
+            "size": "2493171",
+            "md5": "6b77abe3410439a5a9227de0b590f1dc",
+            "crc32": "ea4f9f28",
+            "sha1": "928095cd0772911e619c7881c208af62a1d08efd",
+            "height": "0",
+            "width": "0",
+            "title": "WORDS",
+            "artist": "Jason Shaw",
+            "track": "0",
+            "album": "Audionautix: Acoustic",
+            "genre": "Country",
+            "external-identifier-match-date": "acoustid:2019-03-27T18:47:03Z",
+            "external-identifier": "urn:acoustid:40508321-be7c-40fa-a3bb-84d47b18adb6"
+          },
+          {
+            "name": "Jason_Shaw_-_WORDS.ogg",
+            "source": "derivative",
+            "format": "Ogg Vorbis",
+            "original": "Jason_Shaw_-_WORDS.mp3",
+            "mtime": "1317160068",
+            "size": "1729028",
+            "md5": "ade38152c815a4863b1404e9d085f980",
+            "crc32": "b9b78f9f",
+            "sha1": "6054b29ac8a9155b7a5c5e2d107079fcb37162df",
+            "length": "151.65",
+            "height": "0",
+            "width": "0"
+          },
+          {
+            "name": "Jason_Shaw_-_WORDS.png",
+            "source": "derivative",
+            "format": "PNG",
+            "original": "Jason_Shaw_-_WORDS.mp3",
+            "mtime": "1415616745",
+            "size": "11825",
+            "md5": "de8b3f0e97142ae5c76b2854b2ec16e3",
+            "crc32": "e7eb5663",
+            "sha1": "39c63d732c51eeb628e5cf39b0fd534ed598f9a0"
+          },
+          {
+            "name": "__ia_thumb.jpg",
+            "source": "original",
+            "mtime": "1542339430",
+            "size": "21000",
+            "md5": "04a64d025c92be9f8aca55d644f408eb",
+            "crc32": "89f2fb21",
+            "sha1": "31a0fd44a2a7a80649f6a89811d58626fedcdc27",
+            "format": "Item Tile",
+            "rotation": "0"
+          }
+        ],
+        "files_count": 68,
+        "item_last_updated": 1711797502,
+        "item_size": 102783590,
+        "metadata": {
+          "identifier": "Audionautix_Acoustic-9870",
+          "title": "Audionautix: Acoustic",
+          "mediatype": "audio",
+          "collection": "freemusicarchive",
+          "description": "<p>Jason Shaw's music is a great resource for anyone interested in using CC licensed music in their next project. This is a collection of his acoustic, folk, and country tracks. <br /></p>",
+          "date": "2011-08-17",
+          "year": "2011",
+          "licenseurl": "http://creativecommons.org/licenses/by/3.0/us/",
+          "publicdate": "2011-09-27 20:38:13",
+          "addeddate": "2011-09-27 20:37:57",
+          "uploader": "jake@archive.org",
+          "source": "http://freemusicarchive.org/music/Jason_Shaw/Audionautix_Acoustic/",
+          "artist": "Jason Shaw",
+          "artisturl": "http://freemusicarchive.org/music/Jason_Shaw/",
+          "artist_website": "http://audionautix.com/index.html",
+          "updatedate": "2011-09-27 21:46:53",
+          "updater": "Jake Johnson",
+          "creator": "Jason Shaw",
+          "boxid": "OL100020219",
+          "backup_location": "ia903703_15",
+          "external_metadata_update": "2019-03-27T18:47:03Z"
+        },
+        "reviews": [
+          {
+            "reviewbody": "rich guitar sounds and nicely spaced piano playing\ntrack 1 sounds like soundtrack to a journey - maybe a welcoming journey from sleep to waking?\nnice hard steel sound on track 2\nand track 14 sounds a bit like one of nick drake's instrumentals\nvery competent musicianship\neclectic and wide ranging, which is surprising as the limit of a genre is given on the cover. but its not a limited sound.",
+            "reviewtitle": "uplifting",
+            "reviewer": "matthew boardman",
+            "reviewdate": "2016-06-11 12:11:38",
+            "createdate": "2016-06-11 12:11:38",
+            "stars": "4"
+          },
+          {
+            "reviewbody": "I will be making videos with pictures of my road trips with these wonderful tunes ♥ (I will credit them all of course!). Thank you for sharing such a rich collection, sweet and earthy sounds, I love it!",
+            "reviewtitle": "love it ♥",
+            "reviewer": "SamFT",
+            "reviewdate": "2016-08-07 20:21:04",
+            "createdate": "2016-08-07 20:20:55",
+            "stars": "5"
+          },
+          {
+            "reviewbody": "This music is great if you are looking to just play it casually anywhere at any time. It is also great for how-to or DIY videos.",
+            "reviewtitle": "Amazing! ",
+            "reviewer": "JTfalcon",
+            "reviewer_itemname": "@jtfalcon",
+            "reviewdate": "2019-02-06 21:08:24",
+            "createdate": "2019-02-06 21:08:24",
+            "stars": "5"
+          }
+        ],
+        "server": "dn601304.us.archive.org",
+        "simplelists": {
+          "solo_manifest": {
+            "solo_manifest_dn601304": {
+              "sys_changed_by": {
+                "source": "task",
+                "task_id": "5508130370"
+              },
+              "sys_last_changed": "2026-07-21 02:39:23.396062"
+            }
+          }
+        },
+        "solo": true,
+        "uniq": 88492673,
+        "workable_servers": [
+          "dn601304.us.archive.org"
+        ]
+      }
+    },
+    "GET https://archive.org/advancedsearch.php?q=collection%3Afreemusicarchive+AND+mediatype%3Aaudio+AND+licenseurl%3A*+AND+NOT+licenseurl%3A*-nd*&rows=50&page=1&output=json&fl%5B%5D=identifier&fl%5B%5D=title&fl%5B%5D=creator&fl%5B%5D=date&fl%5B%5D=year&fl%5B%5D=licenseurl&fl%5B%5D=mediatype&fl%5B%5D=subject&sort%5B%5D=downloads+desc": {
+      "status": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": {
+        "responseHeader": {
+          "status": 0,
+          "QTime": 83,
+          "params": {
+            "query": "collection:freemusicarchive AND mediatype:audio AND licenseurl:* AND NOT licenseurl:*-nd*",
+            "qin": "collection:freemusicarchive AND mediatype:audio AND licenseurl:* AND NOT licenseurl:*-nd*",
+            "fields": "identifier,title,creator,date,year,licenseurl,mediatype,subject",
+            "wt": "json",
+            "sort": "downloads desc",
+            "rows": 50,
+            "start": 0
+          }
+        },
+        "response": {
+          "numFound": 5290,
+          "start": 0,
+          "docs": [
+            {
+              "creator": "Jason Shaw",
+              "date": "2011-08-17T00:00:00Z",
+              "identifier": "Audionautix_Acoustic-9870",
+              "licenseurl": "http://creativecommons.org/licenses/by/3.0/us/",
+              "mediatype": "audio",
+              "title": "Audionautix: Acoustic",
+              "year": 2011
+            },
+            {
+              "creator": "Kevin MacLeod",
+              "date": "2011-07-15T00:00:00Z",
+              "identifier": "Classical_Sampler-9615",
+              "licenseurl": "http://creativecommons.org/licenses/by/3.0/",
+              "mediatype": "audio",
+              "title": "Classical Sampler",
+              "year": 2011
+            },
+            {
+              "creator": "Jahzzar",
+              "identifier": "Grab_Bag-12446",
+              "licenseurl": "http://creativecommons.org/licenses/by-sa/3.0/",
+              "mediatype": "audio",
+              "title": "Grab Bag"
+            },
+            {
+              "creator": "John Harrison with the Wichita State University Chamber Players",
+              "date": "2011-11-03T00:00:00Z",
+              "identifier": "The_Four_Seasons_Vivaldi-10361",
+              "licenseurl": "http://creativecommons.org/licenses/by-sa/3.0/",
+              "mediatype": "audio",
+              "title": "The Four Seasons (Vivaldi)",
+              "year": 2011
+            },
+            {
+              "creator": "TerbujurKaku",
+              "date": "2010-02-07T00:00:00Z",
+              "identifier": "Megamix_Album-6124",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/",
+              "mediatype": "audio",
+              "title": "Megamix Album (Koplo Goes To Breakcore)",
+              "year": 2010
+            },
+            {
+              "creator": "Death Grips",
+              "date": "2011-04-29T00:00:00Z",
+              "identifier": "Ex_Military-9086",
+              "licenseurl": "http://freemusicarchive.org/FMA_License",
+              "mediatype": "audio",
+              "title": "Ex Military",
+              "year": 2011
+            },
+            {
+              "creator": "ZUHN",
+              "date": "2010-05-02T00:00:00Z",
+              "identifier": "los_suenos_lucifer-6278",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/us/",
+              "mediatype": "audio",
+              "title": "los suenos lucifer",
+              "year": 2010
+            },
+            {
+              "creator": "NeoBrazilians (Various Artists)",
+              "identifier": "July-12126",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/",
+              "mediatype": "audio",
+              "title": "July"
+            },
+            {
+              "creator": "junior85",
+              "date": "2010-02-22T00:00:00Z",
+              "identifier": "Sleep_Music-5629",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/",
+              "mediatype": "audio",
+              "title": "Sleep Music",
+              "year": 2010
+            },
+            {
+              "creator": "Death Grips",
+              "date": "2011-03-21T00:00:00Z",
+              "identifier": "Death_Grips-8841",
+              "licenseurl": "http://freemusicarchive.org/FMA_License",
+              "mediatype": "audio",
+              "title": "Death Grips",
+              "year": 2011
+            },
+            {
+              "creator": "Krestovsky",
+              "date": "2010-11-27T00:00:00Z",
+              "identifier": "Looksee-7904",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/us/",
+              "mediatype": "audio",
+              "title": "Looks(ee)",
+              "year": 2010
+            },
+            {
+              "creator": "MIT Concert Choir",
+              "date": "2011-06-03T00:00:00Z",
+              "identifier": "Carmina_Burana_Carl_Orff-9275",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc/3.0/us/",
+              "mediatype": "audio",
+              "title": "Carmina Burana [Carl Orff]",
+              "year": 2011
+            },
+            {
+              "creator": "Kimiko Ishizaka",
+              "date": "2012-05-29T00:00:00Z",
+              "identifier": "The_Open_Goldberg_Variations-11823",
+              "licenseurl": "http://creativecommons.org/publicdomain/zero/1.0/",
+              "mediatype": "audio",
+              "title": "The Open Goldberg Variations",
+              "year": 2012
+            },
+            {
+              "creator": "Ultrabunny",
+              "date": "2012-10-13T00:00:00Z",
+              "identifier": "The_Third_Ultrabunny_Album-12590",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/us/",
+              "mediatype": "audio",
+              "title": "The Third Ultrabunny Album",
+              "year": 2012
+            },
+            {
+              "creator": "Silver Process",
+              "date": "2011-11-23T00:00:00Z",
+              "identifier": "Fantastic_Planet-10470",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/us/",
+              "mediatype": "audio",
+              "title": "Fantastic Planet",
+              "year": 2011
+            },
+            {
+              "creator": "Lee Rosevere",
+              "date": "2011-01-18T00:00:00Z",
+              "identifier": "Ding-A-Ling-8294",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc/3.0/",
+              "mediatype": "audio",
+              "title": "Ding-A-Ling",
+              "year": 2011
+            },
+            {
+              "creator": "The New Happy Birthday Song Contest",
+              "date": "2012-12-12T00:00:00Z",
+              "identifier": "The_New_Birthday_Song_Contest-13010",
+              "licenseurl": "http://creativecommons.org/licenses/by/3.0/",
+              "mediatype": "audio",
+              "title": "The New Birthday Song Contest",
+              "year": 2012
+            },
+            {
+              "creator": "Various Artists",
+              "date": "2004-12-01T00:00:00Z",
+              "identifier": "Wakka_Chikka_Wakka_Chikka_Volume_1-13245",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc/3.0/",
+              "mediatype": "audio",
+              "title": "Wakka Chikka Wakka Chikka: Porn Music for the Masses Volume 1",
+              "year": 2004
+            },
+            {
+              "creator": "Kevin MacLeod",
+              "date": "2011-07-15T00:00:00Z",
+              "identifier": "Jazz_Sampler-9619",
+              "licenseurl": "http://creativecommons.org/licenses/by/3.0/",
+              "mediatype": "audio",
+              "title": "Jazz Sampler",
+              "year": 2011
+            },
+            {
+              "creator": "Kokusai Bunka Shinkokai",
+              "date": "2009-01-01T00:00:00Z",
+              "identifier": "Japanese_Traditional_Music-3630",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/us/",
+              "mediatype": "audio",
+              "title": "Japanese Traditional Music",
+              "year": 2009
+            },
+            {
+              "creator": [
+                "Various Artists [Dawn of Sound]",
+                "Francis J. Lapitino"
+              ],
+              "date": "1998-12-01T00:00:00Z",
+              "identifier": "Voices_of_Christmas_Past-8037",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/2.5/ca/",
+              "mediatype": "audio",
+              "title": "Voices of Christmas Past",
+              "year": 1998
+            },
+            {
+              "creator": "Niamh de Barra",
+              "date": "2012-06-12T00:00:00Z",
+              "identifier": "Below_The_Sea-11918",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/",
+              "mediatype": "audio",
+              "title": "Below The Sea",
+              "year": 2012
+            },
+            {
+              "creator": "junior85",
+              "date": "2013-03-15T00:00:00Z",
+              "identifier": "OnwardUpward-13786",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/",
+              "mediatype": "audio",
+              "subject": [
+                "Electronic",
+                "Experimental",
+                "Ambient",
+                "Electronic",
+                "Glitch"
+              ],
+              "title": "Onward&Upward",
+              "year": 2013
+            },
+            {
+              "creator": "Vate",
+              "date": "2008-03-07T00:00:00Z",
+              "identifier": "Porno_Pixel-3321",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/",
+              "mediatype": "audio",
+              "title": "Porno Pixel",
+              "year": 2008
+            },
+            {
+              "creator": "Naran",
+              "date": "2011-07-04T00:00:00Z",
+              "identifier": "Feel_Freeze-9508",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/de/",
+              "mediatype": "audio",
+              "title": "Feel Free:::::ze",
+              "year": 2011
+            },
+            {
+              "creator": "Spitball",
+              "date": "2010-06-10T00:00:00Z",
+              "identifier": "The_Last_Straw-6527",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/us/",
+              "mediatype": "audio",
+              "title": "The Last Straw",
+              "year": 2010
+            },
+            {
+              "creator": "Classwar Karaoke",
+              "date": "2013-02-28T00:00:00Z",
+              "identifier": "Classwar_Karaoke_-_0021_Survey-13652",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/",
+              "mediatype": "audio",
+              "title": "Classwar Karaoke - 0021 Survey",
+              "year": 2013
+            },
+            {
+              "creator": "Talkshow Boy",
+              "date": "2006-06-01T00:00:00Z",
+              "identifier": "Testosterone-11904",
+              "licenseurl": "http://creativecommons.org/licenses/by-sa/3.0/au/",
+              "mediatype": "audio",
+              "title": "Testosterone!",
+              "year": 2006
+            },
+            {
+              "creator": "Jenny Mayhem",
+              "date": "2009-01-07T00:00:00Z",
+              "identifier": "Keep_the_Fire-10442",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/",
+              "mediatype": "audio",
+              "title": "Keep the Fire",
+              "year": 2009
+            },
+            {
+              "creator": "Glass Candy",
+              "date": "2003-02-01T00:00:00Z",
+              "identifier": "Love_Love_Love-210",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/",
+              "mediatype": "audio",
+              "title": "Love Love Love",
+              "year": 2003
+            },
+            {
+              "creator": "Talkshow Boy",
+              "date": "2004-06-01T00:00:00Z",
+              "identifier": "Watch_As_I_Perform_My_Own_Tracheotomy-11864",
+              "licenseurl": "http://creativecommons.org/licenses/by-sa/3.0/au/",
+              "mediatype": "audio",
+              "title": "Watch As I Perform My Own Tracheotomy",
+              "year": 2004
+            },
+            {
+              "creator": [
+                "Motown Meltdown",
+                "Qulfus"
+              ],
+              "date": "2010-05-06T00:00:00Z",
+              "identifier": "Motown_Meltdown_Volume_2-6619",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/us/",
+              "mediatype": "audio",
+              "title": "Motown Meltdown: Volume 2",
+              "year": 2010
+            },
+            {
+              "creator": "N.N.A",
+              "identifier": "no_hope-11832",
+              "licenseurl": "http://creativecommons.org/licenses/by/3.0/",
+              "mediatype": "audio",
+              "title": "no hope"
+            },
+            {
+              "creator": "Nine Inch Nails",
+              "date": "2008-05-05T00:00:00Z",
+              "identifier": "The_Slip-2640",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/us/",
+              "mediatype": "audio",
+              "title": "The Slip",
+              "year": 2008
+            },
+            {
+              "creator": "Kevin MacLeod",
+              "identifier": "Oddities-17185",
+              "licenseurl": "http://creativecommons.org/licenses/by/3.0/",
+              "mediatype": "audio",
+              "title": "Oddities"
+            },
+            {
+              "creator": "Ben von Wildenhaus",
+              "identifier": "Instrumental_Quaalude_vol_1-11161",
+              "licenseurl": "http://creativecommons.org/licenses/by/3.0/",
+              "mediatype": "audio",
+              "title": "Instrumental Quaalude, vol. 1"
+            },
+            {
+              "creator": "Offwight Radiator",
+              "date": "2008-05-01T00:00:00Z",
+              "identifier": "Shreds_Volume_1_1935-9575",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/",
+              "mediatype": "audio",
+              "title": "Shreds Volume 1",
+              "year": 2008
+            },
+            {
+              "creator": "Joe Meek",
+              "date": "2004-07-04T00:00:00Z",
+              "identifier": "Joe_Meek_Demos-7467",
+              "licenseurl": "http://freemusicarchive.org/FMA_License",
+              "mediatype": "audio",
+              "title": "Joe Meek Demos",
+              "year": 2004
+            },
+            {
+              "creator": "Dexter Britain",
+              "date": "2012-03-12T00:00:00Z",
+              "identifier": "Creative_Commons_Selection-11312",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/",
+              "mediatype": "audio",
+              "title": "Creative Commons Selection",
+              "year": 2012
+            },
+            {
+              "creator": "The Feeling of Love",
+              "identifier": "Live_at_OCCII_24062009-11086",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/us/",
+              "mediatype": "audio",
+              "title": "Live at OCCII 24/06/2009"
+            },
+            {
+              "creator": "Discount Fireworks",
+              "date": "2011-07-09T00:00:00Z",
+              "identifier": "Squares-9572",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/us/",
+              "mediatype": "audio",
+              "title": "Squares",
+              "year": 2011
+            },
+            {
+              "creator": "Martin Luther King",
+              "date": "2011-01-17T00:00:00Z",
+              "identifier": "The_Speeches-8291",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/us/",
+              "mediatype": "audio",
+              "title": "The Speeches",
+              "year": 2011
+            },
+            {
+              "creator": "Luciano Foglia",
+              "date": "2004-02-16T00:00:00Z",
+              "identifier": "Pain_Management-9507",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/",
+              "mediatype": "audio",
+              "title": "Pain Management",
+              "year": 2004
+            },
+            {
+              "creator": "Dexter Britain",
+              "date": "2012-12-12T00:00:00Z",
+              "identifier": "Creative_Commons_Volume_5-13062",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/",
+              "mediatype": "audio",
+              "title": "Creative Commons Volume. 5",
+              "year": 2012
+            },
+            {
+              "creator": "junior85",
+              "date": "2012-12-16T00:00:00Z",
+              "identifier": "ITS_CHRISTMAS_CHRISTMAS_TIME-13088",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/",
+              "mediatype": "audio",
+              "title": "IT'S CHRISTMAS CHRISTMAS TIME",
+              "year": 2012
+            },
+            {
+              "creator": "Broke For Free",
+              "date": "2011-07-08T00:00:00Z",
+              "identifier": "Something_EP-9563",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc/3.0/",
+              "mediatype": "audio",
+              "title": "Something EP",
+              "year": 2011
+            },
+            {
+              "creator": "The New Mystikal Troubadours",
+              "date": "2009-11-14T00:00:00Z",
+              "identifier": "The_New_Mystikal_Troubadours-7072",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/us/",
+              "mediatype": "audio",
+              "title": "The New Mystikal Troubadours",
+              "year": 2009
+            },
+            {
+              "creator": "Short Hand",
+              "date": "2011-12-06T00:00:00Z",
+              "identifier": "Attila-10535",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/",
+              "mediatype": "audio",
+              "title": "Attila",
+              "year": 2011
+            },
+            {
+              "creator": "Phizmiz & KIllerwhale",
+              "date": "2011-09-04T00:00:00Z",
+              "identifier": "Happy_Birthday_Beyonce-9992",
+              "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/",
+              "mediatype": "audio",
+              "title": "Happy Birthday Beyonce",
+              "year": 2011
+            },
+            {
+              "creator": "The Tudor Consort",
+              "date": "2010-10-01T00:00:00Z",
+              "identifier": "Stabat_Mater_-_Domenico_Scarlatti-7448",
+              "licenseurl": "http://creativecommons.org/licenses/by/3.0/",
+              "mediatype": "audio",
+              "title": "Stabat Mater - Domenico Scarlatti",
+              "year": 2010
+            }
+          ]
+        }
+      }
+    },
+    "GET https://archive.org/advancedsearch.php?q=collection%3Afreemusicarchive+AND+mediatype%3Aaudio&rows=50&page=1&output=json&fl%5B%5D=identifier&fl%5B%5D=title&fl%5B%5D=creator&fl%5B%5D=date&fl%5B%5D=year&fl%5B%5D=licenseurl&fl%5B%5D=mediatype&fl%5B%5D=subject&sort%5B%5D=publicdate+desc": {
+      "status": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": {
+        "responseHeader": {
+          "status": 0,
+          "QTime": 31,
+          "params": {
+            "query": "collection:freemusicarchive AND mediatype:audio",
+            "qin": "collection:freemusicarchive AND mediatype:audio",
+            "fields": "identifier,title,creator,date,year,licenseurl,mediatype,subject",
+            "wt": "json",
+            "sort": "publicdate desc",
+            "rows": 50,
+            "start": 0
+          }
+        },
+        "response": {
+          "numFound": 16797,
+          "start": 0,
+          "docs": [
+            {
+              "creator": "Pierce Murphy",
+              "date": "2018-09-15T00:00:00Z",
+              "identifier": "fma_To_Japan-27466",
+              "mediatype": "audio",
+              "title": "来日 / To Japan",
+              "year": 2018
+            },
+            {
+              "creator": "Александр Недугин",
+              "date": "2016-08-26T00:00:00Z",
+              "identifier": "fma_1881-27204",
+              "mediatype": "audio",
+              "title": "Яжык Эжопа",
+              "year": 2016
+            },
+            {
+              "creator": "Александр Недугин",
+              "date": "2017-10-26T00:00:00Z",
+              "identifier": "fma_1514-27196",
+              "mediatype": "audio",
+              "title": "Дыр Бул Щит",
+              "year": 2017
+            },
+            {
+              "creator": "dave gabriel",
+              "date": "2018-08-07T00:00:00Z",
+              "identifier": "fma_1522-27142",
+              "mediatype": "audio",
+              "title": "________",
+              "year": 2018
+            },
+            {
+              "creator": "Kosta T",
+              "date": "2018-08-02T00:00:00Z",
+              "identifier": "fma_1461-27102",
+              "mediatype": "audio",
+              "title": "выноси",
+              "year": 2018
+            },
+            {
+              "creator": "Kosta T",
+              "date": "2018-05-07T00:00:00Z",
+              "identifier": "fma_1656-26627",
+              "mediatype": "audio",
+              "title": "напрасные траты",
+              "year": 2018
+            },
+            {
+              "creator": "Kosta T",
+              "date": "2018-04-27T00:00:00Z",
+              "identifier": "fma_1059-26164",
+              "mediatype": "audio",
+              "title": "меткий стрелок",
+              "year": 2018
+            },
+            {
+              "creator": "Kosta T",
+              "date": "2017-12-06T00:00:00Z",
+              "identifier": "fma_1065-25677",
+              "mediatype": "audio",
+              "title": "реквием",
+              "year": 2017
+            },
+            {
+              "creator": "POVALISHIN DIVISION",
+              "date": "2018-02-02T00:00:00Z",
+              "identifier": "fma_1965-25568",
+              "mediatype": "audio",
+              "title": "Запрещать Запрещено",
+              "year": 2018
+            },
+            {
+              "creator": "パブラ",
+              "date": "2018-02-06T00:00:00Z",
+              "identifier": "fma_1659-25426",
+              "mediatype": "audio",
+              "title": "パブラ",
+              "year": 2018
+            },
+            {
+              "creator": "Kosta T",
+              "date": "2018-01-17T00:00:00Z",
+              "identifier": "fma_1681-25398",
+              "mediatype": "audio",
+              "title": "нервы ни к чёрту",
+              "year": 2018
+            },
+            {
+              "creator": "Kosta T",
+              "date": "2017-11-23T00:00:00Z",
+              "identifier": "fma_1720-24987",
+              "mediatype": "audio",
+              "title": "не очень",
+              "year": 2017
+            },
+            {
+              "creator": "Kosta T",
+              "date": "2017-10-31T00:00:00Z",
+              "identifier": "fma_1730-24725",
+              "mediatype": "audio",
+              "title": "твоє життя",
+              "year": 2017
+            },
+            {
+              "creator": "Kosta T",
+              "date": "2017-10-15T00:00:00Z",
+              "identifier": "fma_1004-24614",
+              "mediatype": "audio",
+              "title": "слова",
+              "year": 2017
+            },
+            {
+              "creator": "Kosta T",
+              "date": "2017-10-11T00:00:00Z",
+              "identifier": "fma_1505-24489",
+              "mediatype": "audio",
+              "title": "в конєктикуте",
+              "year": 2017
+            },
+            {
+              "creator": "Kosta T",
+              "date": "2017-09-06T00:00:00Z",
+              "identifier": "fma_1503-24381",
+              "mediatype": "audio",
+              "title": "Как проснёшься, ...",
+              "year": 2017
+            },
+            {
+              "creator": "Kosta T",
+              "date": "2017-08-21T00:00:00Z",
+              "identifier": "fma_1405-24236",
+              "mediatype": "audio",
+              "title": "вериги",
+              "year": 2017
+            },
+            {
+              "creator": "Kosta T",
+              "date": "2017-06-12T00:00:00Z",
+              "identifier": "fma_1431-24143",
+              "mediatype": "audio",
+              "title": "стоны сверху",
+              "year": 2017
+            },
+            {
+              "creator": "Kosta T",
+              "date": "2017-06-20T00:00:00Z",
+              "identifier": "fma_1275-23752",
+              "mediatype": "audio",
+              "title": "так спокойнее",
+              "year": 2017
+            },
+            {
+              "creator": "почему коммутатор молчит",
+              "date": "2014-09-26T00:00:00Z",
+              "identifier": "fma_1814-23475",
+              "mediatype": "audio",
+              "title": "после полуночи",
+              "year": 2014
+            },
+            {
+              "creator": "Kosta T",
+              "date": "2017-06-05T00:00:00Z",
+              "identifier": "fma_1339-23413",
+              "mediatype": "audio",
+              "title": "тютють",
+              "year": 2017
+            },
+            {
+              "creator": "Kosta T",
+              "date": "2017-03-29T00:00:00Z",
+              "identifier": "fma_1564-23192",
+              "mediatype": "audio",
+              "title": "де",
+              "year": 2017
+            },
+            {
+              "creator": "POVALISHIN DIVISION",
+              "date": "2017-04-09T00:00:00Z",
+              "identifier": "fma_1506-22997",
+              "mediatype": "audio",
+              "title": "Пять Ошибок В Слове Нет",
+              "year": 2017
+            },
+            {
+              "creator": "Kosta T",
+              "date": "2017-02-28T00:00:00Z",
+              "identifier": "fma_1251-22859",
+              "mediatype": "audio",
+              "title": "Силуяние хто я",
+              "year": 2017
+            },
+            {
+              "creator": "Kosta T",
+              "date": "2017-03-08T00:00:00Z",
+              "identifier": "fma_1029-22797",
+              "mediatype": "audio",
+              "title": "засыпай",
+              "year": 2017
+            },
+            {
+              "creator": "Kosta T",
+              "date": "2017-03-08T00:00:00Z",
+              "identifier": "fma_1886-22796",
+              "mediatype": "audio",
+              "title": "Услышимя",
+              "year": 2017
+            },
+            {
+              "creator": "POVALISHIN DIVISION",
+              "date": "2017-02-17T00:00:00Z",
+              "identifier": "fma_1687-22719",
+              "mediatype": "audio",
+              "title": "Лягушка Кокосовых Пальм",
+              "year": 2017
+            },
+            {
+              "creator": "Kosta T",
+              "date": "2017-01-24T00:00:00Z",
+              "identifier": "fma_1905-22574",
+              "mediatype": "audio",
+              "title": "Друдба",
+              "year": 2017
+            },
+            {
+              "creator": "SANMI",
+              "date": "2017-02-01T00:00:00Z",
+              "identifier": "fma_-22449",
+              "mediatype": "audio",
+              "title": "[EPV_196] めぐりあい宇宙",
+              "year": 2017
+            },
+            {
+              "creator": "Jared C. Balogh",
+              "date": "2017-01-31T00:00:00Z",
+              "identifier": "fma_Gallery_724-22432",
+              "mediatype": "audio",
+              "title": "@ Gallery 724",
+              "year": 2017
+            },
+            {
+              "creator": "Kosta T",
+              "date": "2017-01-23T00:00:00Z",
+              "identifier": "fma_-22346",
+              "mediatype": "audio",
+              "title": "выходной",
+              "year": 2017
+            },
+            {
+              "creator": "Со мною вот что",
+              "date": "2017-01-03T00:00:00Z",
+              "identifier": "fma_1180-22181",
+              "mediatype": "audio",
+              "title": "Подмосковные вечера /// Училище",
+              "year": 2017
+            },
+            {
+              "creator": "Kosta T",
+              "date": "2016-12-30T00:00:00Z",
+              "identifier": "fma_2003-22142",
+              "mediatype": "audio",
+              "title": "ИСкУС",
+              "year": 2016
+            },
+            {
+              "creator": "Kosta T",
+              "date": "2016-12-08T00:00:00Z",
+              "identifier": "fma_1323-22056",
+              "mediatype": "audio",
+              "title": "медитатио",
+              "year": 2016
+            },
+            {
+              "creator": "Kosta T",
+              "date": "2016-12-10T00:00:00Z",
+              "identifier": "fma_1706-21984",
+              "mediatype": "audio",
+              "title": "зацепка",
+              "year": 2016
+            },
+            {
+              "creator": "Kosta T",
+              "date": "2016-12-07T00:00:00Z",
+              "identifier": "fma_1595-21961",
+              "mediatype": "audio",
+              "title": "поиск",
+              "year": 2016
+            },
+            {
+              "creator": "Kosta T",
+              "date": "2016-11-18T00:00:00Z",
+              "identifier": "fma_1421-21917",
+              "mediatype": "audio",
+              "title": "не знаю",
+              "year": 2016
+            },
+            {
+              "creator": "Kosta T",
+              "date": "2016-05-30T00:00:00Z",
+              "identifier": "fma_-21908",
+              "mediatype": "audio",
+              "title": "наивность",
+              "year": 2016
+            },
+            {
+              "creator": "почему коммутатор молчит",
+              "date": "2016-11-26T00:00:00Z",
+              "identifier": "fma_1593-21907",
+              "mediatype": "audio",
+              "title": "топорная работа",
+              "year": 2016
+            },
+            {
+              "creator": "Kosta T",
+              "date": "2016-11-07T00:00:00Z",
+              "identifier": "fma_1697-21874",
+              "mediatype": "audio",
+              "title": "не свисти",
+              "year": 2016
+            },
+            {
+              "creator": "Kosta T",
+              "date": "2016-11-02T00:00:00Z",
+              "identifier": "fma_1754-21767",
+              "mediatype": "audio",
+              "title": "Фен",
+              "year": 2016
+            },
+            {
+              "creator": "Kosta T",
+              "date": "2016-09-19T00:00:00Z",
+              "identifier": "fma_2751-21616",
+              "mediatype": "audio",
+              "title": "хлам",
+              "year": 2016
+            },
+            {
+              "creator": "RoccoW",
+              "date": "2016-09-15T00:00:00Z",
+              "identifier": "fma_1035-21483",
+              "mediatype": "audio",
+              "title": "ロッコ",
+              "year": 2016
+            },
+            {
+              "creator": "Kosta T",
+              "date": "2016-07-07T00:00:00Z",
+              "identifier": "fma_1727-21419",
+              "mediatype": "audio",
+              "title": "Спим",
+              "year": 2016
+            },
+            {
+              "creator": "Митрий Гранков",
+              "date": "2016-08-20T00:00:00Z",
+              "identifier": "fma_1734-21293",
+              "mediatype": "audio",
+              "title": "Отступление",
+              "year": 2016
+            },
+            {
+              "creator": "chloe orin",
+              "date": "2016-08-03T00:00:00Z",
+              "identifier": "fma_1234-21203",
+              "mediatype": "audio",
+              "title": "[EPV_190] 調律と調和",
+              "year": 2016
+            },
+            {
+              "creator": "Kosta T",
+              "date": "2016-07-07T00:00:00Z",
+              "identifier": "fma_1490-21037",
+              "mediatype": "audio",
+              "title": "лоуфай дети",
+              "year": 2016
+            },
+            {
+              "creator": "Kosta T",
+              "date": "2016-06-27T00:00:00Z",
+              "identifier": "fma_1162-20979",
+              "mediatype": "audio",
+              "title": "вчера",
+              "year": 2016
+            },
+            {
+              "creator": "Cervo",
+              "date": "2009-01-01T00:00:00Z",
+              "identifier": "fma_Second__EP-20792",
+              "mediatype": "audio",
+              "title": "( Second ) EP",
+              "year": 2009
+            },
+            {
+              "creator": "смерть в летнюю полночь",
+              "date": "2015-05-05T00:00:00Z",
+              "identifier": "fma_1586-20544",
+              "mediatype": "audio",
+              "title": "эпоха лишних музыкантов",
+              "year": 2015
+            }
+          ]
+        }
+      }
+    },
+    "GET https://archive.org/metadata/fma_To_Japan-27466": {
+      "status": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": {
+        "alternate_locations": {
+          "servers": [
+            {
+              "server": "dn711101.ca.archive.org",
+              "dir": "/0/items/fma_To_Japan-27466"
+            }
+          ],
+          "workable": [
+            {
+              "server": "dn711101.ca.archive.org",
+              "dir": "/0/items/fma_To_Japan-27466"
+            }
+          ]
+        },
+        "created": 1793096145,
+        "d1": "dn601306.us.archive.org",
+        "dir": "/0/items/fma_To_Japan-27466",
+        "files": [
+          {
+            "name": "__ia_thumb.jpg",
+            "source": "original",
+            "mtime": "1543622471",
+            "size": "8739",
+            "md5": "b56d6194b8cdb7b8ba966c0d4878052c",
+            "crc32": "4ccdd89a",
+            "sha1": "68948f124a8551fc826d4f9ebda89ab6b98c6a1f",
+            "format": "Item Tile",
+            "rotation": "0"
+          },
+          {
+            "name": "fma_To_Japan-27466_archive.torrent",
+            "source": "metadata",
+            "btih": "8c9fc0035cb9bdd719f4587002aa7902002aca78",
+            "mtime": "1592638415",
+            "size": "1857",
+            "md5": "7d1bf5536c5136655916d91ccb531af6",
+            "crc32": "db9b9f5a",
+            "sha1": "7102e4ea15bb26699f94007c2cd6a321e8e70058",
+            "format": "Archive BitTorrent"
+          },
+          {
+            "name": "fma_To_Japan-27466_files.xml",
+            "source": "original",
+            "format": "Metadata",
+            "md5": "268e8cce6983d55a66d6dc3de250d72b",
+            "summation": "md5"
+          },
+          {
+            "name": "fma_To_Japan-27466_itemimage.jpg",
+            "source": "original",
+            "mtime": "1543622431",
+            "size": "58263",
+            "md5": "d03d4f5dd1bab03c22e3b21177e9add9",
+            "crc32": "b1f4fb7e",
+            "sha1": "902464b10a0da551bc38877ec272007c48b92914",
+            "format": "Item Image",
+            "rotation": "0"
+          },
+          {
+            "name": "fma_To_Japan-27466_meta.sqlite",
+            "source": "original",
+            "mtime": "1543622447",
+            "size": "11264",
+            "md5": "f28a58667132fe72f1b5b252599a7e1b",
+            "crc32": "830cb79c",
+            "sha1": "6fb722fea6a6e6276d71f2e515eee9f68d92d4e1",
+            "format": "Metadata"
+          },
+          {
+            "name": "fma_To_Japan-27466_meta.xml",
+            "source": "original",
+            "mtime": "1592638411",
+            "size": "1164",
+            "format": "Metadata",
+            "md5": "cb482c7e46e5c385f6992163acc3f5ab",
+            "crc32": "92d81203",
+            "sha1": "581af184ce2a8f5a57675db7a3efd5c6abd91505"
+          }
+        ],
+        "files_count": 6,
+        "item_last_updated": 1739128014,
+        "item_size": 81287,
+        "metadata": {
+          "identifier": "fma_To_Japan-27466",
+          "artist_website": "piercemurphymusic.com",
+          "collection": "freemusicarchive",
+          "creator": "Pierce Murphy",
+          "date": "2018-09-15",
+          "description": "<p>Written in Japan in 2014 and initially released as a limited run CD for a 2017 Japanese tour, \"<span style=\"color:#545454;font-family:arial, sans-serif;font-size:small;\">来日</span> / To Japan\" is the story of a journey through that beautiful country in search for a way to spare a blossoming love from the wake of the world. Each song was written in the cities they reference, and sound samples recorded in the trains, streets, and izakayas of Japan serve as sonic transitions from place to place. This was a labor of love.</p>",
+          "mediatype": "audio",
+          "scanner": "Internet Archive Python library 1.8.1",
+          "title": "来日 / To Japan",
+          "publicdate": "2018-12-01 00:00:32",
+          "uploader": "jake@archive.org",
+          "addeddate": "2018-12-01 00:00:32",
+          "backup_location": "ia906804_30"
+        },
+        "server": "dn601306.us.archive.org",
+        "simplelists": {
+          "solo_manifest": {
+            "solo_manifest_dn601306": {
+              "sys_changed_by": {
+                "source": "task",
+                "task_id": "5708203495"
+              },
+              "sys_last_changed": "2026-10-15 12:44:27.046744"
+            }
+          }
+        },
+        "solo": true,
+        "uniq": 1984937155,
+        "workable_servers": [
+          "dn601306.us.archive.org"
+        ]
+      }
+    },
+    "GET https://archive.org/advancedsearch.php?q=%28title%3A%28Audionautix%29+OR+creator%3A%28Audionautix%29%29+AND+collection%3Afreemusicarchive+AND+mediatype%3Aaudio&rows=50&page=1&output=json&fl%5B%5D=identifier&fl%5B%5D=title&fl%5B%5D=creator&fl%5B%5D=date&fl%5B%5D=year&fl%5B%5D=licenseurl&fl%5B%5D=mediatype&fl%5B%5D=subject&sort%5B%5D=downloads+desc": {
+      "status": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": {
+        "responseHeader": {
+          "status": 0,
+          "QTime": 30,
+          "params": {
+            "query": "(title:Audionautix OR creator:Audionautix) AND collection:freemusicarchive AND mediatype:audio",
+            "qin": "(title:(Audionautix) OR creator:(Audionautix)) AND collection:freemusicarchive AND mediatype:audio",
+            "fields": "identifier,title,creator,date,year,licenseurl,mediatype,subject",
+            "wt": "json",
+            "sort": "downloads desc",
+            "rows": 50,
+            "start": 0
+          }
+        },
+        "response": {
+          "numFound": 2,
+          "start": 0,
+          "docs": [
+            {
+              "creator": "Jason Shaw",
+              "date": "2011-08-17T00:00:00Z",
+              "identifier": "Audionautix_Acoustic-9870",
+              "licenseurl": "http://creativecommons.org/licenses/by/3.0/us/",
+              "mediatype": "audio",
+              "title": "Audionautix: Acoustic",
+              "year": 2011
+            },
+            {
+              "creator": "Jason Shaw",
+              "date": "2011-08-17T00:00:00Z",
+              "identifier": "Audionautix_Tech_Urban_Dance-9869",
+              "licenseurl": "http://creativecommons.org/licenses/by/3.0/us/",
+              "mediatype": "audio",
+              "title": "Audionautix: Tech, Urban, Dance",
+              "year": 2011
+            }
+          ]
+        }
+      }
+    }
+  }
+}
