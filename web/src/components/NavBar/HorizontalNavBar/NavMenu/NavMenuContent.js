@@ -17,6 +17,8 @@ const useToast = require('stremio/common/Toast/useToast');
 const { withCoreSuspender } = require('stremio/common/CoreSuspender');
 const useStreamingServer = require('stremio/common/useStreamingServer');
 const styles = require('./styles');
+// stremio-music: account on this server (separate from the Stremio.com account above)
+const AccountMenuSection = require('stremio/sm/AccountMenuSection');
 
 const NavMenuContent = ({ onClick }) => {
     const { t } = useTranslation();
@@ -88,6 +90,7 @@ const NavMenuContent = ({ onClick }) => {
                     </Button>
                 </div>
             </div>
+            <AccountMenuSection styles={styles} />
             {
                 (supported && !isAndroidPWA) || install !== null ?
                     <div className={styles['nav-menu-section']}>

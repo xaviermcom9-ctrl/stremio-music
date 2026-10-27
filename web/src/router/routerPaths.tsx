@@ -2,6 +2,8 @@
 
 import React from 'react';
 import routes from 'stremio/routes';
+// stremio-music: Music mode route tree
+import MusicRoot from 'stremio/music';
 import { PLAYER_PATH, META_DETAILS_PATH, LEGACY_META_DETAILS_PATH } from './getBackFallback';
 
 export default [
@@ -64,6 +66,12 @@ export default [
         path: '/',
         view: 0,
         element: <routes.Board />,
+    },
+    {
+        // stremio-music: Music mode (own nested routes); view 1 keeps the board cached underneath
+        path: '/music/*',
+        view: 1,
+        element: <MusicRoot />,
     },
     {
         path: '*',

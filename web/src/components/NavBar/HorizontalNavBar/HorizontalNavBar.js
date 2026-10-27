@@ -10,6 +10,8 @@ const { useFullscreen } = require('stremio/common/Fullscreen');
 const { useHorizontalNavGamepadNavigation } = require('stremio/services/GamepadNavigation');
 const SearchBar = require('./SearchBar');
 const NavMenu = require('./NavMenu');
+// stremio-music: Movies & TV | Music switch
+const ModeSwitch = require('stremio/sm/ModeSwitch');
 const styles = require('./styles');
 const { t } = require('i18next');
 
@@ -52,6 +54,12 @@ const HorizontalNavBar = React.memo(({ className, route, query, title, backButto
                     null
             }
             <div className={styles['buttons-container']}>
+                {
+                    navMenu ?
+                        <ModeSwitch />
+                        :
+                        null
+                }
                 {
                     hdrInfo && (hdrInfo.gamma === 'pq' || hdrInfo.gamma === 'hlg') ?
                         <div className={styles['hdr-indicator']} title={hdrInfo.gamma === 'pq' ? 'HDR10' : 'HLG'}>

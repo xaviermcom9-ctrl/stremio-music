@@ -102,7 +102,7 @@ Not verified: Navidrome/qBittorrent by name (media-stack is down); real-browser 
 - Phase 3 must keep auth on `/engine/*` compatible with the engine's own loopback fetches
   (they bypass the proxy, so fine) and handle external players/casting (signed URLs).
 
-## Phase 3 – Access, auth & web app (done, awaiting go-ahead)
+## Phase 3 – Access, auth & web app (done)
 
 User note (2026-10-27): the **Ubuntu laptop is the main client**; phone secondary. Test desktop first.
 
@@ -131,10 +131,34 @@ session loss mid-use → fetch guard → login. (SW registration needs a trusted
 internal CA untrusted Chrome refuses; worked with the CA accepted.)
 
 Not done / notes:
-- No in-app link to /account yet (Phase 4 adds the top-level mode switch; put Account/Sign out there).
 - Your instance is fresh: create the admin with the setup code from `docker logs stremio-music`
   (a new code is printed on every start until an account exists).
-- GitHub push pending: no gh/SSH credentials on the server.
+
+GitHub: private repo https://github.com/xaviermcom9-ctrl/stremio-music (gh logged in on the server).
+User's own admin account created via setup (2026-10-27). Browser: Brave on the Ubuntu laptop.
+
+## Phase 4 – Tab switch (done, awaiting go-ahead)
+
+- `web/src/sm/ModeSwitch`: "Movies & TV | Music" segmented control (tablist, arrow keys; icons only
+  under 800px). Shown in upstream's top bar (main tabs) and in the Music top bar.
+- `web/src/music/`: Music route tree at `#/music/*` (view 1, board stays cached underneath): own
+  layout (top bar, sidebar → bottom tab bar ≤640px), placeholder pages Home/Search/Library/Radio/
+  Downloads/Sources (admin only), account menu (Account, Movies & TV settings, Sign out), own icons
+  (note, radio, sources) where Stremio's set has none.
+- Last mode per user, server-side (`user_prefs` table, `GET /api/me/prefs`, `PUT /api/me/prefs/:key`):
+  `ModeTracker` saves mode changes; a fresh open on the default page restores Music; deep links win.
+  Each mode remembers its last page (switching back returns there).
+- Shift+M toggles (in upstream shortcuts.json, so it's listed in the Ctrl+/ help).
+- Upstream profile menu: "Account · <user>" and "Sign out of Stremio Music" (separate from Stremio.com).
+- Upstream patches: 5 files, ~30 lines (web/PATCHES.md). 36 backend tests.
+
+Verified (headless Chrome, 1440px laptop first, 412px Android): switch + navigation, Shift+M both
+ways returning to the previous page (radio ↔ discover), saved mode, fresh open → #/music, deep link
+#/library not overridden (and saves movies), both menus, admin-only Sources, shortcut in help,
+phone bottom tab bar, no horizontal scroll, no console errors (only upstream view-transition notices).
+
+Notes: fresh profiles get upstream's seasonal "event" modal (upstream behaviour). Six bottom tabs
+truncate "Downloads" on narrow phones (admins only); revisit in Phase 8.
 
 ### Next
-- User: GitHub access; go-ahead for Phase 4 (Movies & TV | Music switch).
+- User: go-ahead for Phase 5 (source plugin system).

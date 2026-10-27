@@ -7,6 +7,7 @@ import { AuthStore } from './auth/store.js';
 import type { Config } from './config.js';
 import { dbHealthy } from './db.js';
 import { registerEngineProxy } from './engine/proxy.js';
+import { registerPrefs } from './prefs.js';
 import type { EngineSupervisor } from './engine/supervisor.js';
 
 export const VERSION = '0.1.0';
@@ -52,6 +53,7 @@ export async function buildApp({ config, db, engine }: AppDeps): Promise<Fastify
     });
   });
 
+  registerPrefs(app, db);
   await registerEngineProxy(app, engine);
 
   if (existsSync(config.webRoot)) {

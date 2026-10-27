@@ -59,6 +59,18 @@ describe('app', () => {
     assert.equal(res.statusCode, 503);
   });
 
+  test('per-user prefs: set, read back, validated', async () => {
+    const put = (key: string, payload: unknown) => app.inject({ method: 'PUT', url: `/api/me/prefs/${key}`, headers: { cookie }, payload: payload as object });
+    assert.equal((await put('mode', { value: 'music' })).statusCode, 200);
+    assert.equal((await put('mode', { value: 'movies' })).statusCode, 200);
+    assert.equal((await put('player.volume', { value: 0.5 })).statusCode, 200);
+    assert.equal((await put('Bad-Key', { value: 1 })).statusCode, 400);
+    assert.equal((await put('big', { value: 'x'.repeat(20000) })).statusCode, 413);
+    const res = await app.inject({ url: '/api/me/prefs', headers: { cookie } });
+    assert.deepEqual(res.json(), { prefs: { mode: 'movies', 'player.volume': 0.5 } });
+    assert.equal((await app.inject('/api/me/prefs')).statusCode, 401);
+  });
+
   test('serves the UI with cache headers', async () => {
     const anon = await app.inject({ url: '/', headers: { accept: 'text/html' } });
     assert.equal(anon.statusCode, 302);

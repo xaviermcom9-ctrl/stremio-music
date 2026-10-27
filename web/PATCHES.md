@@ -13,3 +13,8 @@ Upstream: https://github.com/Stremio/stremio-web @ `8329565` (5.0.0-beta.43), im
 | `src/index.js` + new `src/sm/authGuard.js` | wraps `fetch`: a same-origin 401 with `x-auth-required: 1` sends the user to `login?next=…` | the session can expire while the app is open |
 | `webpack.config.js` (GenerateSW) | `exclude` adds `/\.html$/` | the service worker caches the UI shell only; `index.html` always comes from the server so logged-out visitors get the login page |
 | `manifest.json` | `name`/`description` changed (icons, scope, start_url unchanged and relative) | tell the installed PWA apart from official Stremio |
+| `src/router/routerPaths.tsx` | adds `/music/*` (view 1) → `src/music` | Music mode route tree, its own module |
+| `src/components/NavBar/HorizontalNavBar/HorizontalNavBar.js` | renders `src/sm/ModeSwitch` in the top bar where the profile menu is shown | "Movies & TV \| Music" switch |
+| `src/components/NavBar/HorizontalNavBar/NavMenu/NavMenuContent.js` | adds `src/sm/AccountMenuSection` (Account, Sign out of Stremio Music) | this server's account, separate from the Stremio.com account |
+| `src/common/Shortcuts/shortcuts.json` | `toggleMode`: Shift+M | keyboard shortcut (also listed in the shortcuts help) |
+| `src/App/App.js` | handles `toggleMode`; mounts `ModeTracker` (restores/saves the last mode per user) | remember the last mode per user, server-side |

@@ -1,0 +1,74 @@
+// stremio-music
+
+@import (reference) '~stremio/common/screen-sizes.less';
+
+.mode-switch {
+    flex: none;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    border-radius: 2rem;
+    background-color: var(--overlay-color);
+
+    .option {
+        flex: none;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 0.5rem;
+        height: 2.75rem;
+        padding: 0 1.1rem;
+        border: none;
+        border-radius: 1.75rem;
+        background: transparent;
+        color: var(--primary-foreground-color);
+        font: inherit;
+        font-size: 1rem;
+        font-weight: 600;
+        white-space: nowrap;
+        cursor: pointer;
+        opacity: 0.65;
+        transition: background-color 0.15s, opacity 0.15s;
+
+        .icon {
+            flex: none;
+            width: 1.4rem;
+            height: 1.4rem;
+            color: currentColor;
+        }
+
+        &:focus-visible {
+            outline: var(--focus-outline-size, 2px) solid var(--primary-foreground-color);
+            outline-offset: 2px;
+            opacity: 1;
+        }
+
+        @media (pointer: fine) {
+            &:hover {
+                opacity: 1;
+            }
+        }
+
+        &.selected {
+            background-color: var(--primary-accent-color);
+            color: #fff;
+            opacity: 1;
+            cursor: default;
+        }
+    }
+}
+
+// narrow windows and phones: icons only
+@media only screen and (max-width: @xxsmall) {
+    .mode-switch {
+        .option {
+            padding: 0 0.85rem;
+
+            .label {
+                display: none;
+            }
+        }
+    }
+}

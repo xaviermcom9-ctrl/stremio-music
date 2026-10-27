@@ -16,6 +16,8 @@ const { default: UpdaterBanner } = require('./UpdaterBanner');
 const { default: ShortcutsModal } = require('./ShortcutsModal');
 const { default: GamepadModal } = require('./GamepadModal');
 const { default: useInterfaceScale } = require('./useInterfaceScale');
+// stremio-music: Movies & TV | Music modes
+const { ModeTracker, otherModePath } = require('stremio/sm/mode');
 const styles = require('./styles');
 
 const ProtectedRoutes = withCoreSuspender(Routes);
@@ -55,6 +57,10 @@ const App = () => {
             case 'navigateSearch':
                 navigate('/search');
                 break;
+            // stremio-music
+            case 'toggleMode':
+                navigate(otherModePath(location.pathname));
+                break;
             case 'navigateTabs': {
                 const index = Number(key) - 1;
                 if (index >= 0 && index < NAVIGATE_TABS_ROUTES.length)
@@ -69,7 +75,7 @@ const App = () => {
                 }
                 break;
         }
-    }, [toggleShortcutModal, toggleGamepadModal, changeInterfaceScale, navigate, goBack]);
+    }, [toggleShortcutModal, toggleGamepadModal, changeInterfaceScale, navigate, goBack, location.pathname]);
 
     React.useEffect(() => {
         const prevPath = previousPathRef.current;
@@ -172,6 +178,7 @@ const App = () => {
                                     <ServicesToaster />
                                     <SearchParamsHandler />
                                     <DeepLinkHandler />
+                                    <ModeTracker />
                                     <ShellOpenHandler />
                                     <UpdaterBanner className={styles['updater-banner-container']} />
                                     <ProtectedRoutes />

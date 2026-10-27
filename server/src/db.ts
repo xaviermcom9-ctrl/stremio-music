@@ -23,6 +23,13 @@ const MIGRATIONS: string[] = [
      ip TEXT
    );
    CREATE INDEX sessions_user ON sessions(user_id);`,
+  `CREATE TABLE user_prefs (
+     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+     key TEXT NOT NULL,
+     value TEXT NOT NULL,            -- JSON
+     updated_at INTEGER NOT NULL,
+     PRIMARY KEY (user_id, key)
+   );`,
 ];
 
 export function openDb(file: string): DatabaseSync {
