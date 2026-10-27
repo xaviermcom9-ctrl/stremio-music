@@ -2,7 +2,7 @@
 // Calls go through SourceRuntime, exactly as the server makes them. Outbound requests are answered
 // from the source's recorded fixtures.json, so the suite runs offline and in `docker build`.
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, test } from 'node:test';
 import type { MusicMeta, MusicSource, SourceContext } from '../../src/music-sources/sdk.js';
@@ -12,8 +12,17 @@ import { ResponseCache, SourceRuntime, toStremioManifest, validateSourceManifest
 export interface Fixtures {
   /** settings to run with (in addition to defaults) */
   settings?: Record<string, string | number | boolean>;
+  /** query parameters left out of the keys below (random salts, tokens…) */
+  ignoreParams?: string[];
   /** "GET https://host/path?query" -> response */
   responses?: Record<string, { status?: number; headers?: Record<string, string>; body: unknown }>;
+}
+
+/** The fixture key for a request: method + URL without the ignored query parameters. */
+export function fixtureKey(method: string | undefined, url: string, ignore: string[] = []): string {
+  const u = new URL(url);
+  for (const p of ignore) u.searchParams.delete(p);
+  return `${(method ?? 'GET').toUpperCase()} ${u.href}`;
 }
 
 export function loadFixtures(dir: string | null): Fixtures {
@@ -25,7 +34,7 @@ export function loadFixtures(dir: string | null): Fixtures {
 export function fixtureFetch(fixtures: Fixtures, missed: string[]): typeof fetch {
   return (async (input: string | URL | Request, init?: RequestInit) => {
     const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
-    const key = `${(init?.method ?? 'GET').toUpperCase()} ${url}`;
+    const key = fixtureKey(init?.method, url, fixtures.ignoreParams);
     const hit = fixtures.responses?.[key];
     if (!hit) {
       missed.push(key);
@@ -38,15 +47,52 @@ export function fixtureFetch(fixtures: Fixtures, missed: string[]): typeof fetch
   }) as typeof fetch;
 }
 
+/**
+ * Real fetch that records every response into `fixtures` (for `test:sources -- --record <id>`).
+ * Only text responses are recorded; sources should use ctx.proxyUrl for media.
+ */
+export function recordingFetch(fixtures: Fixtures): typeof fetch {
+  fixtures.responses ??= {};
+  return (async (input: string | URL | Request, init?: RequestInit) => {
+    const res = await fetch(input as string, init);
+    const url = res.url || String(input);
+    const text = await res.text();
+    const type = res.headers.get('content-type') ?? '';
+    let body: unknown = text;
+    if (type.includes('json')) {
+      try {
+        body = JSON.parse(text);
+      } catch {
+        // keep as text
+      }
+    }
+    fixtures.responses![fixtureKey(init?.method, String(input instanceof Request ? input.url : input), fixtures.ignoreParams)] = {
+      status: res.status,
+      headers: { 'content-type': type || 'text/plain' },
+      body,
+    };
+    const copy = new Response(text, { status: res.status, headers: res.headers });
+    Object.defineProperty(copy, 'url', { value: url });
+    return copy;
+  }) as typeof fetch;
+}
+
 const USER: SourceContext['user'] = { id: 1, username: 'contract' };
 
 /** Registers the contract suite for one source. `dir` locates fixtures.json. */
-export function contractSuite(label: string, load: () => Promise<{ impl: MusicSource; dir: string | null; close?: () => void }>): void {
+export function contractSuite(
+  label: string,
+  load: () => Promise<{ impl: MusicSource; dir: string | null; close?: () => void }>,
+  opts: { record?: boolean } = {},
+): void {
   describe(`source contract: ${label}`, () => {
     let rt: SourceRuntime;
     let impl: MusicSource;
     const missed: string[] = [];
     let close: (() => void) | undefined;
+    let fixtures: Fixtures = {};
+    let dir: string | null = null;
+    let secrets: string[] = [];
 
     test('loads and has a valid manifest', async () => {
       const loaded = await load();
@@ -54,13 +100,22 @@ export function contractSuite(label: string, load: () => Promise<{ impl: MusicSo
       close = loaded.close;
       const v = validateSourceManifest(impl.manifest);
       assert.ok(v.ok, v.ok ? '' : v.errors.join('\n'));
-      const fixtures = loadFixtures(loaded.dir);
+      dir = loaded.dir;
+      fixtures = loadFixtures(loaded.dir);
+      if (opts.record) fixtures.responses = {};
       const defaults = Object.fromEntries(Object.entries(impl.manifest.settings).map(([k, f]) => [k, f.default]));
+      // recording with real credentials: SOURCE_SETTINGS='{"clientId":"…"}' (never written to fixtures)
+      const live = opts.record && process.env.SOURCE_SETTINGS ? (JSON.parse(process.env.SOURCE_SETTINGS) as Record<string, string>) : {};
+      secrets = Object.entries(live)
+        .filter(([k]) => impl.manifest.settings[k]?.secret)
+        .map(([, v]) => String(v))
+        .filter((v) => v.length >= 4);
       rt = new SourceRuntime(impl, {
         perUser: false,
         cache: new ResponseCache(100),
-        fetchImpl: fixtureFetch(fixtures, missed),
-        settingsFor: () => ({ ...defaults, ...fixtures.settings }),
+        fetchImpl: opts.record ? recordingFetch(fixtures) : fixtureFetch(fixtures, missed),
+        settingsFor: () => ({ ...defaults, ...fixtures.settings, ...live }),
+        makeProxyUrl: (url) => `api/proxy/test-${Buffer.from(url).toString('base64url').slice(0, 24)}`,
       });
     });
 
@@ -128,7 +183,10 @@ export function contractSuite(label: string, load: () => Promise<{ impl: MusicSo
     test('streams are valid and match the capabilities', async (t) => {
       const caps = impl.manifest.capabilities;
       if (!caps.streams) return t.skip('no streams');
-      const targets = metas.flatMap((m) => (m.videos?.length ? [m.videos[0]!.id] : [m.id])).slice(0, 3);
+      // a track to play: an album's first track, or a track/station meta itself (artists have no streams)
+      const targets = metas
+        .flatMap((m) => (m.videos?.length ? [m.videos[0]!.id] : m.music.kind === 'track' || m.music.kind === 'station' ? [m.id] : []))
+        .slice(0, 3);
       assert.ok(targets.length > 0, 'no track to request streams for');
       for (const id of targets) {
         const streams = await rt.streams(USER, id);
@@ -141,7 +199,7 @@ export function contractSuite(label: string, load: () => Promise<{ impl: MusicSo
             assert.ok(caps.live, 'stream marked live but the source is not');
             assert.ok(!hints.downloadable, 'live streams cannot be downloadable');
           }
-          if (s.url) assert.match(s.url, /^https?:\/\//, 'stream url must be http(s)');
+          if (s.url) assert.match(s.url, /^(https?:\/\/|api\/proxy\/)/, 'stream url must be http(s) or a proxy URL');
         }
       }
       assert.deepEqual(await rt.streams(USER, `${impl.manifest.id}:does-not-exist`), [], 'unknown ids must return []');
@@ -156,6 +214,13 @@ export function contractSuite(label: string, load: () => Promise<{ impl: MusicSo
 
     test('made no requests without fixtures', () => {
       close?.();
+      if (opts.record && dir) {
+        // secrets can be echoed back in responses (e.g. in media URLs): never write them to git
+        let json = JSON.stringify(fixtures, null, 2) + '\n';
+        for (const s of secrets) json = json.split(s).join('FIXTURE');
+        writeFileSync(path.join(dir, 'fixtures.json'), json);
+        console.log(`recorded ${Object.keys(fixtures.responses ?? {}).length} responses into ${path.join(dir, 'fixtures.json')}`);
+      }
       assert.deepEqual(missed, [], 'record these in fixtures.json');
     });
   });

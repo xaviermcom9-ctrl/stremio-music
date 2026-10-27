@@ -3,11 +3,13 @@
 //  /api/sources/…         Sources page (admin; per-user settings for everyone)
 //  /api/music/…           what the Music UI uses: one API across all active sources
 import { createReadStream } from 'node:fs';
+import { Readable } from 'node:stream';
 import { parse as parseQs } from 'node:querystring';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
+import { readNowPlaying, type NowPlaying } from './icy.js';
 import { classifyMeta } from './protocol/content-types.js';
-import { SourceError, toStremioManifest } from './runtime.js';
+import { APP_VERSION, hostAllowed, SourceError, toStremioManifest } from './runtime.js';
 import type { SourceEntry, SourceRegistry } from './registry.js';
 
 const userOf = (req: FastifyRequest) => (req.user ? { id: req.user.id, username: req.user.username } : null);
@@ -27,7 +29,14 @@ function parseExtra(segment: string | undefined): Record<string, string> {
 
 const sourceRef = (e: SourceEntry) => ({ id: e.id, name: e.name });
 
-export function registerMusicRoutes(app: FastifyInstance, registry: SourceRegistry, info: { secretKeySource: string }): void {
+export function registerMusicRoutes(
+  app: FastifyInstance,
+  registry: SourceRegistry,
+  info: { secretKeySource: string },
+  fetchImpl?: typeof fetch,
+  opts: { allowPrivateStreams?: boolean } = {},
+): void {
+  const nowPlayingCache = new Map<string, { at: number; value: NowPlaying }>();
   const requireAdmin = async (req: FastifyRequest, reply: FastifyReply) => {
     if (!req.user?.isAdmin) return reply.code(403).send({ error: 'admin only' });
   };
@@ -65,6 +74,42 @@ export function registerMusicRoutes(app: FastifyInstance, registry: SourceRegist
     } catch (err) {
       return fail(reply, err);
     }
+  });
+
+  // ------------------------------------------------------------ private media (ctx.proxyUrl)
+
+  const PASS_HEADERS = ['content-type', 'content-length', 'content-range', 'accept-ranges', 'last-modified', 'etag', 'content-disposition'];
+
+  app.get<{ Params: { token: string } }>('/api/proxy/:token', async (req, reply) => {
+    const t = registry.openProxyToken(req.params.token);
+    if (!t) return reply.code(404).send({ error: 'invalid or expired link' });
+    const e = registry.get(t.s);
+    if (!e?.runtime || !e.enabled) return reply.code(404).send({ error: 'source unavailable' });
+    const allowed = e.runtime.allowedHosts(registry.settingsFor(e.id, userOf(req)));
+    if (!hostAllowed(new URL(t.u).host, allowed)) return reply.code(403).send({ error: 'host no longer allowed' });
+
+    const headers: Record<string, string> = { 'user-agent': e.runtime.manifest.userAgent ?? `StremioMusic/${APP_VERSION} (self-hosted)`, ...t.h };
+    if (typeof req.headers.range === 'string') headers.range = req.headers.range;
+    const abort = new AbortController();
+    req.raw.on('close', () => abort.abort());
+    let res: Response;
+    try {
+      res = await (fetchImpl ?? fetch)(t.u, { headers, signal: abort.signal, redirect: 'follow' });
+    } catch (err) {
+      return reply.code(502).send({ error: `upstream: ${message(err)}` });
+    }
+    if (res.url && !hostAllowed(new URL(res.url).host, allowed)) {
+      await res.body?.cancel();
+      return reply.code(502).send({ error: 'upstream redirected to a host that is not allowed' });
+    }
+    reply.code(res.status);
+    for (const h of PASS_HEADERS) {
+      const v = res.headers.get(h);
+      if (v) reply.header(h, v);
+    }
+    reply.header('cache-control', res.ok ? 'private, max-age=86400' : 'no-store');
+    if (!res.body) return reply.send();
+    return reply.send(Readable.fromWeb(res.body as never));
   });
 
   // ------------------------------------------------------------ Sources page
@@ -215,6 +260,28 @@ export function registerMusicRoutes(app: FastifyInstance, registry: SourceRegist
     return reply.code(404).send({ error: 'not found', errors });
   });
 
+  // what a live station is playing (ICY metadata, read server-side; cached 15 s per station)
+  app.get<{ Querystring: { id?: string } }>('/api/music/nowplaying', async (req, reply) => {
+    const id = req.query.id;
+    if (!id) return reply.code(400).send({ error: 'missing id' });
+    const hit = nowPlayingCache.get(id);
+    if (hit && Date.now() - hit.at < 15_000) return hit.value;
+    const user = userOf(req);
+    const owner = registry.active(user).find((e) => registry.owns(e, 'stream', id));
+    if (!owner) return reply.code(404).send({ error: 'no source for this id' });
+    const streams = (await registry.streams(owner, user, id).catch(() => [])) as { url?: string; behaviorHints?: { music?: { live?: boolean; codec?: string } } }[];
+    const live = streams.find((s) => s.url && /^https?:/.test(s.url) && s.behaviorHints?.music?.live && s.behaviorHints.music.codec !== 'hls');
+    if (!live) return { title: null };
+    try {
+      const value = await readNowPlaying(live.url!, { userAgent: `StremioMusic/${APP_VERSION}`, allowPrivate: opts.allowPrivateStreams });
+      nowPlayingCache.set(id, { at: Date.now(), value });
+      if (nowPlayingCache.size > 500) nowPlayingCache.delete(nowPlayingCache.keys().next().value!);
+      return value;
+    } catch (err) {
+      return { title: null, error: message(err) };
+    }
+  });
+
   app.get<{ Querystring: { id?: string } }>('/api/music/streams', async (req, reply) => {
     const id = req.query.id;
     if (!id) return reply.code(400).send({ error: 'missing id' });
@@ -224,11 +291,20 @@ export function registerMusicRoutes(app: FastifyInstance, registry: SourceRegist
     const streams: unknown[] = [];
     const errors: unknown[] = [];
     settled.forEach((r, i) => {
-      if (r.status === 'fulfilled') streams.push(...(r.value as object[]).map((s) => ({ ...forBrowser(s), source: sourceRef(owners[i]!) })));
+      if (r.status === 'fulfilled') streams.push(...(r.value as object[]).map((s) => ({ ...playOnly(forBrowser(s)), source: sourceRef(owners[i]!) })));
       else errors.push({ source: sourceRef(owners[i]!), error: message(r.reason) });
     });
     return { streams, errors };
   });
+}
+
+/**
+ * YouTube streams from remote addons are play-only: never offered for download (brief).
+ */
+function playOnly(stream: object): object {
+  const s = stream as { ytId?: string; behaviorHints?: { music?: object; [k: string]: unknown } };
+  if (!s.ytId) return stream;
+  return { ...s, behaviorHints: { ...s.behaviorHints, music: { ...s.behaviorHints?.music, downloadable: false, playOnly: true } } };
 }
 
 /**

@@ -222,7 +222,15 @@ clear cookies on exit, you'll have to sign in each time; add the app as an excep
 Music comes from sources, managed under **Music → Sources**. Admins see everything; other users
 see only the sources that need their own login. There are three kinds:
 
-- **Built-in** (Navidrome, Internet Archive, Jamendo, Free Music Archive, Radio Browser; Phase 6).
+- **Built-in:**
+  - **Navidrome:** your library. The admin sets the server URL (default `http://navidrome:4533`), and
+    each user enters their own Navidrome login under **Your settings**.
+  - **Internet Archive:** Live Music Archive, netlabels, 78 RPM records. No account needed.
+  - **Radio Browser:** internet radio. "Stations near you" defaults to Australia, which you can
+    change in its settings.
+  - **Jamendo:** needs a free client ID from [devportal.jamendo.com](https://devportal.jamendo.com),
+    for non-commercial use only.
+  - **Free Music Archive:** pending a decision on how to access it (see PROGRESS.md).
 - **Folder plugins**: drop a folder into `/config/music-sources/` and press **Reload plugins**.
   Start one with `docker exec -it stremio-music sm-new-source my-source`, and test it with
   `docker exec -it stremio-music sm-test-source /config/music-sources/my-source`.

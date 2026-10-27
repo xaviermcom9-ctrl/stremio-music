@@ -137,9 +137,29 @@ Return one or more ways to play an id (a track id from `videos`, or a track/stat
 - **Exactly one** of `url`, `infoHash` or `ytId` per stream.
 - `downloadable: true` only when the source's terms allow downloading (and the capability says so).
   Live streams are never downloadable.
-- **Never put credentials in a URL the browser could see.** If fetching needs auth, put the headers
-  in `behaviorHints.proxyHeaders.request`. The backend strips them from what the browser receives
-  and fetches the stream itself (the playback proxy arrives in Phase 7).
+- **Never put credentials in a URL the browser could see.** Two ways to keep them server-side:
+  - `ctx.proxyUrl(url)` for URLs with credentials in the query string (e.g. Subsonic tokens, API
+    keys). It works for any URL, cover art included.
+  - `behaviorHints.proxyHeaders.request` when auth goes in headers.
+
+  Either way, the browser gets an app-relative `api/proxy/<token>` URL. The token is AES-GCM
+  encrypted and valid for 7 days, and the backend fetches the upstream itself (forwarding `Range`
+  for seeking, after re-checking the host allow-list). The host must be in `allowedHosts` or come
+  from a `url` setting.
+- Public URLs (the Internet Archive, Radio Browser stations) can be returned as they are.
+- Live streams (`music.live: true`) get a server-side "now playing" for free: `GET
+  /api/music/nowplaying?id=…` reads the stream's ICY metadata. Connections to private addresses are
+  refused.
+
+### Hooks
+
+- `scrobble(trackId, ctx)`: called when playback of an item starts counting (Phase 7), e.g.
+  Navidrome scrobbles, and Radio Browser counts a station click as its guidelines ask.
+- `setLiked(id, liked, ctx)`: called when the user likes or unlikes an item (Phase 8), e.g.
+  Navidrome stars.
+
+Hooks run as the user who acted (their per-user settings). Failures are logged, never shown as
+playback errors.
 
 ### Settings
 
@@ -227,7 +247,19 @@ deterministically:
 }
 ```
 
-Keys are `<METHOD> <exact URL>`. A missing fixture fails the test and names the URL to record.
+Keys are `<METHOD> <exact URL>` without the `ignoreParams` (for random salts, tokens and API keys).
+A missing fixture fails the test and names the URL to record.
+
+**Recording:** run the source against the real service and write `fixtures.json`. Settings come
+from `fixtures.json`, plus real credentials from `SOURCE_SETTINGS`, which are **never** written
+out: secret values are replaced by `FIXTURE` everywhere in the recording.
+
+```sh
+SOURCE_SETTINGS='{"clientId":"…"}' node dist/test/contract/run.js --record jamendo
+```
+
+Re-record when the service changes. Navidrome's fixtures come from a throwaway server with a
+generated library (`server/scripts/dev/navidrome-fixture.sh`).
 
 ---
 

@@ -1,3 +1,4 @@
+import './net.js';
 import { buildApp } from './app.js';
 import { loadConfig } from './config.js';
 import { openDb } from './db.js';

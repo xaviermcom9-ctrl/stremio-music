@@ -164,7 +164,7 @@ Dockerfile now appends a hash of the web sources (`…-sm-<hash>`), so every cha
 Notes: fresh profiles get upstream's seasonal "event" modal (upstream behaviour). Six bottom tabs
 truncate "Downloads" on narrow phones (admins only); revisit in Phase 8.
 
-## Phase 5 – Source plugin system (done, awaiting go-ahead)
+## Phase 5 – Source plugin system (done)
 
 Backend (`server/src/music/`, `server/src/music-sources/`):
 - `music-sources/sdk.ts`: the `MusicSource` interface (manifest, catalog/meta/streams/test, hooks,
@@ -204,5 +204,55 @@ sandbox blocks reading /etc/hostname (unit test).
 Notes: no built-in sources yet (Phase 6), so the Sources page starts empty. Built-in sources
 need recorded fixtures.json to pass the contract in the build.
 
+## Phase 6 – Built-in sources (in progress: waiting on the user for Jamendo key + FMA choice)
+
+Media stack started by Claude on user request (2026-10-27): navidrome, lidarr, prowlarr, qbittorrent,
+nzbget all up; names resolve from the app container. User's Navidrome: 0.64.2, one account
+("admin", password unknown to Claude), 2 tracks. Untouched: development used a throwaway Navidrome
+(`server/scripts/dev/navidrome-fixture.sh`, generated FLAC/MP3 library).
+
+Framework additions:
+- `ctx.proxyUrl(url, {headers})` + streams with `proxyHeaders` -> `api/proxy/<AES-GCM token>` (source,
+  URL, headers, 7-day expiry); `/api/proxy/:token` re-checks enabled source + host allow-list (also
+  after redirects), forwards Range, streams the body, aborts upstream on disconnect. Fastify
+  maxParamLength raised to 4096 (tokens are long; default 100 made every proxy URL 404).
+- Contract tests: `ignoreParams`, `--record <id>` with `SOURCE_SETTINGS` (secrets scrubbed to
+  "FIXTURE"), fake proxy URLs; artist metas no longer need streams.
+- `src/net.ts`: Node's 250 ms happy-eyeballs attempt timeout made every request to Europe fail from
+  Melbourne (IPv4 timed out, IPv6 unroutable in Docker) -> 2.5 s everywhere (backend, CLI, contract
+  runner, engine via --network-family-autoselection-attempt-timeout).
+- `/api/music/nowplaying?id=` reads ICY StreamTitle server-side (`music/icy.ts`); refuses private/
+  loopback/link-local addresses on every hop with DNS pinned (SSRF: station URLs are public data).
+- ytId streams from remote addons are marked play-only, not downloadable.
+- SDK: `albums` on artist metas.
+
+Sources (all pass the contract live and offline from fixtures; 57 unit/integration tests):
+1. **Navidrome** ✅ Subsonic token auth, server URL global (default http://navidrome:4533), login per
+   user. Catalogs: recently added, most played, starred, random, artists, playlists, by genre, search3.
+   Meta: album/artist(albums + top songs or newest albums' tracks)/playlist/track. Streams: original +
+   MP3 320 transcode, via proxy (covers too). Hooks: star/unstar, scrobble. Verified e2e against the
+   throwaway server: covers image/jpeg, audio 206 FLAC with Range, no credentials in browser
+   responses, tampered token 404, star/scrobble visible in Navidrome, wrong password message.
+   Not downloadable (it's your own library). Playlist write-back not done (Phase 8 decision).
+2. **Internet Archive** ✅ catalogs: popular this week, LMA recent, LMA bands (band -> shows),
+   netlabels (+genre), 78 RPM (georgeblood, audio only), search across music collections. Best
+   format per track FLAC > VBR MP3 > other (alternatives offered). stream_only/access-restricted
+   items (e.g. GD soundboards): private files skipped, not downloadable. Licence from licenseurl
+   (CC parsed), else rights text, else item page link. Fixtures 743 KB (IA lists every derivative).
+3. **Jamendo** ⏸ implemented from the current v3.0 docs (verified, incl. API terms: non-commercial,
+   attribute + link each item, minimal caching, downloads only where allowed); stream URLs carry the
+   client ID -> proxied. NOT registered yet: needs the user's free client ID to record fixtures.
+4. **Free Music Archive** ⏸ investigated, waiting for the user's choice (see report below).
+5. **Radio Browser** ✅ server discovery via all.api.radio-browser.info (or fixed server), own UA,
+   click reporting via scrobble hook, catalogs: stations near you (default AU, setting), top voted,
+   trending, by genre, search; live, no download. Verified live: AU stations, now-playing titles.
+
+FMA report: official API gone (/api and /api/get/* -> 404, no replacement documented); the live
+site (Tribe of Noise) is HTML only -> scraping, fragile and needs a ToS review; archive.org has a
+`freemusicarchive` mirror: 16,797 releases added 2011-2018 (frozen), ~half with a CC licence URL,
+same stable API as the Internet Archive source. Recommendation: FMA via the archive.org mirror.
+
+UI parts of the Radio brief (LIVE badge, no seek, Radio page) come with the player/UI (Phases 7-8).
+
 ### Next
-- User: go-ahead for Phase 6 (built-in sources, Navidrome first).
+- User: Jamendo client ID (to record fixtures + enable), FMA choice; then Phase 7.

@@ -24,6 +24,9 @@ function makeContext(callId: number, ctx: { settings: unknown; user: unknown }) 
   return {
     settings: ctx.settings,
     user: ctx.user,
+    // same placeholder as SourceRuntime (PROXY_MARKER); the parent checks the host and encrypts it
+    proxyUrl: (url: string, opts?: { headers?: Record<string, string> }) =>
+      'smproxy:' + Buffer.from(JSON.stringify({ u: new URL(url).href, h: opts?.headers })).toString('base64url'),
     log: { debug: log('debug'), info: log('info'), warn: log('warn'), error: log('error') },
     fetch: (url: string, init?: unknown) =>
       new Promise((resolve, reject) => {

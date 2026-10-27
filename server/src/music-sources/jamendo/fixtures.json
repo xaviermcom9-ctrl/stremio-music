@@ -1,0 +1,5 @@
+{
+  "settings": { "clientId": "FIXTURE" },
+  "ignoreParams": ["client_id"],
+  "responses": {}
+}

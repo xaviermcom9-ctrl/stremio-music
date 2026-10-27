@@ -134,6 +134,7 @@ export class SourceRegistry {
       cache: this.cache,
       fetchImpl: this.o.fetchImpl,
       settingsFor: (user) => this.settingsFor(m.id, user),
+      makeProxyUrl: (url, headers) => this.proxyUrl(m.id, url, headers),
     });
     const entry: SourceEntry = {
       id: m.id,
@@ -393,6 +394,21 @@ export class SourceRegistry {
     return e;
   }
 
+  /** App-relative URL the browser can use for a private upstream URL (see /api/proxy). */
+  proxyUrl(sourceId: string, url: string, headers?: Record<string, string>): string {
+    const token = this.o.box.seal({ s: sourceId, u: url, h: headers, e: Date.now() + PROXY_TOKEN_TTL_MS } satisfies ProxyToken);
+    return `api/proxy/${token}`;
+  }
+
+  openProxyToken(token: string): ProxyToken | null {
+    try {
+      const t = this.o.box.open<ProxyToken>(token);
+      return t.e > Date.now() ? t : null;
+    } catch {
+      return null;
+    }
+  }
+
   iconPath(id: string): string | null {
     const e = this.entries.get(id);
     if (!e?.icon || /^https?:\/\//.test(e.icon)) return null;
@@ -462,6 +478,20 @@ export class SourceRegistry {
     for (const e of this.entries.values()) e.folder?.stop();
   }
 }
+
+export interface ProxyToken {
+  /** source id */
+  s: string;
+  /** upstream URL */
+  u: string;
+  /** request headers */
+  h?: Record<string, string>;
+  /** expiry (ms epoch) */
+  e: number;
+}
+
+/** Proxy URLs end up in cached catalogs and in saved queues, so they live a while. */
+const PROXY_TOKEN_TTL_MS = 7 * 24 * 3600 * 1000;
 
 /** Built-in sources live in server/src/music-sources/<id>/ (icons are read from there). */
 export const BUILTIN_DIR = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../music-sources');

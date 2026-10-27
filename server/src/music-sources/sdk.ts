@@ -68,6 +68,8 @@ export interface MusicMeta extends MusicMetaPreview {
   background?: string;
   logo?: string;
   videos?: MusicTrack[];
+  /** artist pages: the artist's albums */
+  albums?: MusicMetaPreview[];
   links?: { name: string; category: string; url: string }[];
 }
 
@@ -81,7 +83,8 @@ export interface MusicStream {
   name?: string;
   description?: string;
   behaviorHints?: {
-    /** HTTP headers the backend must send when fetching `url` (never exposed to the browser) */
+    /** HTTP headers the backend must send when fetching `url`; the stream is then served through the
+     * backend's proxy and the headers never reach the browser */
     proxyHeaders?: { request?: Record<string, string> };
     music?: {
       downloadable?: boolean;
@@ -180,6 +183,13 @@ export interface SourceContext {
   user: { id: number; username: string } | null;
   /** fetch() with the source's rate limit, User-Agent, timeout and host allow-list applied */
   fetch(url: string, init?: { method?: string; headers?: Record<string, string>; body?: string; timeoutMs?: number }): Promise<SourceResponse>;
+  /**
+   * For URLs the browser must not see (credentials in the query string, auth headers): returns a
+   * placeholder that the backend turns into an app-relative `api/proxy/<encrypted token>` URL and
+   * serves itself (with Range support). Use it for stream and cover-art URLs. The host must be
+   * allowed (allowedHosts or a url-type setting).
+   */
+  proxyUrl(url: string, opts?: { headers?: Record<string, string> }): string;
   log: Logger;
 }
 

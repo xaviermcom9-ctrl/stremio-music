@@ -47,6 +47,15 @@ export class SecretBox {
     return Buffer.concat([decipher.update(raw.subarray(28)), decipher.final()]).toString('utf8');
   }
 
+  /** URL-safe encrypted token for a small JSON payload (proxy URLs). */
+  seal(payload: unknown): string {
+    return Buffer.from(this.encrypt(JSON.stringify(payload)).slice(PREFIX.length), 'base64').toString('base64url');
+  }
+
+  open<T>(token: string): T {
+    return JSON.parse(this.decrypt(PREFIX + Buffer.from(token, 'base64url').toString('base64'))) as T;
+  }
+
   static isEncrypted(value: unknown): value is string {
     return typeof value === 'string' && value.startsWith(PREFIX);
   }

@@ -116,7 +116,8 @@ export class EngineSupervisor extends EventEmitter {
     this.setState('starting');
     mkdirSync(this.o.appPath, { recursive: true });
 
-    const child = spawn(this.o.nodeBin, ['-r', this.o.preload, this.o.script], {
+    // see src/net.ts: the default 250 ms per address is too short for far-away servers
+    const child = spawn(this.o.nodeBin, ['--network-family-autoselection-attempt-timeout=2500', '-r', this.o.preload, this.o.script], {
       cwd: this.o.appPath,
       detached: true, // own process group: stop() signals the engine and its ffmpeg children together
       stdio: ['ignore', 'pipe', 'pipe'],

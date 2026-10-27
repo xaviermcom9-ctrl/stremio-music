@@ -35,6 +35,8 @@ export async function buildApp({ config, db, engine, builtins, fetchImpl }: AppD
     trustProxy: config.trustedProxies.length ? config.trustedProxies : false,
     // long-lived media streams must not hold up `docker stop`
     forceCloseConnections: true,
+    // encrypted proxy tokens (/api/proxy/:token) are several hundred characters
+    maxParamLength: 4096,
   });
 
   // polled by the Docker HEALTHCHECK every 30 s: keep it out of the request log
@@ -79,7 +81,7 @@ export async function buildApp({ config, db, engine, builtins, fetchImpl }: AppD
   });
   await registry.init();
   app.addHook('onClose', async () => registry.stop());
-  registerMusicRoutes(app, registry, { secretKeySource: box.source });
+  registerMusicRoutes(app, registry, { secretKeySource: box.source }, fetchImpl);
   await registerEngineProxy(app, engine);
 
   if (existsSync(config.webRoot)) {

@@ -23,6 +23,8 @@ const CALL_TIMEOUT_MS = 30_000;
 const FETCH_TIMEOUT_MS = 15_000;
 const MAX_FETCH_BYTES = 10 * 1024 * 1024;
 const LOG_LINES = 300;
+/** ctx.proxyUrl() placeholder, replaced in the source's output by a real proxy URL (see resolveProxies) */
+export const PROXY_MARKER = 'smproxy:';
 
 const Num = z.number().finite();
 const SettingField = z.object({
@@ -140,6 +142,8 @@ export interface RuntimeOptions {
   cache: ResponseCache;
   fetchImpl?: typeof fetch;
   onLog?: (line: string) => void;
+  /** turns a private upstream URL (+ headers) into an app-relative proxy URL */
+  makeProxyUrl?: (url: string, headers?: Record<string, string>) => string;
 }
 
 /** Thrown for a source's own failures (vs. "not found"). */
@@ -213,7 +217,32 @@ export class SourceRuntime {
       user,
       log: this.logger(),
       fetch: (url, init) => this.sourceFetch(url, init, allowed),
+      proxyUrl: (url, opts) => {
+        const u = new URL(url);
+        if (!hostAllowed(u.host, allowed)) throw new SourceError(`proxyUrl: host not allowed: ${u.host}`, 'blocked-host');
+        return PROXY_MARKER + Buffer.from(JSON.stringify({ u: u.href, h: opts?.headers })).toString('base64url');
+      },
     };
+  }
+
+  /** Replaces ctx.proxyUrl() placeholders anywhere in a result with real proxy URLs. */
+  private resolveProxies<T>(value: T, user: SourceContext['user']): T {
+    let allowed: string[] | null = null;
+    const walk = (v: unknown): unknown => {
+      if (typeof v === 'string') {
+        if (!v.startsWith(PROXY_MARKER)) return v;
+        if (!this.opts.makeProxyUrl) throw new SourceError('proxyUrl is not available here', 'invalid');
+        const { u, h } = JSON.parse(Buffer.from(v.slice(PROXY_MARKER.length), 'base64url').toString('utf8')) as { u: string; h?: Record<string, string> };
+        // checked here too: folder plugins create placeholders in their own process
+        allowed ??= this.allowedHosts(this.opts.settingsFor(user));
+        if (!hostAllowed(new URL(u).host, allowed)) throw new SourceError(`proxyUrl: host not allowed: ${new URL(u).host}`, 'blocked-host');
+        return this.opts.makeProxyUrl(u, h);
+      }
+      if (Array.isArray(v)) return v.map(walk);
+      if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, walk(x)]));
+      return v;
+    };
+    return walk(value) as T;
   }
 
   async sourceFetch(
@@ -281,7 +310,7 @@ export class SourceRuntime {
     const started = Date.now();
     this.stats.requests++;
     try {
-      const value = await withTimeout(fn(this.context(user)), CALL_TIMEOUT_MS, what);
+      const value = this.resolveProxies(await withTimeout(fn(this.context(user)), CALL_TIMEOUT_MS, what), user);
       if (ttl > 0) this.opts.cache.set(ck, value, { maxAge: ttl, staleRevalidate: 0, staleError: ttl * 4 });
       return value;
     } catch (err) {
@@ -352,7 +381,16 @@ export class SourceRuntime {
     if (!this.impl.streams) throw new SourceError('no stream support', 'unsupported');
     const streams = await this.run(`streams ${id}`, user, this.manifest.cache.streams, ['streams', id], (ctx) => this.impl.streams!(id, ctx));
     const kept = this.keep(Stream, streams, `streams ${id}`) as unknown as MusicStream[];
-    return kept.map((s) => (s.infoHash ? { ...s, infoHash: s.infoHash.toLowerCase() } : s));
+    return kept.map((s) => {
+      if (s.infoHash) return { ...s, infoHash: s.infoHash.toLowerCase() };
+      const headers = s.behaviorHints?.proxyHeaders?.request;
+      if (s.url && headers && this.opts.makeProxyUrl && !s.url.startsWith('api/proxy/')) {
+        // the browser gets a proxy URL; the headers stay in the encrypted token
+        const { proxyHeaders: _hidden, ...hints } = s.behaviorHints!;
+        return { ...s, url: this.opts.makeProxyUrl(s.url, headers), behaviorHints: hints };
+      }
+      return s;
+    });
   }
 
   async test(user: SourceContext['user']): Promise<SourceTestResult> {

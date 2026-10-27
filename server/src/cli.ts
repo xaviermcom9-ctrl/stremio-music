@@ -5,6 +5,7 @@
 //   docker exec -it stremio-music sm-user admin alice on|off
 //   docker exec -it stremio-music sm-user disable|enable|delete alice
 // Passwords are prompted for (no echo), or read from stdin when it isn't a terminal.
+import './net.js';
 import readline from 'node:readline';
 import { AuthStore } from './auth/store.js';
 import { passwordProblem, USERNAME_RE } from './auth/password.js';
