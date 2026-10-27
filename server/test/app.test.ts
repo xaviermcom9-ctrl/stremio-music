@@ -15,13 +15,16 @@ describe('app', () => {
   mkdirSync(path.join(web, 'abc1234def/scripts'), { recursive: true });
   writeFileSync(path.join(web, 'index.html'), '<!doctype html><title>t</title>');
   writeFileSync(path.join(web, 'abc1234def/scripts/main.js'), 'console.log(1)');
-  const config = loadConfig({ CONFIG_DIR: path.join(root, 'config'), CACHE_DIR: path.join(root, 'cache'), WEB_ROOT: web, LOG_LEVEL: 'error' });
+  const config = loadConfig({ CONFIG_DIR: path.join(root, 'config'), CACHE_DIR: path.join(root, 'cache'), WEB_ROOT: web, LOG_LEVEL: 'error', ADMIN_USERNAME: 'admin', ADMIN_PASSWORD: 'admin password' });
   const db = openDb(config.dbPath);
   const { s: engine } = fakeEngine({});
   let app: FastifyInstance;
+  let cookie = '';
 
   before(async () => {
     app = await buildApp({ config, db, engine });
+    const res = await app.inject({ method: 'POST', url: '/api/auth/login', payload: { username: 'admin', password: 'admin password' } });
+    cookie = `sm_session=${res.cookies.find((c) => c.name === 'sm_session')!.value}`;
   });
   after(async () => {
     await engine.stop();
@@ -43,7 +46,7 @@ describe('app', () => {
 
   test('proxies /engine/* to the engine and rewrites self-referencing URLs', async () => {
     const mediaURL = 'http://music.lan:8095/engine/abc/1';
-    const res = await app.inject({ url: `/engine/hlsv2/probe?mediaURL=${encodeURIComponent(mediaURL)}`, headers: { host: 'music.lan:8095' } });
+    const res = await app.inject({ url: `/engine/hlsv2/probe?mediaURL=${encodeURIComponent(mediaURL)}`, headers: { host: 'music.lan:8095', cookie } });
     assert.equal(res.statusCode, 200, res.body);
     const echoed = new URL(res.json().path, 'http://x');
     assert.equal(echoed.pathname, '/hlsv2/probe');
@@ -52,15 +55,17 @@ describe('app', () => {
 
   test('/engine/* is 503 while the engine is down', async () => {
     await engine.stop();
-    const res = await app.inject('/engine/heartbeat');
+    const res = await app.inject({ url: '/engine/heartbeat', headers: { cookie } });
     assert.equal(res.statusCode, 503);
   });
 
   test('serves the UI with cache headers', async () => {
-    const index = await app.inject('/');
+    const anon = await app.inject({ url: '/', headers: { accept: 'text/html' } });
+    assert.equal(anon.statusCode, 302);
+    const index = await app.inject({ url: '/', headers: { cookie } });
     assert.equal(index.statusCode, 200);
     assert.equal(index.headers['cache-control'], 'no-cache');
-    const js = await app.inject('/abc1234def/scripts/main.js');
+    const js = await app.inject({ url: '/abc1234def/scripts/main.js', headers: { cookie } });
     assert.match(String(js.headers['cache-control']), /immutable/);
   });
 });

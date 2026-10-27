@@ -12,6 +12,11 @@ services:
       TZ: ${TZ:-Australia/Melbourne}
       # cap for the streaming engine's torrent cache (e.g. 20GB, 512MiB, 0 = no cache, unlimited)
       ENGINE_CACHE_SIZE: ${ENGINE_CACHE_SIZE:-10GB}
+      # behind a reverse proxy: its address(es), e.g. the shared Docker network (see README)
+      # TRUSTED_PROXIES: 172.18.0.0/16
+      # first admin without the setup code (ignored once an account exists)
+      # ADMIN_USERNAME: admin
+      # ADMIN_PASSWORD_FILE: /run/secrets/admin_password
     ports:
       - "8095:8095"
     volumes:

@@ -2,6 +2,8 @@ import { existsSync } from 'node:fs';
 import fastifyStatic from '@fastify/static';
 import Fastify, { type FastifyInstance } from 'fastify';
 import type { DatabaseSync } from 'node:sqlite';
+import { registerAuth } from './auth/plugin.js';
+import { AuthStore } from './auth/store.js';
 import type { Config } from './config.js';
 import { dbHealthy } from './db.js';
 import { registerEngineProxy } from './engine/proxy.js';
@@ -18,12 +20,22 @@ export interface AppDeps {
 export async function buildApp({ config, db, engine }: AppDeps): Promise<FastifyInstance> {
   const app = Fastify({
     logger: { level: config.logLevel },
-    trustProxy: true,
+    // X-Forwarded-* only from configured proxies; otherwise clients could spoof their IP
+    trustProxy: config.trustedProxies.length ? config.trustedProxies : false,
     // long-lived media streams must not hold up `docker stop`
     forceCloseConnections: true,
   });
 
   // polled by the Docker HEALTHCHECK every 30 s: keep it out of the request log
+  app.addHook('onSend', async (_req, reply) => {
+    reply.header('x-content-type-options', 'nosniff');
+    reply.header('referrer-policy', 'same-origin');
+    if (!reply.hasHeader('content-security-policy')) reply.header('content-security-policy', "frame-ancestors 'self'");
+  });
+
+  // first: its onRequest hook guards every route registered below
+  await registerAuth(app, { config, store: new AuthStore(db, config.auth.sessionTtlMs) });
+
   app.get('/health', { logLevel: 'warn' }, async (_req, reply) => {
     const e = engine.status();
     const dbOk = dbHealthy(db);

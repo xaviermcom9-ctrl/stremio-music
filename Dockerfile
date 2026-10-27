@@ -52,6 +52,7 @@ COPY --from=server /src/server/package.json /app/server/
 COPY --from=server /src/server/node_modules /app/server/node_modules
 COPY --from=server /src/server/dist/src /app/server/dist/src
 COPY docker/entrypoint.sh /app/docker/entrypoint.sh
+COPY docker/sm-user /usr/local/bin/sm-user
 
 ENV PUID=1000 PGID=1000 UMASK=022 TZ=Australia/Melbourne \
     PORT=8095 ENGINE_CACHE_SIZE=10GB NODE_ENV=production

@@ -2,8 +2,7 @@
 
 Self-hosted Stremio web UI with a Music mode, in one Docker container on one port.
 Private use. See [ARCHITECTURE.md](ARCHITECTURE.md) for the design and [PROGRESS.md](PROGRESS.md)
-for status. This README grows with each phase. Auth, reverse proxy, HTTPS, Tailscale and sources
-come in later phases.
+for status. This README grows with each phase; sources and music come in later phases.
 
 > **Keep the image private.** It contains Stremio's streaming server (`server.js`), which has no
 > published source or licence text. Don't push the image to a public registry.
@@ -51,6 +50,164 @@ It's HTTP 503 when the engine has failed or the database is unavailable. The Doc
 The engine is started, health-checked (every 10 s), restarted on crash (backoff 1 s → 30 s; after
 5 crashes in 5 minutes the state is `failed` and it retries every minute) and stopped by the app.
 `docker stop` stops it (and any ffmpeg) first, so it takes a few seconds.
+
+## Sign-in and users
+
+Everything except `/health`, the login page and the PWA manifest/icons requires signing in.
+
+**First start:** the container log prints a one-time setup code:
+
+```sh
+docker logs stremio-music 2>&1 | grep "setup code"
+```
+
+Open the app; it redirects to the setup page, where you enter the code and create the admin
+account. Alternatively, set `ADMIN_USERNAME` + `ADMIN_PASSWORD` (or `ADMIN_PASSWORD_FILE` for a
+Docker secret) to create the admin at first start. These are ignored once any account exists.
+
+**More users / password changes:** open `<app>/account` (change your password, sign out; admins
+also add, disable and delete users and reset passwords). From the shell:
+
+```sh
+docker exec -it stremio-music sm-user list
+docker exec -it stremio-music sm-user add alice [--admin]
+docker exec -it stremio-music sm-user passwd alice        # e.g. a forgotten admin password
+docker exec -it stremio-music sm-user admin alice on|off
+docker exec -it stremio-music sm-user disable|enable|delete alice
+```
+
+Details:
+- Passwords are hashed with scrypt in `/config/app.db`. Sessions are random tokens in an HttpOnly,
+  SameSite=Lax cookie (only a hash is stored), 30 days, extended while you use the app
+  (`SESSION_TTL_DAYS`). Changing a password signs out your other devices.
+- Login is rate-limited (10 attempts per 15 min per client IP). A username is also locked for 15
+  minutes after 5 wrong passwords.
+- Requests that change things must come from the app's own origin (CSRF protection).
+- The cookie is `Secure` automatically when the request arrived over HTTPS through a trusted proxy.
+  Force it with `COOKIE_SECURE=true|false`.
+
+### Auth environment
+
+| Variable | Default | |
+|---|---|---|
+| `AUTH_MODE` | `local` | `local` = built-in accounts; `proxy` = trust a user header from your authenticating reverse proxy (below) |
+| `TRUSTED_PROXIES` | *(none)* | comma-separated IPs/CIDRs of your reverse proxy. Only these may set `X-Forwarded-For/-Proto/-Host/-Prefix`; leave empty when clients connect directly. |
+| `ADMIN_USERNAME`, `ADMIN_PASSWORD` / `ADMIN_PASSWORD_FILE` | | create the first admin instead of using the setup code |
+| `SESSION_TTL_DAYS` | `30` | |
+| `COOKIE_SECURE` | `auto` | |
+| `PROXY_USER_HEADER` | `Remote-User` | `proxy` mode: header carrying the user name |
+| `PROXY_ADMIN_USERS` | *(none)* | `proxy` mode: comma-separated admins. If empty, the first user seen becomes admin. |
+
+## Reverse proxy, HTTPS and sub-paths
+
+Plain `http://<server>:8095` works on the LAN, but **installing the app (PWA) and its service
+worker need a secure context**: HTTPS, or `localhost`. Put it behind a reverse proxy with TLS, or
+use Tailscale (next section). The app works at the root of a host (`https://music.example.com/`)
+or under a sub-path (`https://media.example.com/stremio/`). It uses relative URLs throughout, so
+the proxy only has to strip the prefix.
+
+Always set `TRUSTED_PROXIES` to the proxy's address. On the shared Docker network
+(`media-stack_default` = `172.18.0.0/16`) that's `TRUSTED_PROXIES=172.18.0.0/16`. A proxy running on
+the host reaches the container from the network gateway (`172.18.0.1`).
+
+The proxy must pass the original `Host` (or `X-Forwarded-Host`) and `X-Forwarded-Proto`, and for a
+sub-path `X-Forwarded-Prefix` (used to scope the cookie). Keep buffering off and timeouts long:
+video and music are streamed through it.
+
+**Caddy** (TLS automatic):
+
+```caddyfile
+music.example.com {
+	reverse_proxy stremio-music:8095
+}
+
+# or under a sub-path
+media.example.com {
+	redir /stremio /stremio/
+	handle_path /stremio/* {
+		reverse_proxy stremio-music:8095 {
+			header_up X-Forwarded-Prefix /stremio
+		}
+	}
+}
+```
+
+**Nginx:**
+
+```nginx
+location = /stremio { return 301 /stremio/; }
+location /stremio/ {
+    proxy_pass http://stremio-music:8095/;     # trailing slash strips /stremio
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Forwarded-Prefix /stremio;
+    proxy_buffering off;
+    proxy_request_buffering off;
+    proxy_read_timeout 1h;
+    client_max_body_size 0;
+}
+```
+
+**Traefik** (labels on the `stremio-music` service; StripPrefix sets `X-Forwarded-Prefix` itself):
+
+```yaml
+labels:
+  - traefik.enable=true
+  - traefik.http.routers.stremio-music.rule=Host(`media.example.com`) && PathPrefix(`/stremio`)
+  - traefik.http.routers.stremio-music.entrypoints=websecure
+  - traefik.http.routers.stremio-music.tls.certresolver=letsencrypt
+  - traefik.http.routers.stremio-music.middlewares=sm-slash,sm-strip
+  - traefik.http.middlewares.sm-slash.redirectregex.regex=^(https?://[^/]+/stremio)$$
+  - traefik.http.middlewares.sm-slash.redirectregex.replacement=$${1}/
+  - traefik.http.middlewares.sm-strip.stripprefix.prefixes=/stremio
+  - traefik.http.services.stremio-music.loadbalancer.server.port=8095
+```
+
+For a root host, drop the `PathPrefix` and both middlewares.
+
+### Letting the proxy do the sign-in (`AUTH_MODE=proxy`)
+
+If your proxy already authenticates (Authelia, Authentik, oauth2-proxy, Caddy `forward_auth`,
+Traefik ForwardAuth…), set `AUTH_MODE=proxy` and `TRUSTED_PROXIES`. The proxy must send the
+signed-in user's name in `Remote-User` (or `PROXY_USER_HEADER`). Accounts are created on first
+sight. **Only use this behind such a proxy**: the app then refuses every connection that doesn't
+come from `TRUSTED_PROXIES` (except `/health`), and it won't start without that setting, because
+anyone who can reach port 8095 directly could otherwise claim to be any user. Don't publish port
+8095 on the host in this mode; let only the proxy reach it over the Docker network.
+
+## Remote access with Tailscale
+
+Instead of opening ports, reach the app over your tailnet. `tailscale serve` on the host gives it
+an HTTPS address with a valid certificate (`https://<host>.<tailnet>.ts.net`), which also makes
+the PWA installable on your phone:
+
+```sh
+sudo tailscale serve --bg http://127.0.0.1:8095
+```
+
+Then set `TRUSTED_PROXIES=172.18.0.1` (`tailscale serve` connects through the Docker gateway) and
+`COOKIE_SECURE=true`, and keep using the app's own sign-in. Only devices on your tailnet can reach
+it. (Tailscale also passes `Tailscale-User-Login`, so `AUTH_MODE=proxy` with
+`PROXY_USER_HEADER=Tailscale-User-Login` is possible, but then the LAN port must not be reachable
+by anything else; the built-in login is the simpler choice.)
+
+## Installing the app (PWA)
+
+Over HTTPS, open the app and install it: on an **Ubuntu laptop** use Chrome, Chromium or Edge
+(the install icon in the address bar, or ⋮ → *Cast, save and share* → *Install page as app*). It
+then gets its own window and launcher entry, and media keys work through the desktop's media
+controls. **Firefox on Linux can't install web apps**, though the app works fine in a normal
+Firefox tab. On Android use **Add to Home Screen** / **Install app**.
+
+No HTTPS yet and only using it on the LAN? Chrome/Chromium can treat this one address as secure:
+open `chrome://flags/#unsafely-treat-insecure-origin-as-secure`, add `http://<server>:8095`,
+relaunch. That's for your own laptop only; HTTPS (proxy or Tailscale) is the proper fix. The service
+worker caches only the UI shell (scripts, styles, fonts, images) so the app opens fast. Pages,
+your data, the API and streams always come from the server, and signing in is always checked
+there.
 
 ## Torrent peers and VPN
 

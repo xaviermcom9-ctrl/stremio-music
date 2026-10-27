@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { z } from 'zod';
 
@@ -37,7 +38,25 @@ const Env = z.object({
   }),
   FFMPEG_BIN: z.string().default('/usr/bin/ffmpeg'),
   FFPROBE_BIN: z.string().default('/usr/bin/ffprobe'),
+  // local = built-in accounts; proxy = an authenticating reverse proxy sends the user name
+  AUTH_MODE: z.enum(['local', 'proxy']).default('local'),
+  // comma-separated IPs/CIDRs whose X-Forwarded-* headers are trusted (and, in proxy mode, the only
+  // addresses allowed to connect)
+  TRUSTED_PROXIES: z.string().default(''),
+  PROXY_USER_HEADER: z.string().default('Remote-User'),
+  PROXY_ADMIN_USERS: z.string().default(''),
+  ADMIN_USERNAME: z.string().default(''),
+  ADMIN_PASSWORD: z.string().default(''),
+  ADMIN_PASSWORD_FILE: z.string().default(''),
+  SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(365).default(30),
+  COOKIE_SECURE: z.enum(['auto', 'true', 'false']).default('auto'),
 });
+
+const list = (v: string) =>
+  v
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
 
 export type Config = ReturnType<typeof loadConfig>;
 
@@ -48,6 +67,12 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
     throw new Error(`invalid configuration: ${issues}`);
   }
   const e = parsed.data;
+  const trustedProxies = list(e.TRUSTED_PROXIES);
+  if (e.AUTH_MODE === 'proxy' && trustedProxies.length === 0) {
+    throw new Error('AUTH_MODE=proxy requires TRUSTED_PROXIES (the reverse proxy address), or anyone could send the user header');
+  }
+  let adminPassword = e.ADMIN_PASSWORD;
+  if (e.ADMIN_PASSWORD_FILE) adminPassword = readFileSync(e.ADMIN_PASSWORD_FILE, 'utf8').trim();
   return {
     host: e.HOST,
     port: e.PORT,
@@ -63,6 +88,16 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
       cacheSize: e.ENGINE_CACHE_SIZE,
       ffmpeg: e.FFMPEG_BIN,
       ffprobe: e.FFPROBE_BIN,
+    },
+    trustedProxies,
+    auth: {
+      mode: e.AUTH_MODE,
+      proxyUserHeader: e.PROXY_USER_HEADER.toLowerCase(),
+      proxyAdminUsers: list(e.PROXY_ADMIN_USERS).map((u) => u.toLowerCase()),
+      adminUsername: e.ADMIN_USERNAME,
+      adminPassword,
+      sessionTtlMs: e.SESSION_TTL_DAYS * 24 * 3600 * 1000,
+      cookieSecure: e.COOKIE_SECURE,
     },
   };
 }

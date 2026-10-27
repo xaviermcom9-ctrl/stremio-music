@@ -68,7 +68,7 @@ stremio-shell c3a8bcb, stremio-shell-ng c6aae4e, stremio-addon-sdk ec4e0a4.
   pasted URLs directly. Needs a real-browser check by the user.
 - ARCHITECTURE.md written (engine, container, supervision, single origin, auth, plugin system).
 
-## Phase 2 – Container & hidden engine (done, awaiting go-ahead)
+## Phase 2 – Container & hidden engine (done)
 
 Built + running: `docker compose up -d` -> http://192.168.0.13:8095 (healthy).
 - `web/` = upstream stremio-web 8329565 snapshot + patches (web/PATCHES.md): same-origin engine URL
@@ -102,5 +102,39 @@ Not verified: Navidrome/qBittorrent by name (media-stack is down); real-browser 
 - Phase 3 must keep auth on `/engine/*` compatible with the engine's own loopback fetches
   (they bypass the proxy, so fine) and handle external players/casting (signed URLs).
 
+## Phase 3 – Access, auth & web app (done, awaiting go-ahead)
+
+User note (2026-10-27): the **Ubuntu laptop is the main client**; phone secondary. Test desktop first.
+
+- Auth (`server/src/auth/`): local accounts (scrypt N=2^15) + sessions in SQLite (cookie token, only
+  its sha256 stored; HttpOnly, SameSite=Lax, Secure over HTTPS, path = X-Forwarded-Prefix; 30 days
+  sliding). Login rate limit 10/15 min/IP (@fastify/rate-limit) + 5-failure username lockout;
+  same reply for unknown user/wrong password (dummy hash for timing). Origin/Sec-Fetch-Site check
+  on unsafe methods. First admin via one-time setup code in the log, or ADMIN_USERNAME/PASSWORD(_FILE).
+  Pages: /login, /setup, /account (password change, sign out, admin user management), strict CSP.
+  `sm-user` CLI via docker exec. `AUTH_MODE=proxy` (Remote-User header, only from TRUSTED_PROXIES,
+  refuses to start without it; direct connections 403). trustProxy now only TRUSTED_PROXIES
+  (was `true` → spoofable IPs).
+- Guard: navigations → relative redirect to login (sub-path safe); others 401 + `x-auth-required`.
+  Public: /health, login/setup, auth assets, manifest, favicons/images/fonts.
+- Web: `src/sm/authGuard.js` (fetch 401 → login?next=…), SW precache excludes HTML, manifest renamed.
+- README: sign-in, users, auth env, Caddy/Nginx/Traefik (root + sub-path), proxy auth, Tailscale,
+  PWA install on Ubuntu (Chromium-based; Firefox on Linux can't install), LAN flag workaround.
+- Deps added: @fastify/cookie 11.1.3, @fastify/rate-limit 11.2.1. npm audit 0. 35 tests.
+
+Verified (throwaway instance + Caddy `tls internal` at /stremio/, headless Chrome, 412px phone and
+1440px desktop): setup with wrong/right code; app + engine work after setup; account page adds a
+user; sign-out → engine 401; HTTPS sub-path: redirect to /stremio/login?next=%2F, cookie
+Secure/HttpOnly/Lax/path=/stremio/, engine at https://…/stremio/engine/ Online; SW active at
+/stremio/ scope caching 75 shell assets, no HTML/api/engine; reload after logout → login page;
+session loss mid-use → fetch guard → login. (SW registration needs a trusted cert: with Caddy's
+internal CA untrusted Chrome refuses; worked with the CA accepted.)
+
+Not done / notes:
+- No in-app link to /account yet (Phase 4 adds the top-level mode switch; put Account/Sign out there).
+- Your instance is fresh: create the admin with the setup code from `docker logs stremio-music`
+  (a new code is printed on every start until an account exists).
+- GitHub push pending: no gh/SSH credentials on the server.
+
 ### Next
-- User: go-ahead for Phase 3 (auth, reverse proxy/sub-path, PWA, mobile).
+- User: GitHub access; go-ahead for Phase 4 (Movies & TV | Music switch).

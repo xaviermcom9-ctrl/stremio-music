@@ -4,6 +4,25 @@ import { DatabaseSync } from 'node:sqlite';
 
 const MIGRATIONS: string[] = [
   `CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)`,
+  `CREATE TABLE users (
+     id INTEGER PRIMARY KEY,
+     username TEXT NOT NULL UNIQUE COLLATE NOCASE,
+     password_hash TEXT,            -- NULL for users managed by an authenticating proxy
+     is_admin INTEGER NOT NULL DEFAULT 0,
+     disabled INTEGER NOT NULL DEFAULT 0,
+     created_at INTEGER NOT NULL,
+     updated_at INTEGER NOT NULL
+   );
+   CREATE TABLE sessions (
+     id TEXT PRIMARY KEY,           -- sha256 of the cookie token; the token itself is never stored
+     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+     created_at INTEGER NOT NULL,
+     expires_at INTEGER NOT NULL,
+     last_seen_at INTEGER NOT NULL,
+     user_agent TEXT,
+     ip TEXT
+   );
+   CREATE INDEX sessions_user ON sessions(user_id);`,
 ];
 
 export function openDb(file: string): DatabaseSync {

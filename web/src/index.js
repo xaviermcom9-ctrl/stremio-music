@@ -1,5 +1,8 @@
 // Copyright (C) 2017-2023 Smart code 203358507
 
+// stremio-music: must run before anything fetches
+require('./sm/authGuard');
+
 if (typeof process.env.SENTRY_DSN === 'string') {
     const Sentry = require('@sentry/browser');
     Sentry.init({ dsn: process.env.SENTRY_DSN });

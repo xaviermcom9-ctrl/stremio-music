@@ -231,6 +231,9 @@ module.exports = (env, argv) => ({
         argv.mode === 'production' &&
             new WorkboxPlugin.GenerateSW({
                 maximumFileSizeToCacheInBytes: 20000000,
+                // stremio-music: cache the UI shell (scripts, styles, fonts, images) but never HTML,
+                // so page loads always reach the server's login check; nothing else is cached
+                exclude: [/\.map$/, /^manifest.*\.js$/, /\.html$/],
                 clientsClaim: true,
                 skipWaiting: false
             }),
