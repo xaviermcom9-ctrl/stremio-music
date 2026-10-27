@@ -1,0 +1,9 @@
+#!/bin/sh
+# Backup of /config (database, secret key, folder plugins) while the app runs; see server/src/backup.ts.
+# `docker exec` runs as root by default: drop to PUID:PGID so the archive gets the right owner.
+set -eu
+CLI="node --disable-warning=ExperimentalWarning /app/server/dist/src/backup.js"
+if [ "$(id -u)" = "0" ]; then
+  exec setpriv --reuid="${PUID:-1000}" --regid="${PGID:-1000}" --clear-groups env HOME=/config $CLI "$@"
+fi
+exec $CLI "$@"

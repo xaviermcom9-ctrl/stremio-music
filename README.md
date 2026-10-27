@@ -1,72 +1,137 @@
 # Stremio Music
 
-Self-hosted Stremio web UI with a Music mode, in one Docker container on one port.
-Private use. See [ARCHITECTURE.md](ARCHITECTURE.md) for the design and [PROGRESS.md](PROGRESS.md)
-for status. This README grows with each phase; sources and music come in later phases.
+Self-hosted Stremio web UI with a **Music mode**, in one Docker container on one port: Movies & TV
+is upstream stremio-web with its streaming engine built in; Music plays your Navidrome library,
+Internet Archive, Jamendo, Free Music Archive, internet radio and Stremio music addons, with a
+library, playlists and server-side downloads into your music folder.
+
+For private use. Design: [ARCHITECTURE.md](ARCHITECTURE.md). Writing music sources:
+[PLUGINS.md](PLUGINS.md). History: [PROGRESS.md](PROGRESS.md).
 
 > **Keep the image private.** It contains Stremio's streaming server (`server.js`), which has no
-> published source or licence text. Don't push the image to a public registry.
+> published source or licence text. Build it yourself, or push it only to a registry of your own.
 
-## Run
+**Contents:** [Install](#install) · [Configuration](#configuration) · [Sign-in and users](#sign-in-and-users) ·
+[Reverse proxy and HTTPS](#reverse-proxy-https-and-sub-paths) · [Tailscale](#remote-access-with-tailscale) ·
+[Installing the app (PWA)](#installing-the-app-pwa) · [Music sources](#music-sources) ·
+[Connecting Navidrome](#connecting-navidrome) · [Library](#library) · [Playback](#playback) ·
+[Downloads](#downloads) · [Connecting qBittorrent](#connecting-qbittorrent) · [Updating](#updating) ·
+[Backup and restore](#backup-and-restore) · [Troubleshooting](#troubleshooting) ·
+[Torrent peers and VPN](#torrent-peers-and-vpn) · [Uninstall](#uninstall) · [Development](#development)
+
+## Install
+
+Needs: Docker Engine with Compose v2, on x86_64 (built and tested on Ubuntu Server 26.04.1 LTS,
+Docker 29.9, Compose 5.6). The example compose file joins an existing media stack network
+(`media-stack_default`) so the app reaches `navidrome:4533` and `qbittorrent:8080` by name; that
+stack must be up first. Without one, delete the `networks:` parts.
 
 ```sh
-docker compose build
+git clone <your copy of this repo> ~/stremio-music && cd ~/stremio-music
+cp .env.example .env                 # optional: PUID/PGID, TZ, cache size
+# edit the /music volume in docker-compose.yml: your library folder (the one Navidrome reads)
+REVISION=$(git rev-parse --short HEAD) docker compose build     # ~5 min; runs all tests
 docker compose up -d
-docker compose logs -f stremio-music
+docker logs stremio-music 2>&1 | grep "setup code"
 ```
 
-Open `http://<server>:8095/`. Movies & TV uses the built-in engine automatically: Settings →
-Streaming shows `http://<server>:8095/engine/` as Online.
+Open `http://<server>:8095/`, enter the setup code and create the admin account. Movies & TV uses
+the built-in engine automatically (Settings → Streaming shows `…/engine/` as Online). Then add your
+Navidrome login (below) and look at **Music → Sources**.
 
-`docker-compose.yml` joins the existing `media-stack_default` network, so the app can reach
-`navidrome:4533` and `qbittorrent:8080` by name. That stack must be up first (`external: true`).
+The build downloads Stremio's `server.js` (pinned version and checksum), Ubuntu packages, and the
+npm/pnpm dependencies (exact versions from the lockfiles). It runs the server tests and the
+source contract tests: a failing test fails the build.
+
+`docker-compose.yml`:
+
+```yaml
+services:
+  stremio-music:
+    build:
+      context: .
+      args:
+        REVISION: ${REVISION:-unknown}
+    image: ${STREMIO_MUSIC_IMAGE:-stremio-music:local}
+    container_name: stremio-music
+    restart: unless-stopped
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-Australia/Melbourne}
+      ENGINE_CACHE_SIZE: ${ENGINE_CACHE_SIZE:-10GB}
+      # TRUSTED_PROXIES: 172.18.0.0/16        # behind a reverse proxy
+      # MUSICBRAINZ_CONTACT: you@example.org  # artist merging via MusicBrainz
+    ports:
+      - "8095:8095"
+    volumes:
+      - ./config:/config                       # settings, plugins, database: back this up
+      - ./cache:/cache                         # engine/torrent cache
+      - /srv/media/library/music:/music        # library, shared read-write with Navidrome
+      - ./downloads:/downloads                 # staging for downloads
+    networks:
+      - media
+    stop_grace_period: 20s
+
+networks:
+  media:
+    name: media-stack_default
+    external: true
+```
+
+## Configuration
 
 ### Environment
 
 | Variable | Default | |
 |---|---|---|
-| `PUID` / `PGID` | `1000` / `1000` | user the app runs as; owns `/config` and `/cache` |
-| `UMASK` | `022` | for files the app creates (use `002` for a group-writable `/music`) |
+| `PUID` / `PGID` | `1000` / `1000` | user the app runs as; owns `/config`, `/cache` and the files it writes to `/music` (use Navidrome's user) |
+| `UMASK` | `022` | for files the app creates (`002` for a group-writable library) |
 | `TZ` | `Australia/Melbourne` | |
 | `PORT` | `8095` | port inside the container (change the `ports:` mapping instead, normally) |
-| `ENGINE_CACHE_SIZE` | `10GB` | engine/torrent cache cap: `20GB`, `512MiB`, `0` (no cache), `unlimited`. Applied on every engine start, overriding the cache size picked in the Movies & TV settings page. |
 | `LOG_LEVEL` | `info` | `debug` also logs the engine's own output |
+| `ENGINE_CACHE_SIZE` | `10GB` | engine/torrent cache cap: `20GB`, `512MiB`, `0` (no cache), `unlimited`. Applied on every engine start, overriding the Movies & TV settings page |
+| `AUTH_MODE` | `local` | `local` = built-in accounts; `proxy` = trust a user header from your authenticating reverse proxy ([below](#letting-the-proxy-do-the-sign-in-auth_modeproxy)) |
+| `TRUSTED_PROXIES` | *(none)* | comma-separated IPs/CIDRs of your reverse proxy; only these may set `X-Forwarded-*`. Empty when clients connect directly |
+| `ADMIN_USERNAME`, `ADMIN_PASSWORD` / `ADMIN_PASSWORD_FILE` | | create the first admin instead of using the setup code (ignored once an account exists) |
+| `SESSION_TTL_DAYS` | `30` | sign-in lifetime, extended while you use the app |
+| `COOKIE_SECURE` | `auto` | `true`/`false` to force the cookie's `Secure` flag |
+| `PROXY_USER_HEADER` | `Remote-User` | `proxy` mode: header carrying the user name |
+| `PROXY_ADMIN_USERS` | *(none)* | `proxy` mode: comma-separated admins; if empty, the first user seen becomes admin |
+| `APP_SECRET_KEY` / `APP_SECRET_KEY_FILE` | *(generated)* | passphrase (16+ characters) for encrypting source passwords and API keys; else a random key in `/config/secret.key` |
+| `MUSIC_SOURCES_DIR` | `/config/music-sources` | folder plugins |
+| `MUSICBRAINZ_CONTACT` | *(none)* | email or URL for MusicBrainz's User-Agent rule; unset = no MusicBrainz lookups ([Library](#library)) |
+| `STREMIO_MUSIC_IMAGE` | `stremio-music:local` | compose only: image to run ([Updating](#updating)) |
 
 ### Volumes
 
 | Path | Contents |
 |---|---|
-| `/config` | database (`app.db`), settings, later: user plugins, secret key. **Back this up.** |
+| `/config` | database (`app.db`: users, sessions, sources and their settings, library, downloads), `secret.key`, folder plugins, backups. **Back this up.** |
 | `/cache` | engine cache and its settings (`/cache/engine`). Safe to delete while stopped. |
-| `/music` | your library, shared read-write with Navidrome (downloads land here). Never chowned; the app warns at start if it can't write. |
-| `/downloads` | optional staging area |
+| `/music` | your library, shared read-write with Navidrome: downloads land here. Never chowned; the app warns at start if `PUID:PGID` can't write it. |
+| `/downloads` | staging for downloads (`/downloads/incoming`); without it, a hidden `/music/.stremio-music` folder |
 
 ### Health
 
-`GET /health` returns `{status, engine: {state, pid, version, restarts, lastExit, lastError}, db}`.
-It's HTTP 503 when the engine has failed or the database is unavailable. The Docker
-`HEALTHCHECK` uses it, so `docker ps` shows `healthy`/`unhealthy`.
+`GET /health` (no sign-in) returns `{status, version, engine: {state, pid, version, restarts,
+lastExit, lastError}, db}`, HTTP 503 when the engine has failed or the database is unavailable.
+The image's `HEALTHCHECK` uses it every 30 s, so `docker ps` shows `healthy`/`unhealthy`.
 
-The engine is started, health-checked (every 10 s), restarted on crash (backoff 1 s → 30 s; after
-5 crashes in 5 minutes the state is `failed` and it retries every minute) and stopped by the app.
-`docker stop` stops it (and any ffmpeg) first, so it takes a few seconds.
+The app starts the engine, checks it every 10 s, restarts it on crash (backoff 1 s → 30 s; after
+5 crashes in 5 minutes it's `failed` and retried every minute) and stops it. `docker stop` stops
+the engine and any ffmpeg first and exits within a second or two.
 
 ## Sign-in and users
 
 Everything except `/health`, the login page and the PWA manifest/icons requires signing in.
 
-**First start:** the container log prints a one-time setup code:
+**First start:** the log prints a one-time setup code (`docker logs stremio-music 2>&1 | grep "setup
+code"`), printed again on every start until an account exists. Open the app, enter it, create the
+admin. Or set `ADMIN_USERNAME` + `ADMIN_PASSWORD` (`ADMIN_PASSWORD_FILE` for a Docker secret).
 
-```sh
-docker logs stremio-music 2>&1 | grep "setup code"
-```
-
-Open the app; it redirects to the setup page, where you enter the code and create the admin
-account. Alternatively, set `ADMIN_USERNAME` + `ADMIN_PASSWORD` (or `ADMIN_PASSWORD_FILE` for a
-Docker secret) to create the admin at first start. These are ignored once any account exists.
-
-**More users / password changes:** open `<app>/account` (change your password, sign out; admins
-also add, disable and delete users and reset passwords). From the shell:
+**More users / password changes:** `<app>/account` (change your password, sign out; admins also
+add, disable and delete users and reset passwords), also in the Music account menu. From the shell:
 
 ```sh
 docker exec -it stremio-music sm-user list
@@ -76,27 +141,14 @@ docker exec -it stremio-music sm-user admin alice on|off
 docker exec -it stremio-music sm-user disable|enable|delete alice
 ```
 
-Details:
-- Passwords are hashed with scrypt in `/config/app.db`. Sessions are random tokens in an HttpOnly,
-  SameSite=Lax cookie (only a hash is stored), 30 days, extended while you use the app
-  (`SESSION_TTL_DAYS`). Changing a password signs out your other devices.
-- Login is rate-limited (10 attempts per 15 min per client IP). A username is also locked for 15
+Each user has their own library, playlists, downloads, play queue and source logins (e.g.
+Navidrome). Details:
+- Passwords are hashed with scrypt. Sessions are random tokens in an HttpOnly, SameSite=Lax cookie
+  (only a hash is stored). Changing a password signs out your other devices.
+- Login is rate-limited (10 attempts per 15 min per client IP); a username is locked for 15
   minutes after 5 wrong passwords.
 - Requests that change things must come from the app's own origin (CSRF protection).
 - The cookie is `Secure` automatically when the request arrived over HTTPS through a trusted proxy.
-  Force it with `COOKIE_SECURE=true|false`.
-
-### Auth environment
-
-| Variable | Default | |
-|---|---|---|
-| `AUTH_MODE` | `local` | `local` = built-in accounts; `proxy` = trust a user header from your authenticating reverse proxy (below) |
-| `TRUSTED_PROXIES` | *(none)* | comma-separated IPs/CIDRs of your reverse proxy. Only these may set `X-Forwarded-For/-Proto/-Host/-Prefix`; leave empty when clients connect directly. |
-| `ADMIN_USERNAME`, `ADMIN_PASSWORD` / `ADMIN_PASSWORD_FILE` | | create the first admin instead of using the setup code |
-| `SESSION_TTL_DAYS` | `30` | |
-| `COOKIE_SECURE` | `auto` | |
-| `PROXY_USER_HEADER` | `Remote-User` | `proxy` mode: header carrying the user name |
-| `PROXY_ADMIN_USERS` | *(none)* | `proxy` mode: comma-separated admins. If empty, the first user seen becomes admin. |
 
 ## Reverse proxy, HTTPS and sub-paths
 
@@ -112,7 +164,7 @@ the host reaches the container from the network gateway (`172.18.0.1`).
 
 The proxy must pass the original `Host` (or `X-Forwarded-Host`) and `X-Forwarded-Proto`, and for a
 sub-path `X-Forwarded-Prefix` (used to scope the cookie). Keep buffering off and timeouts long:
-video and music are streamed through it.
+video, music and the Downloads page's live updates are streamed through it.
 
 **Caddy** (TLS automatic):
 
@@ -198,17 +250,17 @@ by anything else; the built-in login is the simpler choice.)
 
 Over HTTPS, open the app and install it: on an **Ubuntu laptop** use Brave, Chrome, Chromium or
 Edge (the install icon at the right of the address bar, or the menu → *Install Stremio Music…* /
-*Cast, save and share* → *Install page as app*). It
-then gets its own window and launcher entry, and media keys work through the desktop's media
-controls. **Firefox on Linux can't install web apps**, though the app works fine in a normal
-Firefox tab. On Android use **Add to Home Screen** / **Install app**.
+*Cast, save and share* → *Install page as app*). It then gets its own window and launcher entry,
+and media keys work through the desktop's media controls. **Firefox on Linux can't install web
+apps**, though the app works fine in a normal Firefox tab. On Android use **Add to Home Screen** /
+**Install app**.
 
 No HTTPS yet and only using it on the LAN? Chromium-based browsers can treat this one address as
-secure: open `brave://flags/#unsafely-treat-insecure-origin-as-secure` (Chrome:
-`chrome://flags/…`), add `http://<server>:8095`, enable, relaunch. That's for your own laptop only; HTTPS (proxy or Tailscale) is the proper fix. The service
-worker caches only the UI shell (scripts, styles, fonts, images) so the app opens fast. Pages,
-your data, the API and streams always come from the server, and signing in is always checked
-there.
+secure: open `brave://flags/#unsafely-treat-insecure-origin-as-secure` (Chrome: `chrome://flags/…`),
+add `http://<server>:8095`, enable, relaunch. That's for your own laptop only; HTTPS (proxy or
+Tailscale) is the proper fix. The service worker caches only the UI shell (scripts, styles, fonts,
+images) so the app opens fast. Pages, your data, the API and streams always come from the server,
+and signing in is always checked there.
 
 ### Brave
 
@@ -219,47 +271,56 @@ clear cookies on exit, you'll have to sign in each time; add the app as an excep
 
 ## Music sources
 
-Music comes from sources, managed under **Music → Sources**. Admins see everything; other users
-see only the sources that need their own login. There are three kinds:
+Music comes from sources, managed under **Music → Sources** (on phones: account menu → Music
+sources). Admins see everything; other users see only the sources that need their own login.
+There are three ways to add one:
 
-- **Built-in:**
-  - **Navidrome:** your library. The admin sets the server URL (default `http://navidrome:4533`), and
-    each user enters their own Navidrome login under **Your settings**.
-  - **Internet Archive:** Live Music Archive, netlabels, 78 RPM records. No account needed.
-  - **Radio Browser:** internet radio. "Stations near you" defaults to Australia, which you can
-    change in its settings.
-  - **Jamendo:** needs a free client ID from [devportal.jamendo.com](https://devportal.jamendo.com),
-    for non-commercial use only.
-  - **Free Music Archive:** Creative Commons releases up to 2018, from FMA's mirror on archive.org.
-    FMA's own API no longer exists.
-- **Folder plugins**: drop a folder into `/config/music-sources/` and press **Reload plugins**.
-  Start one with `docker exec -it stremio-music sm-new-source my-source`, and test it with
-  `docker exec -it stremio-music sm-test-source /config/music-sources/my-source`.
-- **Remote addons**: paste a Stremio addon manifest URL. It's used only if it declares the `music`
-  type.
+1. **Built-in** (already there, enable/disable as you like):
+   - **Navidrome:** your library ([connect it](#connecting-navidrome)).
+   - **Internet Archive:** Live Music Archive, netlabels, 78 RPM records. No account needed.
+   - **Radio Browser:** internet radio. "Stations near you" defaults to Australia (its settings).
+   - **Jamendo:** needs a free client ID from [devportal.jamendo.com](https://devportal.jamendo.com)
+     (sign up, create an app), non-commercial use only: paste it in Jamendo's settings.
+   - **Free Music Archive:** Creative Commons releases up to 2018, from FMA's mirror on
+     archive.org (FMA's own API no longer exists).
+2. **Folder plugins:** a folder in `/config/music-sources/`, loaded at start or with **Reload
+   plugins**. Each runs in its own sandboxed process. Start one from the template and test it:
+   ```sh
+   docker exec -it stremio-music sm-new-source my-source        # writes /config/music-sources/my-source
+   docker exec -it stremio-music sm-test-source /config/music-sources/my-source
+   ```
+   Load errors show on the Sources page instead of breaking anything. [PLUGINS.md](PLUGINS.md)
+   explains the interface.
+3. **Remote addons:** paste a Stremio addon manifest URL under **Add a source**. It's used only if it
+   declares the `music` type. Addons may return torrents (played through the engine, downloadable)
+   or YouTube links (play-only).
 
-On the Sources page you can enable or disable each source and change its order (which sets Home
-and search order). You can also edit settings, **Test connection**, and see status, errors and
-logs. Writing a source is covered in [PLUGINS.md](PLUGINS.md).
+On the Sources page you can enable or disable each source and change its order (which sets the
+Home and search order), edit settings, **Test connection**, and see status, errors and logs.
+Passwords and API keys in source settings are encrypted with `APP_SECRET_KEY` (or the generated
+`/config/secret.key`); changing the key means entering them again.
 
-**Secrets** (passwords, API keys) entered in source settings are encrypted at rest. Set the key
-yourself, or a random one is created in `/config/secret.key`, next to the data:
+### Connecting Navidrome
 
-| Variable | |
-|---|---|
-| `APP_SECRET_KEY` | passphrase (16+ characters) for encrypting source secrets |
-| `APP_SECRET_KEY_FILE` | the same, read from a file, e.g. a Docker secret (`/run/secrets/…`) |
-| `MUSIC_SOURCES_DIR` | folder plugin directory (default `/config/music-sources`) |
-
-Changing the key makes saved secrets unreadable: they have to be entered again.
+1. **Admin, once:** Sources → Navidrome → *Settings*: **Server URL** as this container sees it,
+   `http://navidrome:4533` on the shared Docker network (the default). Save.
+2. **Every user:** Sources → Navidrome → *Your settings*: your **Navidrome username and password**
+   (each app user maps to their own Navidrome account, so stars, playlists and play counts are
+   theirs). **Test connection** says e.g. "Connected to navidrome 0.64.2 as alice".
+3. Navidrome rows appear on Home; likes sync with Navidrome stars; playlists can sync to Navidrome
+   ([Library](#library)). Streams and covers go through the server, so the password never reaches
+   the browser.
+4. Downloads land in the folder Navidrome reads. To have Navidrome rescan right after, the user who
+   downloads needs a Navidrome **admin** login; otherwise Navidrome's own scan finds the files later.
 
 ## Library
 
-**Library** keeps, per user and on the server: **Liked songs**, saved albums, followed artists, saved
-radio stations, and your **playlists** (which can mix tracks from any source). Tap a heart to like
-or save; every track's **⋯** menu has *Play next*, *Add to queue*, *Add to playlist…*, *Go to album*
-and *Go to artist*. Playlists are listed in the sidebar (on phones: under Library); a playlist's ⋯
-menu edits its details, reorders and removes tracks, and deletes it.
+**Library** keeps, per user and on the server: **Liked songs**, saved albums, followed artists,
+saved radio stations, and your **playlists** (which can mix tracks from any source). Tap a heart to
+like or save; every track's **⋯** menu has *Play next*, *Add to queue*, *Add to playlist…*, *Go to
+album*, *Go to artist* and, where allowed, *Download*. Playlists are listed in the sidebar (on
+phones: under Library); a playlist's ⋯ menu edits its details, reorders and removes tracks,
+downloads it, and deletes it.
 
 **Navidrome sync** (for users who entered their Navidrome login):
 
@@ -276,10 +337,6 @@ another source has the same album. Matching uses MusicBrainz IDs where sources p
 (Navidrome does, from your tags), otherwise names. With `MUSICBRAINZ_CONTACT` set, the server also
 asks MusicBrainz for the artist's id and aliases (so "Beatles" finds "The Beatles"): at most one
 request per second, answers cached for 30 days.
-
-| Variable | |
-|---|---|
-| `MUSICBRAINZ_CONTACT` | an email address or URL, sent in the User-Agent as [MusicBrainz requires](https://musicbrainz.org/doc/MusicBrainz_API/Rate_Limiting); unset = no MusicBrainz lookups |
 
 ## Playback
 
@@ -324,34 +381,161 @@ and radio are never downloaded.
   as "(2)", setting).
 - Afterwards the server asks **Navidrome** to rescan, with the Navidrome login of the user who
   downloaded (Navidrome only lets admins start a scan; otherwise its own scan finds them later).
-- Partial downloads wait in `/downloads/incoming` (or a hidden `/music/.stremio-music` folder
-  when `/downloads` isn't writable).
+- If the best stream fails, the next downloadable one is tried; errors name the source (e.g.
+  "Jamendo: the server answered HTTP 500": a broken file on their side, retry later).
 
-**Torrents through qBittorrent** (optional, Downloads → Settings, admins): instead of the built-in
-engine, which stops sharing once a file is done, send torrents to your qBittorrent so they keep
-seeding. Only the wanted files are downloaded. qBittorrent must save into a folder both containers
-see, best inside the music volume. With this repo's compose file and a media stack where
-qBittorrent mounts `/srv/media` as `/data`:
+Admins find the settings under Downloads → **Settings**: existing files (skip / keep both),
+downloads at the same time, the Navidrome rescan, and the torrent client.
 
-| Setting | Value |
-|---|---|
-| Web UI address | `http://qbittorrent:8080` |
-| Save folder, as qBittorrent sees it | `/data/library/music/.stremio-music-torrents` |
-| The same folder, as this app sees it | `/music/.stremio-music-torrents` |
+### Connecting qBittorrent
 
-**Test connection** checks the login and the folder, and puts a `.ndignore` in it so Navidrome
-doesn't list the torrent copies. Finished files are tagged into the library from there (a new
-file, so seeding isn't disturbed). Torrents are added in the `stremio-music` category, tagged
-`stremio-music`, and left in qBittorrent when done: its own seeding limits apply. qBittorrent 4.5
-or later is needed (it must stop torrents once their file list arrives).
+Optional. Instead of the built-in engine, which stops sharing once a file is done, torrents can go
+to your qBittorrent (4.5 or later), which downloads only the wanted files and keeps seeding.
+
+1. **qBittorrent's login.** Open its web UI (`http://<server>:8080`). Never set a password? The
+   linuxserver/official images print a temporary one on each start:
+   `docker logs qbittorrent 2>&1 | grep -i "temporary password"`. Sign in as `admin` with it, then
+   set your own under **Tools → Options → WebUI → Authentication** and **Save** (the temporary one
+   changes on every restart).
+2. **A folder both containers see**, best inside the music volume. With this compose file and a
+   media stack where qBittorrent mounts `/srv/media` as `/data`:
+
+   | Setting (Downloads → Settings → qBittorrent) | Value |
+   |---|---|
+   | Web UI address | `http://qbittorrent:8080` |
+   | Username / Password | your qBittorrent login |
+   | Category | `stremio-music` |
+   | Save folder, as qBittorrent sees it | `/data/library/music/.stremio-music-torrents` |
+   | The same folder, as this app sees it | `/music/.stremio-music-torrents` |
+
+3. **Test connection**, then **Save**. The test checks the login and the folder, and puts a
+   `.ndignore` in it so Navidrome doesn't list the torrent copies.
+
+Torrents are added in that category, tagged `stremio-music`, with every file but the wanted ones
+switched off. Finished files are tagged into the library from that folder (as new files, so seeding
+isn't disturbed) and the torrents stay in qBittorrent under its own seeding limits.
+
+## Updating
+
+```sh
+cd ~/stremio-music
+docker exec stremio-music sm-backup                 # a backup first (see below)
+git pull
+REVISION=$(git rev-parse --short HEAD) docker compose build
+docker compose up -d                                # recreates the container; ~1 s of downtime
+docker inspect -f '{{.State.Health.Status}}' stremio-music
+```
+
+Everything in `/config` carries over: the database is migrated forward automatically on start
+(users, sessions, sources and settings, folder plugins, library, downloads in progress). There is
+no downgrade: to go back, run the older image with a backup taken before the update. Open browsers
+pick up the new UI on their next load (each build has new asset URLs).
+
+What's pinned, and how to move it:
+- **Ubuntu base image:** by digest in the `Dockerfile` (`ARG UBUNTU=…@sha256:…`), so rebuilds are
+  identical. For Ubuntu's security updates (Node, ffmpeg, OpenSSL come from Ubuntu), take the
+  current one now and then: `docker compose build --pull --build-arg UBUNTU=ubuntu:26.04`, or put
+  the new digest (`docker image inspect ubuntu:26.04 --format '{{index .RepoDigests 0}}'`) in the
+  `Dockerfile`.
+- **Stremio's streaming server:** `ENGINE_URL` and `ENGINE_SHA256` in the `Dockerfile`
+  (`engine/server.version` records it). A new version needs both changed; check Movies & TV
+  playback afterwards.
+- **npm / pnpm dependencies:** exact versions in `server/package-lock.json` and
+  `web/pnpm-lock.yaml`, installed with `npm ci` / `pnpm install --frozen-lockfile`.
+
+**Your own registry** (optional, e.g. to run the image on another host). Push only to a private
+registry (see the note at the top):
+
+```sh
+docker tag stremio-music:local registry.lan:5000/stremio-music:1.0.0
+docker push registry.lan:5000/stremio-music:1.0.0
+# on the other host, in .env: STREMIO_MUSIC_IMAGE=registry.lan:5000/stremio-music:1.0.0
+docker compose pull && docker compose up -d --no-build
+```
+
+## Backup and restore
+
+`/config` is everything that matters: accounts, source settings and secrets, folder plugins, your
+library and playlists. `/cache` can be rebuilt; `/music` is your library (back it up your own way).
+
+**Backup while it runs:**
+
+```sh
+docker exec stremio-music sm-backup
+# backup written: /config/backups/stremio-music-2026-10-28T09-30-00.tar.gz (180 kB): app.db, secret.key, music-sources/
+```
+
+It makes a consistent copy of the database (SQLite online backup, safe during use), plus
+`secret.key` and the folder plugins, and keeps the newest 7 (`--keep 14`, `--dir /some/where`).
+The archive contains secrets, so it's readable by its owner only; copy `config/backups/` off the
+server. If you set `APP_SECRET_KEY`, keep that value too: it isn't in the backup, and without it
+saved source passwords must be entered again. For a daily backup, a host crontab line:
+
+```cron
+30 3 * * * docker exec stremio-music sm-backup >/dev/null
+```
+
+**Restore** (into the same or a new install):
+
+```sh
+cd ~/stremio-music
+docker compose stop stremio-music
+mv config config.before-restore
+mkdir config
+tar -xzf config.before-restore/backups/stremio-music-<date>.tar.gz -C config
+cp -a config.before-restore/backups config/      # keep your older backups
+docker compose start stremio-music
+```
+
+Run `tar` as the user from `PUID` (or let the container fix ownership on start). Downloads that
+were in progress when the backup was taken start again from the beginning. Restoring an older
+backup into a newer version is fine (it is migrated); the reverse is not.
+
+**Cold copy instead:** `docker compose stop && tar -czf config-$(date +%F).tar.gz config && docker
+compose start` is equally valid, with a few seconds of downtime.
+
+## Troubleshooting
+
+- **First look:** `docker logs stremio-music --tail 100`, and `curl -s http://<server>:8095/health`.
+  `LOG_LEVEL=debug` adds the engine's own output.
+- **`unhealthy` / engine `failed`:** `/health` shows `engine.lastError`. The app retries every
+  minute; `docker compose restart` starts over. Check that nothing else uses the container's ports
+  and that `/cache` is writable.
+- **No setup code / locked out:** the code is printed on every start until an account exists
+  (`docker logs stremio-music 2>&1 | grep "setup code"`). Forgot the admin password:
+  `docker exec -it stremio-music sm-user passwd <name>`.
+- **Sign-in loops behind a proxy:** `TRUSTED_PROXIES` must contain the proxy's address as the app
+  sees it, the proxy must send `X-Forwarded-Proto` (and `X-Forwarded-Prefix` on a sub-path). Over
+  plain HTTP don't set `COOKIE_SECURE=true`.
+- **Movies & TV says the streaming server is offline:** Settings → Streaming must use the
+  `…/engine/` entry, not Stremio's default `http://127.0.0.1:11470/`.
+- **Old UI after an update:** reload once more (the service worker swaps in the new shell); still
+  old, clear the site's data in the browser.
+- **Can't install the app:** needs HTTPS (proxy or Tailscale) or the browser flag in
+  [Installing the app](#installing-the-app-pwa). Firefox on Linux can't install web apps.
+- **Navidrome: "wrong username or password" / can't connect:** the Server URL is as seen from the
+  container (`http://navidrome:4533` on the shared network, not `localhost`). LDAP/external-auth
+  Navidrome accounts can't use Subsonic token logins.
+- **A source shows nothing:** Sources → its card shows the last error and logs; **Test
+  connection**. Jamendo needs its client ID.
+- **A track won't play:** the now-playing view shows the stream and any error. Unsupported formats
+  are converted automatically; on HTTPS, plain-`http` radio goes through the server.
+- **Downloads fail with a permission error:** `PUID:PGID` must be able to write the `/music`
+  folder (the start log warns if not). `chown`/`chmod` the host folder, or set `PUID`/`PGID` to
+  the folder's owner (usually the same user as Navidrome).
+- **Downloads don't show in Navidrome:** the rescan needs a Navidrome admin login for the user who
+  downloaded; otherwise wait for Navidrome's scan. Files are in `/music/<Artist>/<Album>/`.
+- **qBittorrent:** "login failed" = wrong login (try it in the web UI); "login banned" = too many
+  attempts (restart qBittorrent or wait); "isn't a writable folder here" = the two folder settings
+  don't point at the same place.
 
 ## Torrent peers and VPN
 
 **Incoming peer port: not supported by the engine.** Stremio's streaming server only makes
 outgoing peer connections. Its torrent library has a `listen()` that v4.20.16 never calls, the same
 as in the official desktop apps. So there's no port to open for Movies & TV or music torrents.
-Streaming works over outgoing connections. For torrents you want to keep, Phase 9 can hand them to
-qBittorrent, which has its own listening port (6881 in your stack).
+Streaming works over outgoing connections. For torrents you want to keep seeding, use
+[qBittorrent](#connecting-qbittorrent), which has its own listening port.
 
 **Behind a VPN container** (e.g. gluetun). The app joins the VPN container's network namespace, so
 all engine traffic goes through the VPN. Ports are then published on the VPN container:
@@ -383,6 +567,22 @@ Notes:
 - Only route the app through the VPN if you want *all* its traffic there (Internet Archive,
   Jamendo and Radio Browser requests too).
 
+## Uninstall
+
+```sh
+cd ~/stremio-music
+docker exec stremio-music sm-backup && cp config/backups/*.tar.gz ~/   # if you might come back
+docker compose down                       # stops and removes the container
+docker image rm stremio-music:local       # and docker builder prune for the build cache
+rm -rf config cache downloads             # your accounts, settings, library and cache: gone
+```
+
+`/music` is left as it is: downloaded albums stay in your library (with their `LICENSE.txt`
+files). Remove the hidden `.stremio-music` and `.stremio-music-torrents` folders in it if they
+exist. In qBittorrent, the `stremio-music` category/tag lists the torrents it added. In Navidrome,
+stars and synced playlists remain yours. Installed app windows (PWA) are removed from the
+browser's app menu (*Uninstall*).
+
 ## Development
 
 Node isn't needed on the host: `scripts/node` runs Node 22 + ffmpeg in an `ubuntu:26.04`
@@ -392,8 +592,10 @@ container (`docker/dev.Dockerfile`).
 docker build -t stremio-music-dev:26.04 -f docker/dev.Dockerfile docker
 SUBDIR=server scripts/node npm ci
 SUBDIR=server scripts/node npm run build
-SUBDIR=server scripts/node npm test
+SUBDIR=server scripts/node npm test               # unit + integration
+SUBDIR=server scripts/node npm run test:sources   # source contract tests
 ```
 
 Dependencies are pinned exactly and installed with `npm install --before=<two weeks ago>`. The
-exception is security fixes, which are taken immediately.
+exception is security fixes, which are taken immediately. Upstream changes to stremio-web are
+listed in [web/PATCHES.md](web/PATCHES.md).

@@ -18,7 +18,9 @@ import { ResponseCache } from './protocol/cache.js';
 import { RateLimiter, RateLimitError } from './protocol/limiter.js';
 import type { Manifest } from './protocol/types.js';
 
-export const APP_VERSION = '0.1.0';
+import { VERSION as APP_VERSION } from '../version.js';
+
+export { APP_VERSION };
 const CALL_TIMEOUT_MS = 30_000;
 const FETCH_TIMEOUT_MS = 15_000;
 const MAX_FETCH_BYTES = 10 * 1024 * 1024;

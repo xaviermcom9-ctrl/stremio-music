@@ -2,8 +2,12 @@
 # Joins the existing media-stack network so the app can reach navidrome:4533 and qbittorrent:8080.
 services:
   stremio-music:
-    build: .
-    image: stremio-music:local
+    build:
+      context: .
+      args:
+        REVISION: ${REVISION:-unknown}
+    # a local build by default; set STREMIO_MUSIC_IMAGE in .env to run an image from your registry
+    image: ${STREMIO_MUSIC_IMAGE:-stremio-music:local}
     container_name: stremio-music
     restart: unless-stopped
     environment:

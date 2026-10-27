@@ -306,7 +306,7 @@ Not done / notes:
 ## Phase 8 – Music UI (done, awaiting go-ahead)
 
 Server:
-- Library (`music/library.ts`, migration 7): liked songs + saved albums/artists/stations/playlists
+- Library (`music/library.ts`, schema version 6): liked songs + saved albums/artists/stations/playlists
   (snapshots), playlists with entries (add, remove, move, rename, describe), per-user, limits
   (20k items, 500 playlists, 5k tracks each). `GET/PUT/DELETE /api/library…`.
 - Navidrome sync (decided here, see README): likes both ways (new hooks `listLiked`; the source is the
@@ -356,7 +356,7 @@ Not done / notes:
 
 ## Phase 9 – Downloads (done, awaiting go-ahead)
 
-Server (`server/src/downloads/`, migration 8; dependency `music-metadata` 12.2.0, MIT, as approved):
+Server (`server/src/downloads/`, schema version 7; dependency `music-metadata` 12.2.0, MIT, as approved):
 - Queue per track, grouped (album / track / list); SQLite state, restart-safe (re-queued; HTTP and
   engine downloads resume with Range). Concurrency setting (default 2).
 - Enqueue: album/playlist meta (all tracks, tags from the meta), track (with the album it came from),
@@ -398,5 +398,32 @@ Not done / notes:
 - Internet Archive titles are whatever the uploader tagged (some are file names).
 - The qBittorrent integration was tested against a throwaway 5.2.4, not your instance (no login).
 
-### Next
-- User: go-ahead for Phase 10 (deploy & docs).
+## Phase 10 – Deploy & docs (done)
+
+- Version 1.0.0 (`server/src/version.ts`: /health, User-Agent, backups, image label). OCI labels with
+  version + git revision (`REVISION=$(git rev-parse --short HEAD) docker compose build`).
+- Pinned: Ubuntu base by digest (update procedure in README), server.js by URL + sha256, npm/pnpm by
+  lockfiles (exact versions). Compose: `STREMIO_MUSIC_IMAGE` for a private registry; `.env.example`.
+- `sm-backup` (`server/src/backup.ts`): SQLite online backup + secret.key + folder plugins into
+  `/config/backups/stremio-music-<date>.tar.gz` (0600, keeps 7, no overwrite within a second);
+  restore documented (and tested).
+- README rewritten: install, full environment table, volumes, health, sign-in, proxies/HTTPS,
+  Tailscale, PWA, sources (three ways), connecting Navidrome, library, playback, downloads,
+  connecting qBittorrent (incl. its temporary password), updating + pinning + registry,
+  backup/restore + cron, troubleshooting, VPN, uninstall, development.
+
+Tested on this host (Ubuntu Server 26.04.1 LTS, Docker 29.9.2, Compose 5.6.1):
+- Fresh deploy with the compose file (own name/port/folders): healthy in 6 s, setup code in the log,
+  admin created with it, volumes owned by PUID:PGID.
+- Upgrade from the Phase 8 image (built from a5f8835) on the same volumes: schema 6 -> 7, users,
+  sessions, playlist, saved album, folder plugin, global setting and an encrypted per-user secret
+  all intact (secret decrypts), new Downloads API working.
+- Backup while running -> restore into a new folder per README -> same data, secret decrypts.
+- `docker restart`: serving again ~1 s later. Engine SIGKILL: /health "degraded"/"restarting", back to
+  "ok"/"running" within 3 s (restarts: 1), container stayed healthy.
+- `docker stop` with the engine and an ffmpeg transcode streaming: 171 ms, exit code 0, nothing left.
+
+### Status
+All ten phases done. Possible later work (not requested): drag-and-drop playlist ordering, a
+transcode cache for instant seeking in converted tracks, MusicBrainz lookups (set
+MUSICBRAINZ_CONTACT).

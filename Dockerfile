@@ -2,7 +2,10 @@
 # Stremio Music: stremio-web fork + Fastify backend + streaming engine, one container, one port.
 # Build: docker compose build   (or: docker build -t stremio-music:local .)
 
-ARG UBUNTU=ubuntu:26.04
+# Pinned by digest so a rebuild gives the same base. For Ubuntu's security updates, bump it now and
+# then: `docker pull ubuntu:26.04 && docker image inspect ubuntu:26.04 --format '{{index .RepoDigests 0}}'`
+# (or build with --build-arg UBUNTU=ubuntu:26.04 to take the latest), see README "Updating".
+ARG UBUNTU=ubuntu:26.04@sha256:19fcd1bf268f02b60aca3bd30bd8a6d9a11759a430e32921833e65f16d87348a
 
 # --- build toolchain: Ubuntu's own Node 22 (same runtime as the final image) -----------------
 FROM ${UBUNTU} AS toolchain
@@ -64,7 +67,16 @@ COPY --from=server /src/server/dist/src /app/server/dist/src
 COPY --from=server /src/server/dist/test/contract /app/server/dist/test/contract
 COPY --from=server /src/server/scripts/new-source.mjs /app/server/scripts/new-source.mjs
 COPY docker/entrypoint.sh /app/docker/entrypoint.sh
-COPY docker/sm-user docker/sm-new-source docker/sm-test-source /usr/local/bin/
+COPY docker/sm-user docker/sm-new-source docker/sm-test-source docker/sm-backup /usr/local/bin/
+
+ARG VERSION=1.0.0
+ARG REVISION=unknown
+LABEL org.opencontainers.image.title="Stremio Music" \
+      org.opencontainers.image.description="stremio-web fork with a Music mode, Fastify backend and the Stremio streaming engine" \
+      org.opencontainers.image.version="${VERSION}" \
+      org.opencontainers.image.revision="${REVISION}" \
+      org.opencontainers.image.licenses="GPL-2.0-only AND LicenseRef-stremio-server"
+
 
 ENV PUID=1000 PGID=1000 UMASK=022 TZ=Australia/Melbourne \
     PORT=8095 ENGINE_CACHE_SIZE=10GB NODE_ENV=production

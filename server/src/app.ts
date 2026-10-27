@@ -27,7 +27,9 @@ import { APP_VERSION } from './music/runtime.js';
 import { SecretBox } from './music/secrets.js';
 import type { EngineSupervisor } from './engine/supervisor.js';
 
-export const VERSION = '0.1.0';
+import { VERSION } from './version.js';
+
+export { VERSION };
 
 export interface AppDeps {
   config: Config;
