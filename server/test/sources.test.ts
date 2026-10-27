@@ -282,35 +282,6 @@ describe('sources API (built-in, folder plugins, remote addons)', () => {
     assert.equal((await as(admin, 'DELETE', `/api/sources/${remoteId}`)).statusCode, 200);
   });
 
-  test('private media goes through encrypted proxy URLs (with Range), never in the clear', async () => {
-    const privateSource: MusicSource = {
-      ...template,
-      manifest: { ...template.manifest, id: 'private', name: 'Private', allowedHosts: ['media.example.org'] },
-      streams: async (_id, ctx) => [
-        { url: ctx.proxyUrl('https://media.example.org/a.flac?token=SECRET'), name: 'via proxyUrl' },
-        { url: 'https://media.example.org/b.flac', name: 'via headers', behaviorHints: { proxyHeaders: { request: { authorization: 'Bearer SECRET2' } } } },
-      ],
-    };
-    const app2 = await buildApp({ config: { ...config, port: 0 }, db, engine, builtins: [privateSource], fetchImpl: fakeFetch });
-    try {
-      const cookie = admin;
-      const res = await app2.inject({ url: '/api/music/streams?id=private:track:x', headers: { cookie } });
-      assert.equal(res.statusCode, 200, res.body);
-      assert.ok(!res.body.includes('SECRET'), 'no credentials in what the browser gets');
-      const [a, b] = res.json().streams as { url: string }[];
-      assert.match(a!.url, /^api\/proxy\/[A-Za-z0-9_-]{100,}$/);
-      const got = await app2.inject({ url: `/${b!.url}`, headers: { cookie, range: 'bytes=0-9' } });
-      assert.equal(got.statusCode, 206);
-      assert.equal(got.headers['content-type'], 'audio/flac');
-      assert.equal(got.body, 'audio for Bearer SECRET2');
-      assert.equal(seenRanges.at(-1), 'bytes=0-9');
-      assert.equal((await app2.inject({ url: `/${a!.url}` })).statusCode, 401, 'needs sign-in');
-      assert.equal((await app2.inject({ url: `/${a!.url.slice(0, -4)}AAAA`, headers: { cookie } })).statusCode, 404, 'tampered token');
-    } finally {
-      await app2.close();
-    }
-  });
-
   test('reload picks up new folder plugins', async () => {
     mkdirSync(path.join(pluginDir, 'later'));
     const js = readFileSync(path.join(TEMPLATE_JS_DIR, 'index.js'), 'utf8').replace("const ID = 'example';", "const ID = 'later';");

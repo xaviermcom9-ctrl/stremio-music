@@ -31,6 +31,7 @@
         "eventemitter3": "5.0.4",
         "fast-equals": "^6.0.0",
         "filter-invalid-dom-props": "3.0.1",
+        "hls.js": "https://github.com/Stremio/hls.js/releases/download/v1.5.4-patch2/hls.js-1.5.4-patch2.tgz",
         "hat": "^0.0.3",
         "i18next": "^24.2.3",
         "langs": "github:Stremio/nodejs-langs",

@@ -395,9 +395,15 @@ export class SourceRegistry {
   }
 
   /** App-relative URL the browser can use for a private upstream URL (see /api/proxy). */
-  proxyUrl(sourceId: string, url: string, headers?: Record<string, string>): string {
-    const token = this.o.box.seal({ s: sourceId, u: url, h: headers, e: Date.now() + PROXY_TOKEN_TTL_MS } satisfies ProxyToken);
-    return `api/proxy/${token}`;
+  proxyUrl(sourceId: string, url: string, headers?: Record<string, string>, opts: { pub?: boolean } = {}): string {
+    return `api/proxy/${this.proxyToken(sourceId, url, headers, opts)}`;
+  }
+
+  proxyToken(sourceId: string, url: string, headers?: Record<string, string>, opts: { pub?: boolean; engine?: boolean } = {}): string {
+    const t: ProxyToken = { s: sourceId, u: url, h: headers, e: Date.now() + PROXY_TOKEN_TTL_MS };
+    if (opts.pub) t.p = 1;
+    if (opts.engine) t.k = 'engine';
+    return this.o.box.seal(t);
   }
 
   openProxyToken(token: string): ProxyToken | null {
@@ -465,6 +471,19 @@ export class SourceRegistry {
     }
   }
 
+  /** Calls an optional source hook as this user; failures are logged on the source, never thrown. */
+  async hook(e: SourceEntry, user: User, name: 'scrobble' | 'setLiked', ...args: unknown[]): Promise<boolean> {
+    const fn = e.runtime?.impl.hooks?.[name] as ((...a: unknown[]) => Promise<void>) | undefined;
+    if (!fn) return false;
+    try {
+      await fn(...args, e.runtime!.context(user));
+      return true;
+    } catch (err) {
+      e.runtime!.log('warn', `${name} hook failed: ${err instanceof Error ? err.message : String(err)}`);
+      return false;
+    }
+  }
+
   logs(e: SourceEntry): string[] {
     if (e.runtime) return e.runtime.logs;
     const s = e.client!.status();
@@ -488,6 +507,10 @@ export interface ProxyToken {
   h?: Record<string, string>;
   /** expiry (ms epoch) */
   e: number;
+  /** public media from any host (e.g. a radio station): allowed only at public addresses */
+  p?: 1;
+  /** `u` is a path on the streaming engine (torrent file), for the transcoder */
+  k?: 'engine';
 }
 
 /** Proxy URLs end up in cached catalogs and in saved queues, so they live a while. */

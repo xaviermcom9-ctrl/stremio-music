@@ -1,0 +1,325 @@
+// stremio-music: cards, rows, grids, track lists
+
+@import (reference) '~stremio/common/screen-sizes.less';
+
+@card: 11rem;
+
+.card {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    width: @card;
+    padding: 0.6rem;
+    border-radius: 0.75rem;
+    color: var(--primary-foreground-color);
+    text-decoration: none;
+    scroll-snap-align: start;
+
+    @media (pointer: fine) {
+        &:hover {
+            background-color: var(--overlay-color);
+
+            .card-play {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--primary-foreground-color);
+
+        .card-play {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .card-art {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 1;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        background-color: var(--overlay-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .placeholder {
+            width: 40%;
+            height: 40%;
+            color: var(--primary-accent-color);
+            opacity: 0.7;
+        }
+    }
+
+    &.round .card-art {
+        border-radius: 50%;
+    }
+
+    .card-title {
+        font-weight: 700;
+        font-size: 0.95rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .card-sub {
+        font-size: 0.8rem;
+        opacity: 0.65;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    &.skeleton .card-art {
+        animation: shimmer 1.4s ease-in-out infinite;
+    }
+}
+
+@keyframes shimmer {
+    50% { opacity: 0.4; }
+}
+
+.card-play {
+    position: absolute;
+    right: 0.5rem;
+    bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: none;
+    border-radius: 50%;
+    background-color: var(--primary-accent-color);
+    color: #fff;
+    box-shadow: 0 0.5rem 1.2rem rgba(0, 0, 0, 0.45);
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(0.4rem);
+    transition: opacity 0.15s, transform 0.15s;
+
+    .icon {
+        width: 1.2rem;
+        height: 1.2rem;
+    }
+
+    &:focus-visible {
+        opacity: 1;
+        transform: translateY(0);
+        outline: 2px solid #fff;
+    }
+}
+
+.live {
+    position: absolute;
+    left: 0.5rem;
+    top: 0.5rem;
+    padding: 0.05rem 0.4rem;
+    border-radius: 0.35rem;
+    background-color: rgb(229, 57, 53);
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(@card, 1fr));
+    gap: 0.25rem;
+
+    .card {
+        width: auto;
+    }
+}
+
+.row {
+    margin-bottom: 1.5rem;
+
+    .row-title {
+        display: flex;
+        align-items: baseline;
+        gap: 0.75rem;
+        margin: 0 0 0.5rem 0.6rem;
+        font-size: 1.3rem;
+        font-weight: 800;
+    }
+
+    .row-error {
+        margin: 0 0.6rem;
+        font-size: 0.85rem;
+        color: rgb(255, 150, 150);
+    }
+
+    .row-scroll {
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: thin;
+        padding-bottom: 0.25rem;
+    }
+}
+
+.source-badge {
+    padding: 0.1rem 0.5rem;
+    border-radius: 0.5rem;
+    background-color: var(--overlay-color);
+    font-size: 0.75rem;
+    font-weight: 600;
+    opacity: 0.8;
+}
+
+.tracks {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.track {
+    border-radius: 0.5rem;
+
+    @media (pointer: fine) {
+        &:hover {
+            background-color: var(--overlay-color);
+        }
+    }
+
+    &.active .track-title, &.active .track-no {
+        color: var(--primary-accent-color);
+    }
+
+    .track-btn {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        width: 100%;
+        padding: 0.55rem 0.75rem;
+        border: none;
+        background: none;
+        color: var(--primary-foreground-color);
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+
+        &:focus-visible {
+            outline: 2px solid var(--primary-foreground-color);
+            border-radius: 0.5rem;
+        }
+    }
+
+    .track-no {
+        flex: none;
+        width: 1.75rem;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+        opacity: 0.7;
+
+        .eq {
+            width: 1rem;
+            height: 1rem;
+        }
+    }
+
+    .track-art {
+        flex: none;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 0.3rem;
+        overflow: hidden;
+        background-color: var(--overlay-color);
+
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    }
+
+    .track-titles {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .track-title, .track-artist {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .track-artist {
+        font-size: 0.82rem;
+        opacity: 0.65;
+    }
+
+    .track-time {
+        flex: none;
+        font-size: 0.85rem;
+        font-variant-numeric: tabular-nums;
+        opacity: 0.65;
+    }
+}
+
+.loading {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 2rem 0.6rem;
+    opacity: 0.7;
+}
+
+.spinner {
+    width: 1.2rem;
+    height: 1.2rem;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.error-box {
+    margin: 1rem 0.6rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    background-color: rgba(255, 107, 107, 0.12);
+    color: rgb(255, 150, 150);
+}
+
+@media only screen and (max-width: @minimum) {
+    .card {
+        width: 9rem;
+        padding: 0.4rem;
+    }
+
+    .grid {
+        grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+    }
+
+    // touch: the play button is always reachable
+    .card-play {
+        opacity: 1;
+        transform: none;
+        width: 2.4rem;
+        height: 2.4rem;
+    }
+
+    .row .row-title {
+        font-size: 1.1rem;
+    }
+}

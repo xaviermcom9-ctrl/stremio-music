@@ -204,7 +204,7 @@ sandbox blocks reading /etc/hostname (unit test).
 Notes: no built-in sources yet (Phase 6), so the Sources page starts empty. Built-in sources
 need recorded fixtures.json to pass the contract in the build.
 
-## Phase 6 – Built-in sources (done, awaiting go-ahead)
+## Phase 6 – Built-in sources (done)
 
 Media stack started by Claude on user request (2026-10-27): navidrome, lidarr, prowlarr, qbittorrent,
 nzbget all up; names resolve from the app container. User's Navidrome: 0.64.2, one account
@@ -263,5 +263,45 @@ UI parts of the Radio brief (LIVE badge, no seek, Radio page) come with the play
 User's instance: all five built-ins registered and active except Navidrome (needs the user's own
 Navidrome login under Sources -> Navidrome -> Your settings).
 
+## Phase 7 – Playback (done, awaiting go-ahead)
+
+Server (`server/src/music/playback.ts`, `upstream.ts`):
+- `POST /api/music/play`: stream + delivery choice from client caps (direct / proxy / transcode /
+  engine / youtube); data saver prefers a small lossy stream, else transcodes from the lossy version.
+- `/api/proxy/:token` rebuilt on Node http(s): allowed hosts may be private; public tokens (radio,
+  mixed content, remote addons) public-only with pinned DNS + IP-literal check on every hop
+  (a test caught Node skipping `lookup` for IP literals: fixed). Keep-alive + redirect cache.
+- `/api/transcode/:token`: ffmpeg -> MP3 via loopback proxy (internal key, loopback only), `t` seek,
+  max 4 concurrent; ffmpeg spawn errors handled (would have crashed the process).
+- `/api/music/played` -> scrobble hooks (non-live at 50 %, live at start); `/api/music/torrent/:ih`
+  (audio files only); `torrent:<ih>:<idx>` ids play through the engine; `player_state` table +
+  `GET/PUT /api/me/player`. 68 server tests incl. real ffmpeg transcode (ffmpeg added to build stage).
+Web (`web/src/music/player`, `components`, `pages/Pages.js`):
+- Player store: one `<audio>`, queue/shuffle/repeat/volume, live reconnect (backoff 1-30 s), hls.js
+  (declared: same tarball stremio-video uses), Media Session, ICY now-playing polling, data saver
+  per device, local + server snapshots, "Continue where you left off on <device>?".
+- YouTube via the official IFrame player, visible 200x200 (ToS), play-only.
+- Player bar (desktop) / compact bar (phone), now-playing view, queue panel; Space/←/→ in Music.
+- Functional browse pages (Phase 8 polishes): Home rows by source priority, item pages (album,
+  artist, playlist, station, track, licence/attribution, torrent albums), Radio (rows + genres,
+  LIVE), Search (grouped by kind, source badges).
+- Fixed: Sources page CSS leaked global `input`/`select` rules into the whole app.
+
+Verified in real Chrome (headless, proprietary codecs) against a throwaway instance with all five
+sources + throwaway Navidrome + a local torrent swarm (scratch-only WebTorrent seeder + tracker +
+mock addon): IA FLAC direct (advancing), next/seek (ArrowRight +10 s), queue, data saver -> server
+MP3 96 resuming mid-track, AU radio (AAC+, LIVE, ICY title), mixed content (https page -> proxied
+live AAC), Navidrome via proxy, Jamendo direct, torrent album -> audio files as tracks -> FLAC via
+engine, resume banner on a second (phone) device, Media Session metadata, no console errors.
+Measured: data-saver seek 6-9 s (was 22-40 s before keep-alive + redirect cache + lossy input);
+Jamendo's CDN is slow to start from Melbourne (~10 s), not a bug.
+
+Not done / notes:
+- Live reconnect and the YouTube embed are implemented but not exercised end-to-end (no reliable way
+  to drop a live stream or reach YouTube deterministically in the test setup).
+- Seeking in a converted track restarts ffmpeg (seconds); a server-side transcode cache would make
+  it instant (possible later).
+- Browse pages are functional, not final: Phase 8 brings the full layout, library, artist merging.
+
 ### Next
-- User: go-ahead for Phase 7 (playback).
+- User: go-ahead for Phase 8 (music UI).

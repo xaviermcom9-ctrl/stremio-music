@@ -79,9 +79,11 @@ const NewUser = z.object({
 export interface AuthOptions {
   config: Config;
   store: AuthStore;
+  /** lets ffmpeg (loopback only) read /api/proxy/* without a session; see music/playback.ts */
+  internal?: { header: string; key: string };
 }
 
-export async function registerAuth(app: FastifyInstance, { config, store }: AuthOptions): Promise<{ setupCode: string | null }> {
+export async function registerAuth(app: FastifyInstance, { config, store, internal }: AuthOptions): Promise<{ setupCode: string | null }> {
   const { auth } = config;
   const trusted = makeBlockList(config.trustedProxies);
   const fromTrustedProxy = (req: FastifyRequest) => addressMatches(trusted, req.socket.remoteAddress);
@@ -143,6 +145,11 @@ export async function registerAuth(app: FastifyInstance, { config, store }: Auth
 
   app.addHook('onRequest', async (req, reply) => {
     const path = req.url.split('?')[0]!;
+
+    if (internal && path.startsWith('/api/proxy/') && req.headers[internal.header] === internal.key) {
+      const remote = req.socket.remoteAddress ?? '';
+      if (remote === '127.0.0.1' || remote === '::1' || remote === '::ffff:127.0.0.1') return;
+    }
 
     // CSRF: state-changing requests must come from our own pages
     if (UNSAFE.has(req.method)) {

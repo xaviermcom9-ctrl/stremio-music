@@ -11,16 +11,21 @@ const { getAuthState } = require('stremio/sm/api');
 const AccountMenu = require('./AccountMenu');
 const MusicIcon = require('./icons');
 const Sources = require('./pages/Sources');
+const { Home, Item, Radio, Search } = require('./pages/Pages');
+const PlayerBar = require('./player/ui/PlayerBar');
+const { getPlayer } = require('./player/store');
+const { default: useShortcut } = require('stremio/common/Shortcuts/useShortcut');
+const { default: useRouteFocused } = require('stremio/common/useRouteFocused');
 const styles = require('./styles');
 
 const stremioIcon = (name) => (className) => <Icon className={className} name={name} />;
 const musicIcon = (name) => (className) => <MusicIcon className={className} name={name} />;
 
 const PAGES = [
-    { path: '', label: 'Home', icon: stremioIcon('home'), text: 'Rows from your music sources will appear here, ordered by source priority.', phase: 8 },
-    { path: 'search', label: 'Search', icon: stremioIcon('search'), text: 'One search box across every source: artists, albums, tracks and stations.', phase: 8 },
+    { path: '', label: 'Home', icon: stremioIcon('home'), element: <Home /> },
+    { path: 'search', label: 'Search', icon: stremioIcon('search'), element: <Search /> },
     { path: 'library', label: 'Library', icon: stremioIcon('library'), text: 'Your liked songs, saved albums and playlists.', phase: 8 },
-    { path: 'radio', label: 'Radio', icon: musicIcon('radio'), text: 'Live radio stations from Radio Browser: top voted, trending, by genre and by country.', phase: 6 },
+    { path: 'radio', label: 'Radio', icon: musicIcon('radio'), element: <Radio /> },
     { path: 'downloads', label: 'Downloads', icon: stremioIcon('download'), text: 'Server-side downloads into your music library, with progress, pause and retry.', phase: 9 },
     { path: 'sources', label: 'Sources', icon: musicIcon('sources'), element: <Sources /> },
 ];
@@ -34,7 +39,22 @@ const Placeholder = ({ page }) => (
     </section>
 );
 
+/** Keyboard: Space play/pause, ←/→ seek 10 s, while the Music view is in front. */
+const usePlayerShortcuts = () => {
+    const focused = useRouteFocused();
+    useShortcut('playPause', React.useCallback(() => getPlayer().toggle(), []), focused);
+    useShortcut('seekForward', React.useCallback((combo) => {
+        const p = getPlayer();
+        p.seek(p.position() + (combo === 1 ? 30 : 10));
+    }, []), focused);
+    useShortcut('seekBackward', React.useCallback((combo) => {
+        const p = getPlayer();
+        p.seek(p.position() - (combo === 1 ? 30 : 10));
+    }, []), focused);
+};
+
 const MusicRoot = () => {
+    usePlayerShortcuts();
     const [user, setUser] = React.useState(null);
 
     React.useEffect(() => {
@@ -80,9 +100,11 @@ const MusicRoot = () => {
                             />
                         ))
                     }
+                    <Route path={'item/*'} element={<Item />} />
                     <Route path={'*'} element={<Placeholder page={{ label: 'Not found', icon: musicIcon('note'), text: 'This music page does not exist.' }} />} />
                 </Routes>
             </main>
+            <PlayerBar />
         </div>
     );
 };

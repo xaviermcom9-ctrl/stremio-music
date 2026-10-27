@@ -18,3 +18,4 @@ Upstream: https://github.com/Stremio/stremio-web @ `8329565` (5.0.0-beta.43), im
 | `src/components/NavBar/HorizontalNavBar/NavMenu/NavMenuContent.js` | adds `src/sm/AccountMenuSection` (Account, Sign out of Stremio Music) | this server's account, separate from the Stremio.com account |
 | `src/common/Shortcuts/shortcuts.json` | `toggleMode`: Shift+M | keyboard shortcut (also listed in the shortcuts help) |
 | `src/App/App.js` | handles `toggleMode`; mounts `ModeTracker` (restores/saves the last mode per user) | remember the last mode per user, server-side |
+| `package.json` | declares `hls.js` (the same Stremio tarball stremio-video already pulls in) | the music player plays HLS radio in browsers without native HLS (Brave/Chrome desktop) |

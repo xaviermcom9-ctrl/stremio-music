@@ -3,13 +3,12 @@
 //  /api/sources/…         Sources page (admin; per-user settings for everyone)
 //  /api/music/…           what the Music UI uses: one API across all active sources
 import { createReadStream } from 'node:fs';
-import { Readable } from 'node:stream';
 import { parse as parseQs } from 'node:querystring';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { readNowPlaying, type NowPlaying } from './icy.js';
 import { classifyMeta } from './protocol/content-types.js';
-import { APP_VERSION, hostAllowed, SourceError, toStremioManifest } from './runtime.js';
+import { APP_VERSION, SourceError, toStremioManifest } from './runtime.js';
 import type { SourceEntry, SourceRegistry } from './registry.js';
 
 const userOf = (req: FastifyRequest) => (req.user ? { id: req.user.id, username: req.user.username } : null);
@@ -74,42 +73,6 @@ export function registerMusicRoutes(
     } catch (err) {
       return fail(reply, err);
     }
-  });
-
-  // ------------------------------------------------------------ private media (ctx.proxyUrl)
-
-  const PASS_HEADERS = ['content-type', 'content-length', 'content-range', 'accept-ranges', 'last-modified', 'etag', 'content-disposition'];
-
-  app.get<{ Params: { token: string } }>('/api/proxy/:token', async (req, reply) => {
-    const t = registry.openProxyToken(req.params.token);
-    if (!t) return reply.code(404).send({ error: 'invalid or expired link' });
-    const e = registry.get(t.s);
-    if (!e?.runtime || !e.enabled) return reply.code(404).send({ error: 'source unavailable' });
-    const allowed = e.runtime.allowedHosts(registry.settingsFor(e.id, userOf(req)));
-    if (!hostAllowed(new URL(t.u).host, allowed)) return reply.code(403).send({ error: 'host no longer allowed' });
-
-    const headers: Record<string, string> = { 'user-agent': e.runtime.manifest.userAgent ?? `StremioMusic/${APP_VERSION} (self-hosted)`, ...t.h };
-    if (typeof req.headers.range === 'string') headers.range = req.headers.range;
-    const abort = new AbortController();
-    req.raw.on('close', () => abort.abort());
-    let res: Response;
-    try {
-      res = await (fetchImpl ?? fetch)(t.u, { headers, signal: abort.signal, redirect: 'follow' });
-    } catch (err) {
-      return reply.code(502).send({ error: `upstream: ${message(err)}` });
-    }
-    if (res.url && !hostAllowed(new URL(res.url).host, allowed)) {
-      await res.body?.cancel();
-      return reply.code(502).send({ error: 'upstream redirected to a host that is not allowed' });
-    }
-    reply.code(res.status);
-    for (const h of PASS_HEADERS) {
-      const v = res.headers.get(h);
-      if (v) reply.header(h, v);
-    }
-    reply.header('cache-control', res.ok ? 'private, max-age=86400' : 'no-store');
-    if (!res.body) return reply.send();
-    return reply.send(Readable.fromWeb(res.body as never));
   });
 
   // ------------------------------------------------------------ Sources page

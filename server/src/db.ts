@@ -45,6 +45,12 @@ const MIGRATIONS: string[] = [
      settings TEXT NOT NULL,        -- per-user settings JSON; secret values encrypted
      PRIMARY KEY (source_id, user_id)
    );`,
+  `CREATE TABLE player_state (
+     user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+     state TEXT NOT NULL,           -- JSON: queue, position, modes; written by the last active device
+     device TEXT,
+     updated_at INTEGER NOT NULL
+   );`,
 ];
 
 export function openDb(file: string): DatabaseSync {

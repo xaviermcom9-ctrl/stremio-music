@@ -8,7 +8,10 @@ import type { Config } from './config.js';
 import { dbHealthy } from './db.js';
 import { registerEngineProxy } from './engine/proxy.js';
 import { registerPrefs } from './prefs.js';
+import { randomBytes } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
+import type { AddressInfo } from 'node:net';
+import { INTERNAL_HEADER, registerPlayback } from './music/playback.js';
 import type { MusicSource } from './music-sources/sdk.js';
 import { BUILTIN_SOURCES } from './music-sources/index.js';
 import { SourceRegistry } from './music/registry.js';
@@ -46,8 +49,11 @@ export async function buildApp({ config, db, engine, builtins, fetchImpl }: AppD
     if (!reply.hasHeader('content-security-policy')) reply.header('content-security-policy', "frame-ancestors 'self'");
   });
 
+  // a fresh key per process: ffmpeg reads media through /api/proxy over loopback with it
+  const internalKey = randomBytes(24).toString('hex');
+
   // first: its onRequest hook guards every route registered below
-  await registerAuth(app, { config, store: new AuthStore(db, config.auth.sessionTtlMs) });
+  await registerAuth(app, { config, store: new AuthStore(db, config.auth.sessionTtlMs), internal: { header: INTERNAL_HEADER, key: internalKey } });
 
   app.get('/health', { logLevel: 'warn' }, async (_req, reply) => {
     const e = engine.status();
@@ -82,6 +88,14 @@ export async function buildApp({ config, db, engine, builtins, fetchImpl }: AppD
   await registry.init();
   app.addHook('onClose', async () => registry.stop());
   registerMusicRoutes(app, registry, { secretKeySource: box.source }, fetchImpl);
+  registerPlayback(app, {
+    registry,
+    engine,
+    db,
+    ffmpeg: config.engine.ffmpeg,
+    port: () => (app.server.address() as AddressInfo | null)?.port ?? config.port,
+    internalKey,
+  });
   await registerEngineProxy(app, engine);
 
   if (existsSync(config.webRoot)) {

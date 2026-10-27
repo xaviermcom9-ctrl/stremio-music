@@ -28,6 +28,8 @@ RUN SRC_HASH=$(find src assets patches webpack.config.js package.json pnpm-lock.
 
 # --- backend -----------------------------------------------------------------------------------
 FROM toolchain AS server
+# ffmpeg: the playback tests transcode for real
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
 WORKDIR /src/server
 COPY server/package.json server/package-lock.json ./
 RUN --mount=type=cache,id=npm-cache,target=/root/.npm npm ci

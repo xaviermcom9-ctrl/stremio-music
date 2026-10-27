@@ -50,6 +50,9 @@ importers:
       hat:
         specifier: ^0.0.3
         version: 0.0.3
+      hls.js:
+        specifier: https://github.com/Stremio/hls.js/releases/download/v1.5.4-patch2/hls.js-1.5.4-patch2.tgz
+        version: https://github.com/Stremio/hls.js/releases/download/v1.5.4-patch2/hls.js-1.5.4-patch2.tgz
       i18next:
         specifier: ^24.2.3
         version: 24.2.3(typescript@5.9.3)

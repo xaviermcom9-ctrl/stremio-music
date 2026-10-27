@@ -253,6 +253,31 @@ yourself, or a random one is created in `/config/secret.key`, next to the data:
 
 Changing the key makes saved secrets unreadable: they have to be entered again.
 
+## Playback
+
+Music plays in the browser. For each track the server picks a stream from what your browser can
+play and how it should be delivered:
+
+- **Direct:** public files the browser can fetch itself (e.g. Internet Archive FLAC).
+- **Through the server:** anything that needs credentials (Navidrome), and plain-`http` streams
+  when the app is opened over HTTPS (mixed content). Seeking works, live radio streams through.
+- **Converted on the server (ffmpeg → MP3):** formats your browser can't play (e.g. ALAC), and
+  **Data saver**: in the now-playing view (tap the bar, or the ⌃ button), pick a maximum bitrate
+  for *this device*, e.g. 96 kbit/s on your phone. Seeking a converted track restarts it at the
+  new position on the server, which takes a few seconds.
+- **Torrents** (from addons that return them) play through the built-in engine; an album
+  torrent's audio files are listed as tracks, and only the files you play are downloaded.
+- **YouTube** streams (from addons) play in YouTube's own small player in the corner, as YouTube
+  requires; they are never downloaded.
+
+Live radio has no seeking, reconnects by itself when the stream drops, and shows what's playing
+when the station sends it. The queue (shuffle, repeat, volume) survives navigating around the app
+and is saved for your account: open the app on another device and it offers to **continue where
+you left off**. Media keys, the desktop's media controls and the phone's lock screen work through
+the browser. Keyboard (in Music): Space play/pause, ←/→ seek 10 s (Shift: 30 s), Shift+M switch
+mode. Plays are reported to the sources that ask for it (Navidrome scrobbles at half a track,
+Radio Browser counts a station start).
+
 ## Torrent peers and VPN
 
 **Incoming peer port: not supported by the engine.** Stremio's streaming server only makes

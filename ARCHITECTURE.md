@@ -326,6 +326,22 @@ artist).
 
 ---
 
+## 5b. Playback (Phase 7, as built)
+
+- `POST /api/music/play {id, caps}`: the browser sends what `<audio>` can play (canPlayType), HLS
+  support, https or not, and its data-saver cap; the server picks a stream (source priority, then the
+  source's order; lossless if playable) and a delivery: `direct`, `proxy` (credentials / mixed
+  content), `transcode` (ffmpeg -> MP3; unsupported codec or over the cap; input preferably the lossy
+  version, which seeks fast), `engine` (torrents) or `youtube` (official embed, play-only).
+- `/api/proxy/:token`: AES-GCM tokens (source, URL, headers, expiry, public flag). Hosts the source
+  allows may be private (Navidrome); anything else must be public: DNS pinned, IP literals checked,
+  every redirect hop re-checked. Keep-alive agents + a 10-minute redirect cache (archive.org).
+- `/api/transcode/:token?br&t`: ffmpeg reads through `/api/proxy` over loopback with a per-process
+  key (the auth hook accepts it from loopback only), so the same host rules apply; `t` = start time.
+- Browser: one `<audio>` + player store (`web/src/music/player`): queue/shuffle/repeat, live
+  reconnect with backoff, hls.js for HLS radio, Media Session, scrobble at 50 % / 4 min (radio at
+  start), per-device data saver, local + server snapshot (`player_state`), "continue on this device".
+
 ## 6. Repository layout (proposed)
 
 ```

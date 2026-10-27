@@ -7,10 +7,12 @@
     inset: 0;
     display: grid;
     grid-template-columns: 15rem minmax(0, 1fr);
-    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
     grid-template-areas:
         "top top"
-        "nav content";
+        "resume resume"
+        "nav content"
+        "player player";
     padding-left: var(--safe-area-inset-left);
     padding-right: var(--safe-area-inset-right);
     background: radial-gradient(120% 40rem at 50% -10rem, var(--secondary-background-color), transparent) no-repeat, var(--primary-background-color);
@@ -236,10 +238,12 @@
 @media only screen and (max-width: @minimum) {
     .music-root {
         grid-template-columns: minmax(0, 1fr);
-        grid-template-rows: auto minmax(0, 1fr) auto;
+        grid-template-rows: auto auto minmax(0, 1fr) auto auto;
         grid-template-areas:
             "top"
+            "resume"
             "content"
+            "player"
             "nav";
     }
 
