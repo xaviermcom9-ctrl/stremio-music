@@ -6,6 +6,7 @@ const usePlayer = require('stremio/music/player/usePlayer');
 const { api, queueItems } = require('stremio/music/data');
 const { Grid, TrackList, Loading, ErrorBox } = require('stremio/music/components');
 const { useAsync } = require('./common');
+const { lidarrStatus, findInLidarr } = require('stremio/music/lidarr');
 const styles = require('./styles');
 
 const GROUPS = [['artist', 'Artists'], ['album', 'Albums'], ['track', 'Tracks'], ['station', 'Stations'], ['playlist', 'Playlists']];
@@ -18,6 +19,10 @@ const Search = () => {
     const [query, setQuery] = React.useState(q.trim());
     const [allTracks, setAllTracks] = React.useState(false);
     const [, player] = usePlayer();
+    const [lidarr, setLidarr] = React.useState(false);
+    React.useEffect(() => {
+        lidarrStatus().then((s) => setLidarr(Boolean(s.canRequest)));
+    }, []);
     React.useEffect(() => {
         const t = setTimeout(() => {
             setQuery(q.trim());
@@ -66,6 +71,7 @@ const Search = () => {
                     return <section key={kind} className={styles['section']}><h2>{title}</h2><Grid metas={metas} showSource /></section>;
                 })
             }
+            {data && lidarr ? <p className={styles['muted']}><a className={styles['lidarr-link']} href={findInLidarr(query)}>{`Not here? Ask Lidarr for “${query}”`}</a></p> : null}
             {data?.errors?.length ? <p className={styles['muted']}>{`Some sources didn't answer: ${[...new Set(data.errors.map((e) => e.source.name))].join(', ')}`}</p> : null}
         </div>
     );

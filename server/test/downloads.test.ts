@@ -251,6 +251,9 @@ describe('downloads (real port, real ffmpeg)', () => {
     assert.ok(!JSON.stringify(r.body).includes('hunter2'));
     const row = db.prepare("SELECT value FROM app_settings WHERE key = 'downloads'").get() as { value: string };
     assert.ok(!row.value.includes('hunter2'));
+    // a partial update (e.g. only a new password) leaves the other settings alone
+    const p = await call('PUT', '/api/downloads/settings', { qbittorrent: { password: 'newpass' } });
+    assert.deepEqual([p.body.qbittorrent.savePath, p.body.qbittorrent.localPath, p.body.torrentClient], ['/data/x', '/music/x', 'qbittorrent']);
     await call('PUT', '/api/downloads/settings', { torrentClient: 'engine' });
   });
 });

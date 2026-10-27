@@ -423,6 +423,26 @@ Tested on this host (Ubuntu Server 26.04.1 LTS, Docker 29.9.2, Compose 5.6.1):
   "ok"/"running" within 3 s (restarts: 1), container stayed healthy.
 - `docker stop` with the engine and an ffmpeg transcode streaming: 171 ms, exit code 0, nothing left.
 
+## After Phase 10 – Lidarr + Prowlarr requests (user request, 2026-10-28)
+
+User asked for The Pirate Bay as a source: declined (an index of pirated commercial music); offered
+Lidarr instead, user chose "Lidarr integration with Prowlarr". Scope chosen: request albums through
+Lidarr's automatic search (Prowlarr's indexers), no manual release picking in this app.
+- Server: `server/src/lidarr/` (see ARCHITECTURE 5e), schema version 8 (`lidarr_requests`).
+  Verified against throwaway Lidarr 3.1.0 and Prowlarr 2.6.5 (your versions): lookups, add album for
+  a new artist (`albumsToMonitor` keeps only that album monitored; plain `monitor: none` let the
+  artist refresh unmonitor it), existing artist -> monitor + search, `lidarr:<id>` lookups, queue,
+  Prowlarr apps/indexers/sync.
+- Fixed on the way: partial settings updates reset unmentioned fields to defaults (zod defaults in
+  `.partial()`), also in the Phase 9 download settings (typing a qBittorrent password and pressing
+  Test reset its address and folders). Regression test added.
+- Web: Downloads page tabs (Downloads | Requests (Lidarr)), search + request + live list, admin
+  settings (test fills folder/profile choices, Prowlarr health, sync button), "Find in Lidarr" on
+  album/track/artist pages, "Ask Lidarr" under search results.
+- 97 server tests (8 new, fake Lidarr/Prowlarr). Real Chrome against the throwaway apps: settings,
+  test, sync, save, search, request, list status, search-page link; no console errors.
+- Not tested against your Lidarr/Prowlarr (no API keys; enter them under Lidarr settings).
+
 ### Status
 All ten phases done. Possible later work (not requested): drag-and-drop playlist ordering, a
 transcode cache for instant seeking in converted tracks, MusicBrainz lookups (set

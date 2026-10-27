@@ -118,6 +118,20 @@ const MIGRATIONS: string[] = [
      key TEXT PRIMARY KEY,
      value TEXT NOT NULL            -- JSON; secret fields encrypted
    );`,
+  `CREATE TABLE lidarr_requests (
+     id INTEGER PRIMARY KEY,
+     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+     foreign_album_id TEXT NOT NULL, -- MusicBrainz release group id (Lidarr's foreignAlbumId)
+     lidarr_album_id INTEGER,
+     title TEXT NOT NULL,
+     artist TEXT NOT NULL,
+     year INTEGER,
+     cover TEXT,
+     status TEXT NOT NULL DEFAULT 'wanted', -- last seen: wanted | downloading | importing | partial | available | removed
+     requested_at INTEGER NOT NULL,
+     updated_at INTEGER NOT NULL,
+     UNIQUE (user_id, foreign_album_id)
+   );`,
 ];
 
 export function openDb(file: string): DatabaseSync {

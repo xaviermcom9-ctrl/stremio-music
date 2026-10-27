@@ -11,6 +11,9 @@ const { request, getAuthState } = require('stremio/sm/api');
 const { useDownloads } = require('stremio/music/downloads/store');
 const { toast } = require('stremio/music/components/overlays');
 const { Loading } = require('stremio/music/components');
+const { useLocation, useNavigate } = require('react-router');
+const { lidarrStatus } = require('stremio/music/lidarr');
+const Requests = require('./Requests');
 const styles = require('./styles');
 
 const STATUS = {
@@ -222,23 +225,16 @@ const Settings = ({ onClose }) => {
 
 Settings.propTypes = { onClose: PropTypes.func.isRequired };
 
-const Downloads = () => {
+const DownloadList = ({ admin }) => {
     const [state, store] = useDownloads();
-    const [admin, setAdmin] = React.useState(false);
     const [settings, setSettings] = React.useState(false);
-    React.useEffect(() => {
-        getAuthState().then((a) => setAdmin(Boolean(a.user?.isAdmin))).catch(() => {});
-    }, []);
     const groups = state.groups ?? [];
     const clearable = groups.filter((g) => g.items.every((i) => ['done', 'skipped', 'cancelled'].includes(i.status)));
     return (
-        <div className={styles['page']}>
-            <div className={styles['head']}>
-                <h1>{'Downloads'}</h1>
-                <div className={styles['head-actions']}>
-                    {clearable.length ? <button type={'button'} onClick={() => clearable.forEach((g) => act(store, 'groups', g.id, 'remove'))}>{'Clear finished'}</button> : null}
-                    {admin ? <button type={'button'} aria-expanded={settings} onClick={() => setSettings(!settings)}><Icon className={styles['icon']} name={'settings'} />{'Settings'}</button> : null}
-                </div>
+        <>
+            <div className={styles['head-actions']}>
+                {clearable.length ? <button type={'button'} onClick={() => clearable.forEach((g) => act(store, 'groups', g.id, 'remove'))}>{'Clear finished'}</button> : null}
+                {admin ? <button type={'button'} aria-expanded={settings} onClick={() => setSettings(!settings)}><Icon className={styles['icon']} name={'settings'} />{'Settings'}</button> : null}
             </div>
             <p className={styles['intro']}>{'Albums and tracks are downloaded by the server into your music library (Artist / Album / NN - Title), tagged, with cover art and, for Creative Commons music, a LICENSE.txt. They carry on when you close the app.'}</p>
             {settings ? <Settings onClose={() => setSettings(false)} /> : null}
@@ -251,6 +247,49 @@ const Downloads = () => {
                     null
             }
             {groups.map((g) => <Group key={g.id} group={g} store={store} />)}
+        </>
+    );
+};
+
+DownloadList.propTypes = { admin: PropTypes.bool };
+
+/** Downloads, and album requests through Lidarr when it's set up (or for admins, to set it up). */
+const Downloads = () => {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const params = new URLSearchParams(location.search);
+    const [admin, setAdmin] = React.useState(false);
+    const [lidarr, setLidarr] = React.useState(null);
+    const loadStatus = React.useCallback(() => {
+        lidarrStatus().then(setLidarr);
+    }, []);
+    React.useEffect(() => {
+        getAuthState().then((a) => setAdmin(Boolean(a.user?.isAdmin))).catch(() => {});
+        loadStatus();
+    }, []);
+    const tab = params.get('tab') === 'requests' ? 'requests' : 'downloads';
+    const showTabs = admin || lidarr?.enabled;
+    const go = (t) => navigate(t === 'requests' ? '/music/downloads?tab=requests' : '/music/downloads', { replace: true });
+    return (
+        <div className={styles['page']}>
+            <div className={styles['head']}>
+                <h1>{tab === 'requests' ? 'Requests' : 'Downloads'}</h1>
+                {
+                    showTabs ?
+                        <div className={styles['tabs']} role={'tablist'}>
+                            <button type={'button'} role={'tab'} aria-selected={tab === 'downloads'} onClick={() => go('downloads')}>{'Downloads'}</button>
+                            <button type={'button'} role={'tab'} aria-selected={tab === 'requests'} onClick={() => go('requests')}>{'Requests (Lidarr)'}</button>
+                        </div>
+                        :
+                        null
+                }
+            </div>
+            {
+                tab === 'requests' ?
+                    lidarr ? <Requests status={lidarr} admin={admin} initialQuery={params.get('q') ?? ''} onSettingsSaved={() => lidarrStatus().then(setLidarr)} /> : <Loading />
+                    :
+                    <DownloadList admin={admin} />
+            }
         </div>
     );
 };

@@ -5,7 +5,8 @@ const React = require('react');
 const PropTypes = require('prop-types');
 const usePlayer = require('stremio/music/player/usePlayer');
 const { api, queueItems } = require('stremio/music/data');
-const { TrackList, LikeButton, SourceBadge, Grid, Loading } = require('stremio/music/components');
+const { TrackList, LikeButton, SourceBadge, Grid, Loading, Menu } = require('stremio/music/components');
+const { lidarrStatus, findInLidarr } = require('stremio/music/lidarr');
 const { useAsync, Cover, Hero, PlayButton, ShuffleButton } = require('./common');
 const styles = require('./styles');
 
@@ -15,6 +16,10 @@ const Artist = ({ id, preview }) => {
     const [, player] = usePlayer();
     const merged = useAsync(() => api.artist(id), [id]);
     const [more, setMore] = React.useState(false);
+    const [lidarr, setLidarr] = React.useState(false);
+    React.useEffect(() => {
+        lidarrStatus().then((s) => setLidarr(Boolean(s.canRequest)));
+    }, []);
     const { meta, source } = merged.data ?? preview;
     const sources = merged.data?.sources?.map((s) => s.source) ?? [source];
     const multi = sources.length > 1;
@@ -34,6 +39,7 @@ const Artist = ({ id, preview }) => {
                         {tracks.length ? <PlayButton label={`Play ${meta.name}`} onClick={() => play(0)} /> : null}
                         {tracks.length > 1 ? <ShuffleButton onClick={() => play(0, true)} /> : null}
                         <LikeButton item={meta} kind={'artist'} source={source} big />
+                        {lidarr ? <Menu label={`More options for ${meta.name}`} items={[{ label: 'Find albums in Lidarr', href: findInLidarr(meta.name) }]} /> : null}
                     </>
                 }
             />

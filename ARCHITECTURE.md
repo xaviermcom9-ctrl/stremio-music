@@ -372,6 +372,16 @@ artist).
   admin settings (`app_settings`, qBittorrent password encrypted).
 - Ported from Resonance: `naming.ts`, `tags.ts`, `format.ts` (sniffing), `qbittorrent.ts`.
 
+## 5e. Album requests via Lidarr/Prowlarr (after Phase 10)
+
+- `lidarr/client.ts` (Lidarr + Prowlarr API v1), `lidarr/settings.ts` (app_settings, keys encrypted),
+  `lidarr/routes.ts`: search (`album/lookup`, re-ranked), request (lookup `lidarr:<rg id>`; known
+  album -> monitor + `AlbumSearch`; new -> `POST /album` with the artist's
+  `addOptions.albumsToMonitor=[id]`, `monitor: none`, `searchForNewAlbum`), `lidarr_requests` table
+  (schema version 8), status from `album/{id}` statistics + `queue`, a 2-minute poller that fires
+  `libraryChanged` (Navidrome rescan) when a request becomes available. Prowlarr: indexer health,
+  Lidarr app link, `ApplicationIndexerSync`. Automatic search only: no release picking.
+
 ## 6. Repository layout (proposed)
 
 ```

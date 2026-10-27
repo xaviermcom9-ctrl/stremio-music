@@ -23,6 +23,8 @@ import { MusicBrainz } from './music/musicbrainz.js';
 import { DownloadManager } from './downloads/manager.js';
 import { qbittorrentFrom, registerDownloads } from './downloads/routes.js';
 import { DownloadSettingsStore } from './downloads/settings.js';
+import { registerLidarr } from './lidarr/routes.js';
+import { LidarrSettingsStore } from './lidarr/settings.js';
 import { APP_VERSION } from './music/runtime.js';
 import { SecretBox } from './music/secrets.js';
 import type { EngineSupervisor } from './engine/supervisor.js';
@@ -135,6 +137,8 @@ export async function buildApp({ config, db, engine, builtins, fetchImpl, downlo
   // after listen: downloads read through our own /api/proxy over loopback
   app.addHook('onListen', async () => downloads.start());
   app.addHook('onClose', async () => downloads.close());
+  const lidarr = registerLidarr(app, db, new LidarrSettingsStore(db, box), registry, fetchImpl);
+  app.addHook('onClose', async () => lidarr.stop());
   await registerEngineProxy(app, engine);
 
   if (existsSync(config.webRoot)) {

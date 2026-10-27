@@ -15,7 +15,8 @@ For private use. Design: [ARCHITECTURE.md](ARCHITECTURE.md). Writing music sourc
 [Reverse proxy and HTTPS](#reverse-proxy-https-and-sub-paths) · [Tailscale](#remote-access-with-tailscale) ·
 [Installing the app (PWA)](#installing-the-app-pwa) · [Music sources](#music-sources) ·
 [Connecting Navidrome](#connecting-navidrome) · [Library](#library) · [Playback](#playback) ·
-[Downloads](#downloads) · [Connecting qBittorrent](#connecting-qbittorrent) · [Updating](#updating) ·
+[Downloads](#downloads) · [Connecting qBittorrent](#connecting-qbittorrent) ·
+[Requests with Lidarr](#album-requests-with-lidarr-and-prowlarr) · [Updating](#updating) ·
 [Backup and restore](#backup-and-restore) · [Troubleshooting](#troubleshooting) ·
 [Torrent peers and VPN](#torrent-peers-and-vpn) · [Uninstall](#uninstall) · [Development](#development)
 
@@ -415,6 +416,35 @@ Torrents are added in that category, tagged `stremio-music`, with every file but
 switched off. Finished files are tagged into the library from that folder (as new files, so seeding
 isn't disturbed) and the torrents stay in qBittorrent under its own seeding limits.
 
+## Album requests with Lidarr and Prowlarr
+
+For albums that aren't in your library (or any source here), ask your **Lidarr**: Downloads →
+**Requests (Lidarr)**, or **Find in Lidarr** in an album's or artist's ⋯ menu, or the *Ask Lidarr*
+link under search results. Search Lidarr's catalogue (MusicBrainz), press **Request**, and Lidarr
+does the rest with its own setup: its automatic search over the indexers **Prowlarr** gives it, your
+quality profile and download client, then the import into its root folder. With that folder being
+the library Navidrome reads, the album shows up in Music; the app asks Navidrome to rescan when a
+request arrives.
+
+- A new artist is added to Lidarr with **only the requested album** monitored (no other albums,
+  no future releases); for an artist Lidarr already has, the album is switched to monitored.
+- The Requests list shows each request live: searching, wanted (no release found yet: Lidarr
+  keeps looking on its schedule), downloading with progress, importing, needs attention (Lidarr's
+  message), in your library. **Search again** and **Remove** (from this list; Lidarr keeps it).
+- Admins see everyone's requests, and can keep requesting to admins only.
+- Picking individual releases stays in Lidarr's own UI.
+
+**Connecting** (admins, Requests (Lidarr) → **Lidarr settings**):
+
+1. **Lidarr:** address `http://lidarr:8686` (on the shared Docker network) and its **API key**
+   (Lidarr → Settings → General → Security). **Test connection**, then pick the **root folder** for
+   new artists (the library folder Navidrome reads, e.g. `/data/library/music` as Lidarr sees it),
+   the **quality profile** and the **metadata profile**.
+2. **Prowlarr (optional):** address `http://prowlarr:9696` and its API key. The test shows how many
+   indexers are enabled or failing and whether Prowlarr feeds Lidarr (if not: Prowlarr → Settings →
+   Apps → add Lidarr). **Sync indexers to Lidarr** pushes Prowlarr's indexers to Lidarr now.
+3. **Save.** Both API keys are stored encrypted and never shown again.
+
 ## Updating
 
 ```sh
@@ -525,6 +555,11 @@ compose start` is equally valid, with a few seconds of downtime.
   the folder's owner (usually the same user as Navidrome).
 - **Downloads don't show in Navidrome:** the rescan needs a Navidrome admin login for the user who
   downloaded; otherwise wait for Navidrome's scan. Files are in `/music/<Artist>/<Album>/`.
+- **Lidarr:** "rejected the API key" = wrong key; "not reachable" = wrong address (use the
+  container name on the shared network); "metadata server didn't answer" = Lidarr's own
+  catalogue service had a hiccup, search again. A request stuck on *Wanted* means no indexer had a
+  matching release: check Prowlarr's indexers and Lidarr's quality profile, or **Search again**
+  later.
 - **qBittorrent:** "login failed" = wrong login (try it in the web UI); "login banned" = too many
   attempts (restart qBittorrent or wait); "isn't a writable folder here" = the two folder settings
   don't point at the same place.

@@ -9,6 +9,7 @@ const { itemHref, formatTime } = require('stremio/music/player/ui/common');
 const { api, queueItems, canDownload } = require('stremio/music/data');
 const { TrackList, LikeButton, Menu, SourceBadge, Grid, Loading, ErrorBox, KIND_LABEL, download } = require('stremio/music/components');
 const { addToPlaylist } = require('stremio/music/components/overlays');
+const { lidarrStatus, findInLidarr } = require('stremio/music/lidarr');
 const { useAsync, Cover, Hero, PlayButton, ShuffleButton, formatLength, plural } = require('./common');
 const Artist = require('./Artist');
 const styles = require('./styles');
@@ -57,8 +58,18 @@ const SourcePicker = ({ id, source }) => {
 
 SourcePicker.propTypes = { id: PropTypes.string.isRequired, source: PropTypes.object.isRequired };
 
+/** Lidarr can be asked for albums by this user. */
+const useLidarr = () => {
+    const [on, setOn] = React.useState(false);
+    React.useEffect(() => {
+        lidarrStatus().then((s) => setOn(Boolean(s.canRequest)));
+    }, []);
+    return on;
+};
+
 const ItemView = ({ id }) => {
     const [, player] = usePlayer();
+    const lidarr = useLidarr();
     const { data, error, loading } = useAsync(() => api.meta(id), [id]);
     const torrent = useTorrentTracks(id, data?.meta);
 
@@ -103,6 +114,7 @@ const ItemView = ({ id }) => {
                                         meta.music?.artistId ? { label: 'Go to artist', href: itemHref(meta.music.artistId) } : null,
                                         meta.music?.albumId && kind === 'track' ? { label: 'Go to album', href: itemHref(meta.music.albumId) } : null,
                                         kind !== 'station' && canDownload(meta.id) ? { label: kind === 'track' ? 'Download' : `Download ${kind}`, onSelect: () => download({ id: meta.id }, `“${meta.name}”`) } : null,
+                                        lidarr && (kind === 'album' || kind === 'track') ? { label: 'Find in Lidarr', href: findInLidarr([meta.music?.artist, kind === 'album' ? meta.name : meta.music?.album ?? meta.name].filter(Boolean).join(' ')) } : null,
                                     ]}
                                 />
                                 :
