@@ -12,6 +12,8 @@ const useLibrary = require('stremio/music/library/useLibrary');
 const { api, snapshotToItem } = require('stremio/music/data');
 const { MetaCard, TrackList, Menu, Loading, ErrorBox, download } = require('stremio/music/components');
 const { canDownload } = require('stremio/music/data');
+const { request } = require('stremio/sm/api');
+const { lidarrStatus, findInLidarr } = require('stremio/music/lidarr');
 const { toast, addToPlaylist, Dialog } = require('stremio/music/components/overlays');
 const { useAsync, Cover, Hero, PlayButton, ShuffleButton, formatLength, plural } = require('./common');
 const styles = require('./styles');
@@ -98,6 +100,162 @@ const NewPlaylistButton = ({ className, children }) => {
 
 NewPlaylistButton.propTypes = { className: PropTypes.string, children: PropTypes.node };
 
+// ---------------------------------------------------------------- import (e.g. from Spotify)
+
+/**
+ * Import a playlist from a file or pasted text: Spotify's data export (Playlist1.json), a CSV
+ * export (e.g. Exportify), or "Artist - Title" lines. The server matches each track against your
+ * sources and creates the playlist; tracks it can't find are listed.
+ */
+const ImportDialog = ({ onClose }) => {
+    const [, library] = useLibrary();
+    const navigate = useNavigate();
+    const [text, setText] = React.useState('');
+    const [filename, setFilename] = React.useState('');
+    const [lists, setLists] = React.useState(null);
+    const [pick, setPick] = React.useState(0);
+    const [name, setName] = React.useState('');
+    const [link, setLink] = React.useState('');
+    const [job, setJob] = React.useState(null);
+    const [busy, setBusy] = React.useState(false);
+    const [lidarr, setLidarr] = React.useState(false);
+    React.useEffect(() => {
+        lidarrStatus().then((s) => setLidarr(Boolean(s.canRequest)));
+    }, []);
+
+    // follow the running import
+    React.useEffect(() => {
+        if (!job || job.state !== 'running') return;
+        const t = setTimeout(() => {
+            request('GET', `api/library/import/${job.id}`).then((r) => {
+                setJob(r.job);
+                if (r.job.state === 'done') library.load(true);
+            }, (e) => setJob({ ...job, state: 'failed', error: e.message }));
+        }, 1000);
+        return () => clearTimeout(t);
+    }, [job]);
+
+    const read = async () => {
+        setBusy(true);
+        try {
+            const r = await request('POST', 'api/library/import/parse', { text, filename });
+            setLists(r.playlists);
+            setPick(0);
+            setName(r.playlists[0].name);
+        } catch (e) {
+            toast(e.message, { error: true });
+        } finally {
+            setBusy(false);
+        }
+    };
+    const onFile = (e) => {
+        const f = e.target.files?.[0];
+        if (!f) return;
+        setFilename(f.name);
+        f.text().then(setText);
+    };
+    const start = async () => {
+        setBusy(true);
+        try {
+            const r = await request('POST', 'api/library/import', { name: name.trim(), tracks: lists[pick].tracks, ...(/^https?:\/\//.test(link.trim()) ? { link: link.trim() } : {}) });
+            setJob(r.job);
+        } catch (e) {
+            toast(e.message, { error: true });
+        } finally {
+            setBusy(false);
+        }
+    };
+    const list = lists?.[pick];
+
+    return (
+        <Dialog title={'Import a playlist'} onClose={onClose}>
+            {
+                !lists ?
+                    <div className={styles['form']}>
+                        <p className={styles['dialog-text']}>{'From Spotify: export the playlist as a CSV (e.g. with Exportify), or use Playlist1.json from Spotify’s “Download your data”. Or paste one “Artist - Title” per line.'}</p>
+                        <label>{'File'}<input type={'file'} accept={'.csv,.json,.txt,text/csv,application/json,text/plain'} onChange={onFile} /></label>
+                        <label>{'…or paste'}<textarea rows={5} value={filename ? '' : text} disabled={Boolean(filename)} placeholder={'Portishead - Roads\nMassive Attack - Teardrop'} onChange={(e) => setText(e.target.value)} /></label>
+                        <button type={'button'} className={styles['pill']} disabled={busy || !text.trim()} onClick={read}>{busy ? 'Reading…' : 'Next'}</button>
+                    </div>
+                    :
+                    !job ?
+                        <div className={styles['form']}>
+                            {
+                                lists.length > 1 ?
+                                    <label>
+                                        {`Playlist (${lists.length} in this file)`}
+                                        <select value={pick} onChange={(e) => (setPick(Number(e.target.value)), setName(lists[Number(e.target.value)].name))}>
+                                            {lists.map((p, i) => <option key={i} value={i}>{`${p.name} (${p.tracks.length})`}</option>)}
+                                        </select>
+                                    </label>
+                                    :
+                                    null
+                            }
+                            <label>{'Name'}<input type={'text'} value={name} maxLength={200} onChange={(e) => setName(e.target.value)} /></label>
+                            <label>{'Spotify link (optional, kept in the description)'}<input type={'url'} value={link} placeholder={'https://open.spotify.com/playlist/…'} onChange={(e) => setLink(e.target.value)} /></label>
+                            <p className={styles['dialog-text']}>
+                                {`${plural(list.tracks.length, 'track')}: `}
+                                {list.tracks.slice(0, 4).map((t) => `${t.artist} – ${t.title}`).join(', ')}
+                                {list.tracks.length > 4 ? ', …' : ''}
+                            </p>
+                            <button type={'button'} className={styles['pill']} disabled={busy || !name.trim()} onClick={start}>{'Find the tracks'}</button>
+                        </div>
+                        :
+                        job.state === 'running' ?
+                            <div className={styles['form']}>
+                                <p className={styles['dialog-text']}>{`Looking for the tracks on your sources: ${job.done} of ${job.total}, ${job.matched} found so far. You can close this; the playlist appears when it’s done.`}</p>
+                                <div className={styles['import-bar']}><div style={{ width: `${(job.done / job.total) * 100}%` }} /></div>
+                            </div>
+                            :
+                            job.state === 'failed' ?
+                                <p className={styles['dialog-text']}>{`The import failed: ${job.error}`}</p>
+                                :
+                                <div className={styles['form']}>
+                                    <p className={styles['dialog-text']}>
+                                        {`Created “${job.name}”: ${job.matched} of ${job.total} tracks found`}
+                                        {Object.keys(job.bySource).length ? ` (${Object.entries(job.bySource).map(([s, n]) => `${s} ${n}`).join(', ')})` : ''}
+                                        {'.'}
+                                    </p>
+                                    {
+                                        job.missing.length ?
+                                            <>
+                                                <p className={styles['dialog-text']}>{`Not found on your sources (${job.missing.length}):`}</p>
+                                                <ul className={styles['missing']}>
+                                                    {
+                                                        job.missing.map((t, i) => (
+                                                            <li key={i}>
+                                                                <span>{`${t.artist} – ${t.title}`}</span>
+                                                                {lidarr ? <a href={findInLidarr(`${t.artist} ${t.album ?? t.title}`)} onClick={onClose}>{'Find in Lidarr'}</a> : null}
+                                                            </li>
+                                                        ))
+                                                    }
+                                                </ul>
+                                            </>
+                                            :
+                                            null
+                                    }
+                                    <div className={styles['dialog-actions']}>
+                                        {lists.length > 1 ? <button type={'button'} className={styles['pill-quiet']} onClick={() => (setJob(null), setLink(''))}>{'Import another from this file'}</button> : null}
+                                        {job.matched ? <button type={'button'} className={styles['pill']} onClick={() => (onClose(), navigate(`/music/playlist/${job.playlistId}`))}>{'Open the playlist'}</button> : null}
+                                    </div>
+                                </div>
+            }
+        </Dialog>
+    );
+};
+
+ImportDialog.propTypes = { onClose: PropTypes.func.isRequired };
+
+const ImportButton = () => {
+    const [open, setOpen] = React.useState(false);
+    return (
+        <>
+            <button type={'button'} className={styles['pill']} onClick={() => setOpen(true)}>{'Import'}</button>
+            {open ? <ImportDialog onClose={() => setOpen(false)} /> : null}
+        </>
+    );
+};
+
 // ---------------------------------------------------------------- Library
 
 const FILTERS = [['all', 'All'], ['playlist', 'Playlists'], ['album', 'Albums'], ['artist', 'Artists'], ['station', 'Stations']];
@@ -153,7 +311,10 @@ const Library = () => {
         <div className={styles['page']}>
             <div className={styles['page-head']}>
                 <h1 className={styles['page-title']}>{'Your library'}</h1>
-                <NewPlaylistButton />
+                <div className={styles['head-buttons']}>
+                    <ImportButton />
+                    <NewPlaylistButton />
+                </div>
             </div>
             <div className={styles['toolbar']}>
                 <div className={styles['chips']} role={'group'} aria-label={'Show'}>

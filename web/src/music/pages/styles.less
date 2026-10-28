@@ -633,3 +633,74 @@
     color: var(--primary-foreground-color);
     font-weight: 600;
 }
+
+// ---------------------------------------------------------------- playlist import
+
+.head-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.form select, .form input[type=file] {
+    padding: 0.55rem 0.8rem;
+    border: 1px solid var(--overlay-color);
+    border-radius: 0.6rem;
+    background-color: var(--overlay-color);
+    color: var(--primary-foreground-color);
+    font: inherit;
+    font-weight: 400;
+
+    option {
+        background-color: var(--modal-background-color);
+    }
+}
+
+.form textarea:disabled {
+    opacity: 0.4;
+}
+
+.import-bar {
+    height: 0.4rem;
+    overflow: hidden;
+    border-radius: 0.2rem;
+    background-color: var(--overlay-color);
+
+    > div {
+        height: 100%;
+        background-color: var(--primary-accent-color);
+        transition: width 0.4s;
+    }
+}
+
+.missing {
+    max-height: 14rem;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+    font-size: 0.9rem;
+
+    li {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.35rem 0;
+        border-top: 1px solid var(--overlay-color);
+
+        span {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            opacity: 0.85;
+        }
+
+        a {
+            flex: none;
+            color: var(--primary-foreground-color);
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+    }
+}

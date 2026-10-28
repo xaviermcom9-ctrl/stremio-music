@@ -323,6 +323,22 @@ album*, *Go to artist* and, where allowed, *Download*. Playlists are listed in t
 phones: under Library); a playlist's ⋯ menu edits its details, reorders and removes tracks,
 downloads it, and deletes it.
 
+**Import a playlist** (e.g. from Spotify): Library → **Import**, then a file or pasted text:
+
+- a **CSV export**, e.g. from [Exportify](https://exportify.app) (sign in with Spotify, *Export*
+  next to a playlist): the fastest way for a few playlists;
+- **Spotify's own data export** (spotify.com → Account → Privacy → *Download your data*, can take
+  a few days): `Playlist1.json` holds all your playlists, pick one at a time;
+- or one **`Artist - Title`** per line.
+
+Each track is looked up on your sources in priority order (your Navidrome library first), by
+artist and title ("- Remastered 2011" and the like ignored, closest length when known), and the
+playlist is created from what was found. Tracks that weren't found are listed afterwards, with
+**Find in Lidarr** when Lidarr is connected. How well it finds things depends on each source's
+search: your own library matches reliably; Jamendo's search sometimes ranks the right song too
+low to be found. (Reading playlists straight from Spotify's API would need Spotify Premium, a
+Spotify developer app and an HTTPS address, and only works for playlists you own.)
+
 **Navidrome sync** (for users who entered their Navidrome login):
 
 - **Likes, both ways:** liking a Navidrome song, album or artist stars it in Navidrome, and stars

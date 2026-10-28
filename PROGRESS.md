@@ -443,6 +443,24 @@ Lidarr's automatic search (Prowlarr's indexers), no manual release picking in th
   test, sync, save, search, request, list status, search-page link; no console errors.
 - Not tested against your Lidarr/Prowlarr (no API keys; enter them under Lidarr settings).
 
+## Playlist import (user request, 2026-10-28)
+
+User asked for importing Spotify playlists ("just want to import 2 playlists"). Checked first:
+Spotify's Developer Policy allows a user moving their own data (III.9; link back to Spotify, II.4.2),
+but since the February 2026 Web API changes a personal (Development Mode) app needs Premium, can read
+items only of playlists you own/collaborate on, and needs Spotify sign-in (HTTPS redirect: not on the
+LAN http address). So: file/paste import, no Spotify API.
+- `server/src/music/import.ts`: parser (Spotify data-export JSON, CSV with header detection, e.g.
+  Exportify; "Artist - Title" lines), matcher (core title without versions/feat., artist must agree,
+  closest duration within 30 s), background job over sources by priority ("artist title", then the
+  title alone for name-only searches), playlist created in the original order; missing tracks
+  reported. 6 tests.
+- Web: Library → Import dialog (file or paste, playlist pick for multi-playlist files, name, optional
+  Spotify link kept in the description, live progress, result with not-found list + Find in Lidarr).
+- Verified in Chrome (laptop file import, phone paste import) against the test Navidrome + Jamendo:
+  Navidrome tracks matched, playlists created in order, no console errors. Limitation seen: Jamendo's
+  search doesn't surface some existing tracks ("Marcus Scriptor – Alone").
+
 ### Status
 All ten phases done. Possible later work (not requested): drag-and-drop playlist ordering, a
 transcode cache for instant seeking in converted tracks, MusicBrainz lookups (set

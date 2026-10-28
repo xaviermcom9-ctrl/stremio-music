@@ -19,6 +19,7 @@ import { SourceRegistry } from './music/registry.js';
 import { registerMusicRoutes } from './music/routes.js';
 import { registerDiscover } from './music/discover.js';
 import { registerLibrary } from './music/library.js';
+import { registerImport } from './music/import.js';
 import { MusicBrainz } from './music/musicbrainz.js';
 import { DownloadManager } from './downloads/manager.js';
 import { qbittorrentFrom, registerDownloads } from './downloads/routes.js';
@@ -107,6 +108,7 @@ export async function buildApp({ config, db, engine, builtins, fetchImpl, downlo
   if (!musicbrainz) app.log.info('MUSICBRAINZ_CONTACT not set: artists are merged by name and the MBIDs sources provide');
   registerDiscover(app, registry, musicbrainz);
   registerLibrary(app, db, registry);
+  registerImport(app, db, registry);
   const playback = registerPlayback(app, {
     registry,
     engine,
