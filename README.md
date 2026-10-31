@@ -98,11 +98,6 @@ git clone https://github.com/xaviermcom9-ctrl/stremio-music.git ~/stremio-music
 cd ~/stremio-music
 ```
 
-If the repository is private, GitHub asks for a username and password: use your GitHub username
-and a [personal access token](https://github.com/settings/tokens) (with read access to the repo)
-as the password, or clone over SSH (`git@github.com:xaviermcom9-ctrl/stremio-music.git`) after
-adding your server's SSH key to GitHub.
-
 All the following commands run in `~/stremio-music`.
 
 ### 3. Choose your music folder and user
