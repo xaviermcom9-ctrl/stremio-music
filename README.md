@@ -98,7 +98,7 @@ If `docker` says *permission denied … docker.sock*, you haven't logged out and
 ### 2. Get the code
 
 ```sh
-git clone https://github.com/xaviermcom9-ctrl/stremio-music.git ~/stremio-music
+git clone https://github.com/fipity/stremio-music.git ~/stremio-music
 cd ~/stremio-music
 ```
 
