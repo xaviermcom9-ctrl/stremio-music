@@ -22,62 +22,229 @@ For private use. Design: [ARCHITECTURE.md](ARCHITECTURE.md). Writing music sourc
 
 ## Install
 
-Needs: Docker Engine with Compose v2, on x86_64 (built and tested on Ubuntu Server 26.04.1 LTS,
-Docker 29.9, Compose 5.6). The example compose file joins an existing media stack network
-(`media-stack_default`) so the app reaches `navidrome:4533` and `qbittorrent:8080` by name; that
-stack must be up first. Without one, delete the `networks:` parts.
+A step-by-step setup on a fresh Linux server. If you already run Docker, skip to
+[step 2](#2-get-the-code).
+
+**You need:**
+- An x86_64 server running Ubuntu Server (built and tested on 26.04.1 LTS) or Debian, with a user
+  that can run `sudo`. Other distributions work too; only step 1 differs.
+- Docker Engine with the Compose v2 and Buildx plugins (tested with Docker 29.9, Compose 5.6).
+  Step 1 installs them.
+- Internet access during the build (it downloads Ubuntu packages, npm packages and Stremio's
+  streaming server), and enough disk for the image, the build cache and the 10 GB engine cache
+  (`df -h /` to check).
+- Optional: [Navidrome](https://www.navidrome.org/) for your own music library, qBittorrent,
+  Lidarr and Prowlarr. The app works without them (Internet Archive, Jamendo, radio and Movies & TV
+  need nothing else).
+
+### 1. Install Docker and Docker Compose
+
+These are Docker's official packages. Ubuntu's own `docker.io` / `docker-compose` packages are
+often too old for this build (it needs BuildKit through the Buildx plugin), so remove them first:
 
 ```sh
-git clone <your copy of this repo> ~/stremio-music && cd ~/stremio-music
-cp .env.example .env                 # optional: PUID/PGID, TZ, cache size
-# edit the /music volume in docker-compose.yml: your library folder (the one Navidrome reads)
+for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do
+  sudo apt-get remove -y $pkg
+done
+```
+
+Add Docker's apt repository:
+
+```sh
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl git
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] \
+https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" \
+  | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+```
+
+On **Debian**, replace both `linux/ubuntu` with `linux/debian` and use `$VERSION_CODENAME`. For
+other distributions see [docs.docker.com/engine/install](https://docs.docker.com/engine/install/).
+
+Install Docker Engine, Compose and Buildx, and start Docker now and on every boot:
+
+```sh
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo systemctl enable --now docker
+```
+
+Let your user run `docker` without `sudo` (this gives that user root-equivalent access to the
+server, so only do it for your own admin account), then **log out and back in** so it takes effect:
+
+```sh
+sudo usermod -aG docker $USER
+```
+
+Check that everything works:
+
+```sh
+docker --version              # Docker version 29.x
+docker compose version        # Docker Compose version v2.x or later (note: no hyphen)
+docker buildx version
+docker run --rm hello-world   # prints "Hello from Docker!"
+```
+
+If `docker` says *permission denied … docker.sock*, you haven't logged out and back in yet (or run
+`newgrp docker` in the current shell).
+
+### 2. Get the code
+
+```sh
+git clone https://github.com/xaviermcom9-ctrl/stremio-music.git ~/stremio-music
+cd ~/stremio-music
+```
+
+If the repository is private, GitHub asks for a username and password: use your GitHub username
+and a [personal access token](https://github.com/settings/tokens) (with read access to the repo)
+as the password, or clone over SSH (`git@github.com:xaviermcom9-ctrl/stremio-music.git`) after
+adding your server's SSH key to GitHub.
+
+All the following commands run in `~/stremio-music`.
+
+### 3. Choose your music folder and user
+
+The app writes downloads into your music library, so it must run as a user that can write there.
+Pick the folder (Navidrome's music folder if you use Navidrome) and look at who owns it:
+
+```sh
+sudo mkdir -p /srv/media/library/music          # only if it doesn't exist yet
+stat -c '%u:%g %U:%G' /srv/media/library/music  # e.g. "1000:1000 xavier:xavier"
+id                                              # your own uid/gid, e.g. uid=1000 gid=1000
+```
+
+The numbers (e.g. `1000:1000`) are your `PUID` and `PGID`. If the folder is owned by `root`, give
+it to your user: `sudo chown -R $USER:$USER /srv/media/library/music` and use your own `id`. If
+Navidrome runs as a different user, use Navidrome's `PUID`/`PGID` instead so both can read the
+files.
+
+### 4. Configure `.env`
+
+```sh
+cp .env.example .env
+nano .env
+```
+
+Set at least:
+
+```ini
+PUID=1000                 # from step 3
+PGID=1000                 # from step 3
+TZ=Europe/London          # your time zone: `timedatectl list-timezones` lists them
+ENGINE_CACHE_SIZE=10GB    # disk the Movies & TV torrent cache may use
+```
+
+Everything else is optional; [Configuration](#configuration) lists all settings.
+
+### 5. Adjust `docker-compose.yml`
+
+```sh
+nano docker-compose.yml
+```
+
+**a. Your music folder.** Change the left side of this line to the folder from step 3 (keep
+`:/music` on the right):
+
+```yaml
+      - /srv/media/library/music:/music
+```
+
+**b. Network: pick one of the two cases.**
+
+- **You already run Navidrome/qBittorrent/Lidarr in a Docker Compose stack.** The app joins that
+  stack's network so it reaches them by container name (`http://navidrome:4533`). Find the
+  network's name and put it under `networks: media: name:` at the bottom of the file (the default
+  is `media-stack_default`, for a stack in a folder called `media-stack`):
+
+  ```sh
+  docker network ls          # e.g. "media-stack_default"
+  ```
+
+  That stack must be running before you start the app.
+
+- **No other stack (or Navidrome isn't in Docker).** Delete the two `networks:` parts: the
+  `networks:` / `- media` lines inside the service, and the whole `networks:` block at the end of
+  the file. You then connect to Navidrome etc. by the server's address (e.g.
+  `http://192.168.1.10:4533`) instead of a container name.
+
+**c. Port (optional).** The app is served on port `8095`. If that port is taken, change the left
+number only, e.g. `"8100:8095"`. To keep it off the network entirely (only reachable through
+Tailscale or a reverse proxy on the same server), use `"127.0.0.1:8095:8095"`.
+
+Check the file is valid:
+
+```sh
+docker compose config --quiet && echo OK
+```
+
+### 6. Build and start
+
+```sh
 REVISION=$(git rev-parse --short HEAD) docker compose build     # ~5 min; runs all tests
 docker compose up -d
+```
+
+The build downloads Stremio's `server.js` (pinned version and checksum), Ubuntu packages, and the
+npm/pnpm dependencies (exact versions from the lockfiles). It runs the server tests and the source
+contract tests: a failing test fails the build.
+
+Check that it's running (it takes a few seconds to become `healthy`):
+
+```sh
+docker compose ps                                     # STATUS: Up … (healthy)
+curl -s http://localhost:8095/health                  # {"status":"ok",…}
+```
+
+### 7. Create the admin account
+
+Get the one-time setup code from the log:
+
+```sh
 docker logs stremio-music 2>&1 | grep "setup code"
 ```
 
-Open `http://<server>:8095/`, enter the setup code and create the admin account. Movies & TV uses
-the built-in engine automatically (Settings → Streaming shows `…/engine/` as Online). Then add your
-Navidrome login (below) and look at **Music → Sources**.
+Find your server's address (`hostname -I`, the first one, e.g. `192.168.1.10`) and open
+`http://<server>:8095/` in a browser on the same network. It goes to the setup page: enter the
+code and choose the admin's username and password. Add more users later at `<app>/account`
+([Sign-in and users](#sign-in-and-users)).
 
-The build downloads Stremio's `server.js` (pinned version and checksum), Ubuntu packages, and the
-npm/pnpm dependencies (exact versions from the lockfiles). It runs the server tests and the
-source contract tests: a failing test fails the build.
+Can't reach the page from another computer?
+- `ss -tlnp | grep 8095` on the server should show Docker listening.
+- Docker's published ports bypass `ufw`, so `ufw` isn't usually the cause, but a cloud provider's
+  firewall / security group is: allow TCP 8095 there.
+- Don't expose port 8095 to the internet directly. For access from outside your home, use
+  [Tailscale](#remote-access-with-tailscale) or an HTTPS [reverse proxy](#reverse-proxy-https-and-sub-paths).
 
-`docker-compose.yml`:
+### 8. Set it up
 
-```yaml
-services:
-  stremio-music:
-    build:
-      context: .
-      args:
-        REVISION: ${REVISION:-unknown}
-    image: ${STREMIO_MUSIC_IMAGE:-stremio-music:local}
-    container_name: stremio-music
-    restart: unless-stopped
-    environment:
-      PUID: ${PUID:-1000}
-      PGID: ${PGID:-1000}
-      TZ: ${TZ:-Australia/Melbourne}
-      ENGINE_CACHE_SIZE: ${ENGINE_CACHE_SIZE:-10GB}
-      # TRUSTED_PROXIES: 172.18.0.0/16        # behind a reverse proxy
-      # MUSICBRAINZ_CONTACT: you@example.org  # artist merging via MusicBrainz
-    ports:
-      - "8095:8095"
-    volumes:
-      - ./config:/config                       # settings, plugins, database: back this up
-      - ./cache:/cache                         # engine/torrent cache
-      - /srv/media/library/music:/music        # library, shared read-write with Navidrome
-      - ./downloads:/downloads                 # staging for downloads
-    networks:
-      - media
-    stop_grace_period: 20s
+1. **Movies & TV** works straight away with the built-in engine: Settings → Streaming should show
+   the `…/engine/` entry as *Online*.
+2. **Navidrome:** Music → Sources → Navidrome. The admin sets the **Server URL** once
+   (`http://navidrome:4533` on a shared network, else `http://<server>:4533`); every user then
+   enters their own Navidrome login. Details: [Connecting Navidrome](#connecting-navidrome).
+3. **Other sources:** look through **Music → Sources** and turn on what you want
+   ([Music sources](#music-sources)). Jamendo needs a free client ID.
+4. **Optional:** [qBittorrent](#connecting-qbittorrent) for torrent downloads,
+   [Lidarr and Prowlarr](#album-requests-with-lidarr-and-prowlarr) for album requests,
+   [HTTPS / remote access](#remote-access-with-tailscale), and
+   [installing it as an app](#installing-the-app-pwa) on your laptop or phone.
+5. **Backups:** everything that matters is in `./config`. Make a backup with
+   `docker exec stremio-music sm-backup` ([Backup and restore](#backup-and-restore)).
 
-networks:
-  media:
-    name: media-stack_default
-    external: true
+The container restarts on its own after a reboot or crash (`restart: unless-stopped`). To update
+later, see [Updating](#updating); if something doesn't work, [Troubleshooting](#troubleshooting).
+
+### Command reference
+
+```sh
+docker compose ps                       # status
+docker logs stremio-music --tail 100    # recent log (-f to follow)
+docker compose restart                  # restart
+docker compose down                     # stop and remove the container (data in ./config stays)
+docker compose up -d                    # start again / apply changes to .env or the compose file
 ```
 
 ## Configuration
