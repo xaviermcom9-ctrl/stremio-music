@@ -5,11 +5,15 @@ is upstream stremio-web with its streaming engine built in; Music plays your Nav
 Internet Archive, Jamendo, Free Music Archive, internet radio and Stremio music addons, with a
 library, playlists and server-side downloads into your music folder.
 
-For private use. Design: [ARCHITECTURE.md](ARCHITECTURE.md). Writing music sources:
+Meant for personal, self-hosted use: you build and run your own copy on your own server
+([Install](#install)). Design: [ARCHITECTURE.md](ARCHITECTURE.md). Writing music sources:
 [PLUGINS.md](PLUGINS.md). History: [PROGRESS.md](PROGRESS.md).
 
-> **Keep the image private.** It contains Stremio's streaming server (`server.js`), which has no
-> published source or licence text. Build it yourself, or push it only to a registry of your own.
+> **Don't publish the built image.** The source code here is public, but the image you build
+> contains Stremio's streaming server (`server.js`), which has no published source or licence
+> text, so it may not be redistributed. The build downloads it from Stremio for you. Build the
+> image yourself, and push it only to a private registry of your own, never to Docker Hub or
+> another public registry.
 
 **Contents:** [Install](#install) · [Configuration](#configuration) · [Sign-in and users](#sign-in-and-users) ·
 [Reverse proxy and HTTPS](#reverse-proxy-https-and-sub-paths) · [Tailscale](#remote-access-with-tailscale) ·
@@ -652,7 +656,7 @@ What's pinned, and how to move it:
   `web/pnpm-lock.yaml`, installed with `npm ci` / `pnpm install --frozen-lockfile`.
 
 **Your own registry** (optional, e.g. to run the image on another host). Push only to a private
-registry (see the note at the top):
+registry, never a public one (see the note at the top):
 
 ```sh
 docker tag stremio-music:local registry.lan:5000/stremio-music:1.0.0

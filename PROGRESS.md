@@ -31,18 +31,17 @@ stremio-shell c3a8bcb, stremio-shell-ng c6aae4e, stremio-addon-sdk ec4e0a4.
   Env: APP_PATH, FFMPEG_BIN, FFPROBE_BIN, NO_CORS, CASTING_DISABLED, DISABLE_CACHING.
   Endpoints seen: /create, /hlsv2/, /probe, /subtitles.vtt, /transcode, /settings, /stats.json,
   /casting, /network-info, /device-info, /heartbeat, /{infoHash}/{fileIdx}.
-  Known quirk (from ~/stremio-docker = tsaridas/stremio-docker, MIT): cache always under
+  Known quirk (from tsaridas/stremio-docker, MIT): cache always under
   ~/.stremio-server regardless of APP_PATH.
 - **Recommendation: Option A** (official server.js). Movies & TV parity needs its HLS
   transcoding/probe/subtitle/settings endpoints; Option B would be a large reimplementation.
   Music torrents can also use `/{infoHash}/{fileIdx}` -> one torrent engine, one cache cap.
 
 ### Decisions
-- Reuse ~/resonance code (approved by user): port server modules (protocol client, playback/
+- Reuse code from Resonance, an earlier music app (approved by user): port server modules (protocol client, playback/
   transcode/FLAC seek, downloads pipeline, Navidrome/qBittorrent/MusicBrainz clients) into the new
   Fastify backend; rewrite its reference-addon sources as `MusicSource` plugins; music UI rebuilt in
-  React inside the stremio-web fork. Only copy what's needed; ~/resonance itself left untouched.
-- Project location: /home/xavier/stremio-music.
+  React inside the stremio-web fork. Only copy what's needed; Resonance itself left untouched.
 
 ### Decisions (2026-10-27, user)
 - Engine: **Option A** (official server.js v4.20.16, private image only).
@@ -54,8 +53,7 @@ stremio-shell c3a8bcb, stremio-shell-ng c6aae4e, stremio-addon-sdk ec4e0a4.
   did not object).
 
 ### Done: run + verify (2026-10-27)
-- Snap blocker fixed (native Claude Code, apt Docker 29.9.2). Note: Docker shows 0 containers –
-  media-stack (navidrome, qbittorrent…) and resonance are currently NOT running (images still present).
+- Dev environment: Docker 29.9.2.
 - server.js v4.20.16 on ubuntu:26.04 with distro Node 22.22.1 + ffmpeg 8.0.1: starts, endpoints 200,
   software HLS transcode (HEVC→H.264 segments) works. HW-accel probes fail cleanly (no GPU).
 - Engine binds all interfaces (`server.listen(11470)`, HTTPS 12470, no host option) ->
@@ -70,7 +68,7 @@ stremio-shell c3a8bcb, stremio-shell-ng c6aae4e, stremio-addon-sdk ec4e0a4.
 
 ## Phase 2 – Container & hidden engine (done)
 
-Built + running: `docker compose up -d` -> http://192.168.0.13:8095 (healthy).
+Built + running: `docker compose up -d` -> http://<server>:8095 (healthy).
 - `web/` = upstream stremio-web 8329565 snapshot + patches (web/PATCHES.md): same-origin engine URL
   as default (fresh profiles switch silently from core's 127.0.0.1 default), stremio-video relative
   engine paths (pnpm patch), COMMIT_HASH from env.
@@ -93,7 +91,7 @@ with a public self-referencing mediaURL (probe/master/variant/init/segment all 2
 engine -> back in ~1 s; `docker stop` 0.15 s, exit 0; headless Chrome: no modal on a fresh profile,
 engine auto-selected + Online, Server Version 4.20.16, cache 9.32 GiB.
 
-Not verified: Navidrome/qBittorrent by name (media-stack is down); real-browser video playback.
+Not verified: Navidrome/qBittorrent by name (no media stack running at the time); real-browser video playback.
 
 ### Notes / follow-ups
 - The core's built-in `http://127.0.0.1:11470/` entry still shows in Settings → Streaming; picking it
@@ -104,7 +102,7 @@ Not verified: Navidrome/qBittorrent by name (media-stack is down); real-browser 
 
 ## Phase 3 – Access, auth & web app (done)
 
-User note (2026-10-27): the **Ubuntu laptop is the main client**; phone secondary. Test desktop first.
+Target (2026-10-27): **desktop browser first** (Linux), phone secondary. Test desktop first.
 
 - Auth (`server/src/auth/`): local accounts (scrypt N=2^15) + sessions in SQLite (cookie token, only
   its sha256 stored; HttpOnly, SameSite=Lax, Secure over HTTPS, path = X-Forwarded-Prefix; 30 days
@@ -131,11 +129,8 @@ session loss mid-use → fetch guard → login. (SW registration needs a trusted
 internal CA untrusted Chrome refuses; worked with the CA accepted.)
 
 Not done / notes:
-- Your instance is fresh: create the admin with the setup code from `docker logs stremio-music`
+- A fresh instance needs the admin created with the setup code from `docker logs stremio-music`
   (a new code is printed on every start until an account exists).
-
-GitHub: private repo https://github.com/xaviermcom9-ctrl/stremio-music (gh logged in on the server).
-User's own admin account created via setup (2026-10-27). Browser: Brave on the Ubuntu laptop.
 
 ## Phase 4 – Tab switch (done)
 
@@ -206,9 +201,8 @@ need recorded fixtures.json to pass the contract in the build.
 
 ## Phase 6 – Built-in sources (done)
 
-Media stack started by Claude on user request (2026-10-27): navidrome, lidarr, prowlarr, qbittorrent,
-nzbget all up; names resolve from the app container. User's Navidrome: 0.64.2, one account
-("admin", password unknown to Claude), 2 tracks. Untouched: development used a throwaway Navidrome
+Tested alongside a Compose media stack (navidrome, lidarr, prowlarr, qbittorrent, nzbget): names
+resolve from the app container. Development used a throwaway Navidrome
 (`server/scripts/dev/navidrome-fixture.sh`, generated FLAC/MP3 library).
 
 Framework additions:
@@ -218,8 +212,8 @@ Framework additions:
   maxParamLength raised to 4096 (tokens are long; default 100 made every proxy URL 404).
 - Contract tests: `ignoreParams`, `--record <id>` with `SOURCE_SETTINGS` (secrets scrubbed to
   "FIXTURE"), fake proxy URLs; artist metas no longer need streams.
-- `src/net.ts`: Node's 250 ms happy-eyeballs attempt timeout made every request to Europe fail from
-  Melbourne (IPv4 timed out, IPv6 unroutable in Docker) -> 2.5 s everywhere (backend, CLI, contract
+- `src/net.ts`: Node's 250 ms happy-eyeballs attempt timeout made every request to distant servers fail from
+  the dev server (IPv4 timed out, IPv6 unroutable in Docker) -> 2.5 s everywhere (backend, CLI, contract
   runner, engine via --network-family-autoselection-attempt-timeout).
 - `/api/music/nowplaying?id=` reads ICY StreamTitle server-side (`music/icy.ts`); refuses private/
   loopback/link-local addresses on every hop with DNS pinned (SSRF: station URLs are public data).
@@ -260,7 +254,7 @@ same stable API as the Internet Archive source. Recommendation: FMA via the arch
 
 UI parts of the Radio brief (LIVE badge, no seek, Radio page) come with the player/UI (Phases 7-8).
 
-User's instance: all five built-ins registered and active except Navidrome (needs the user's own
+On a fresh instance all five built-ins are registered and active except Navidrome (needs each user's own
 Navidrome login under Sources -> Navidrome -> Your settings).
 
 ## Phase 7 – Playback (done, awaiting go-ahead)
@@ -294,7 +288,7 @@ MP3 96 resuming mid-track, AU radio (AAC+, LIVE, ICY title), mixed content (http
 live AAC), Navidrome via proxy, Jamendo direct, torrent album -> audio files as tracks -> FLAC via
 engine, resume banner on a second (phone) device, Media Session metadata, no console errors.
 Measured: data-saver seek 6-9 s (was 22-40 s before keep-alive + redirect cache + lossy input);
-Jamendo's CDN is slow to start from Melbourne (~10 s), not a bug.
+Jamendo's CDN is slow to start from far away (~10 s), not a bug.
 
 Not done / notes:
 - Live reconnect and the YouTube embed are implemented but not exercised end-to-end (no reliable way
@@ -396,7 +390,7 @@ Not done / notes:
 - Navidrome's `startScan` needs a Navidrome admin login; non-admin users rely on Navidrome's own scan.
 - Jamendo only allows downloads per track where the artist permits it; popular albums often don't.
 - Internet Archive titles are whatever the uploader tagged (some are file names).
-- The qBittorrent integration was tested against a throwaway 5.2.4, not your instance (no login).
+- The qBittorrent integration was tested against a throwaway 5.2.4, not a production instance.
 
 ## Phase 10 – Deploy & docs (done)
 
@@ -429,7 +423,7 @@ User asked for The Pirate Bay as a source: declined (an index of pirated commerc
 Lidarr instead, user chose "Lidarr integration with Prowlarr". Scope chosen: request albums through
 Lidarr's automatic search (Prowlarr's indexers), no manual release picking in this app.
 - Server: `server/src/lidarr/` (see ARCHITECTURE 5e), schema version 8 (`lidarr_requests`).
-  Verified against throwaway Lidarr 3.1.0 and Prowlarr 2.6.5 (your versions): lookups, add album for
+  Verified against throwaway Lidarr 3.1.0 and Prowlarr 2.6.5: lookups, add album for
   a new artist (`albumsToMonitor` keeps only that album monitored; plain `monitor: none` let the
   artist refresh unmonitor it), existing artist -> monitor + search, `lidarr:<id>` lookups, queue,
   Prowlarr apps/indexers/sync.
