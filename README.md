@@ -111,7 +111,7 @@ Pick the folder (Navidrome's music folder if you use Navidrome) and look at who 
 
 ```sh
 sudo mkdir -p /srv/media/library/music          # only if it doesn't exist yet
-stat -c '%u:%g %U:%G' /srv/media/library/music  # e.g. "1000:1000 xavier:xavier"
+stat -c '%u:%g %U:%G' /srv/media/library/music  # e.g. "1000:1000 alice:alice"
 id                                              # your own uid/gid, e.g. uid=1000 gid=1000
 ```
 
